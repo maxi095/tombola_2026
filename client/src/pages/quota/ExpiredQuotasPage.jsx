@@ -32,7 +32,7 @@ function ExpiredQuotasPage() {
   }, [getExpiredQuotas]);
 
   useEffect(() => {
-    let filtered = quotas;
+    let filtered = Array.isArray(quotas) ? quotas : [];
 
     if (selectedEdition) {
       filtered = filtered.filter(quota =>

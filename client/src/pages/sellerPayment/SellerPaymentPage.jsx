@@ -2,6 +2,18 @@ import { useEffect, useRef, useState } from "react";
 import { useSellerPayments } from "../../context/SellerPaymentContext";
 import { Link } from "react-router-dom";
 import dayjs from "dayjs";
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+
+import * as XLSX from 'xlsx';
+
+import utc from 'dayjs/plugin/utc';
+
+// Extender dayjs con los plugins
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
+dayjs.extend(utc);
+
 import SellerPaymentReceipt from "../../components/SellerPaymentReceipt";
 import ReactDOMServer from "react-dom/server";
 
@@ -19,12 +31,13 @@ function SellerPaymentPage() {
   const { selectedEdition } = useEditionFilter();
 
 
-  const [filters, setFilters] = useState({
-    payNumber: "",   
-    sellerName: "",
-    status: "",
-    date: ""
-  });
+const [filters, setFilters] = useState({
+  payNumber: "",   
+  sellerName: "",
+  status: "",
+  dateFrom: "",
+  dateTo: ""
+});
 
   const [filteredPayments, setFilteredPayments] = useState([]);
 
@@ -73,10 +86,29 @@ function SellerPaymentPage() {
           pay.status.toLowerCase().includes(filters.status.toLowerCase())
         );
       }
-      if (filters.date) {
-        filtered = filtered.filter(pay =>
-          dayjs(pay.date).format("YYYY-MM-DD") === filters.date
-        );
+      // Filtro de rango de fechas
+      if (filters.dateFrom || filters.dateTo) {
+        filtered = filtered.filter(pay => {
+          const paymentDate = dayjs.utc(pay.date);
+          
+          // Si solo hay fecha desde
+          if (filters.dateFrom && !filters.dateTo) {
+            return paymentDate.isSameOrAfter(dayjs(filters.dateFrom), 'day');
+          }
+          
+          // Si solo hay fecha hasta  
+          if (!filters.dateFrom && filters.dateTo) {
+            return paymentDate.isSameOrBefore(dayjs(filters.dateTo), 'day');
+          }
+          
+          // Si hay ambas fechas
+          if (filters.dateFrom && filters.dateTo) {
+            return paymentDate.isSameOrAfter(dayjs(filters.dateFrom), 'day') && 
+                  paymentDate.isSameOrBefore(dayjs(filters.dateTo), 'day');
+          }
+          
+          return true;
+        });
       }
 
       setFilteredPayments(filtered);
@@ -125,8 +157,36 @@ function SellerPaymentPage() {
       payNumber: "",   
       sellerName: "",
       status: "",
-      date: ""
+      dateFrom: "",
+      dateTo: ""
     });
+  };
+
+  const exportToExcel = () => {
+    // Preparar los datos para exportar
+    const dataToExport = filteredPayments.map(payment => ({
+      'N° Pago': payment.sellerPaymentNumber || '-',
+      'Edición': payment?.edition?.name ?? 'Sin edición',
+      'Vendedor': `${payment.seller?.person?.lastName}, ${payment.seller?.person?.firstName}`,
+      'Subtotal': getAmount(payment),
+      'Monto Comisión': payment.commissionAmount || 0,
+      'Tipo Comisión': payment.commissionType || '-',
+      'Total': getAmount(payment) - (payment.commissionAmount || 0),
+      'Fecha de Pago': dayjs(payment.date).format("DD/MM/YYYY"),
+      'Estado': payment.status,
+      'Observaciones': payment.observations || ''
+    }));
+
+    // Crear el libro de trabajo
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Pagos Vendedores");
+
+    // Generar nombre del archivo con fecha actual
+    const fileName = `Pagos_Vendedores_${dayjs().format('DD-MM-YYYY')}.xlsx`;
+    
+    // Descargar el archivo
+    XLSX.writeFile(workbook, fileName);
   };
 
   const getAmount = (payment) => 
@@ -139,50 +199,70 @@ function SellerPaymentPage() {
     <div className="page-wide">
       <div className="header-bar">
         <h1 className="title">Pagos a vendedores</h1>
-        <Link to="/sellerPayment/new" className="btn-primary">
-          Registrar pago
-        </Link>
+        <div className="flex gap-2">
+          <button 
+            onClick={exportToExcel}
+            className="btn-secondary"
+            disabled={!filteredPayments || filteredPayments.length === 0}
+          >
+            Exportar a Excel
+          </button>
+          <Link to="/sellerPayment/new" className="btn-primary">
+            Registrar pago
+          </Link>
+        </div>
       </div>
 
-      {/* Filtros */}
-      <div className="filters mb-2">
-        <input
-          className="form-input"
-          type="text"
-          name="payNumber"
-          placeholder="N° de pago"
-          value={filters.payNumber}
-          onChange={handleFilterChange}
-        />
-        <input
-          className="form-input"
-          type="text"
-          name="sellerName"
-          placeholder="Vendedor"
-          value={filters.sellerName}
-          onChange={handleFilterChange}
-        />
-        <select
-          className="form-input mt-1 mb-3"
-          name="status"
-          value={filters.status}
-          onChange={handleFilterChange}
-        >
-          <option value="">Todos</option>
-          <option value="Activo">Activo</option>
-          <option value="Anulado">Anulado</option>
-        </select>
-        <input
-          className="form-input"
-          type="date"
-          name="date"
-          value={filters.date}
-          onChange={handleFilterChange}
-        />
-        <button className="btn-primary mb-4 mt-2 mr-2 ml-2 " onClick={handleClearFilters}>
-          Limpiar Filtros
-        </button>
-      </div>
+{/* Filtros */}
+<div className="filters mb-2">
+  <input
+    className="form-input"
+    type="text"
+    name="payNumber"
+    placeholder="N° de pago"
+    value={filters.payNumber}
+    onChange={handleFilterChange}
+  />
+  <input
+    className="form-input"
+    type="text"
+    name="sellerName"
+    placeholder="Vendedor"
+    value={filters.sellerName}
+    onChange={handleFilterChange}
+  />
+  <select
+    className="form-input"
+    name="status"
+    value={filters.status}
+    onChange={handleFilterChange}
+  >
+    <option value="">Todos</option>
+    <option value="Activo">Activo</option>
+    <option value="Anulado">Anulado</option>
+  </select>
+  <input
+    className="form-input"
+    type="date"
+    name="dateFrom"
+    placeholder="Fecha desde"
+    value={filters.dateFrom}
+    onChange={handleFilterChange}
+  />
+  <input
+    className="form-input"
+    type="date"
+    name="dateTo"
+    placeholder="Fecha hasta"
+    value={filters.dateTo}
+    onChange={handleFilterChange}
+    min={filters.dateFrom}
+  />
+
+  <button className="btn-primary mb-4 mt-2 ml-2" onClick={handleClearFilters}>
+    Limpiar Filtros
+  </button>
+</div>
 
       {!filteredPayments || filteredPayments.length === 0 ? (
         <p className="empty-state">No hay pagos registrados.</p>
@@ -213,9 +293,22 @@ function SellerPaymentPage() {
                   <td className="table-cell">{payment.sellerPaymentNumber || "-"}</td>
                   <td className="table-cell">{payment?.edition?.name ?? "Sin edición"}</td>
                   <td className="table-cell">{payment.seller?.person?.lastName},{" "}{payment.seller?.person?.firstName}</td>
-                  <td className="table-cell">${getAmount(payment).toFixed(2)}</td>
-                  <td className="table-cell">${(payment.commissionAmount ?? 0).toFixed(2)}</td>
-                  <td className="table-cell"> ${(getAmount(payment) - (payment.commissionAmount || 0)).toFixed(2)}</td>
+                  <td className="table-cell text-right">${getAmount(payment).toLocaleString('es-AR')}</td>
+                  <td className="table-cell text-right">
+                    ${payment.commissionAmount?.toLocaleString('es-AR') ?? "0.00"}
+                    {payment.commissionAmount > 0 && (
+                      <span
+                        className={`ml-2 inline-block px-2 py-0.5 text-xs font-semibold rounded ${
+                          payment.commissionType === "Efectivo"
+                            ? "bg-green-200 text-green-800"
+                            : "bg-blue-200 text-blue-800"
+                        }`}
+                      >
+                        {payment.commissionType === "Efectivo" ? "E" : "T"}
+                      </span>
+                    )}
+                  </td>
+                  <td className="table-cell text-right">${(getAmount(payment) - (payment.commissionAmount || 0)).toLocaleString('es-AR')}</td>
                   <td className="table-cell">{dayjs(payment.date).format("DD/MM/YYYY")}</td>
                   <td className="table-cell">
                     {payment.status === "Anulado" ? (
@@ -233,11 +326,19 @@ function SellerPaymentPage() {
                   </td>
                   <td className="table-cell">
                     <button onClick={() => handleDownloadReceipt(payment)} className="text-blue-600 underline mr-2">Descargar recibo</button>
-                    {payment.status === "Activo" ? (
-                      <button onClick={() => handleCancel(payment._id)} className="btn-cancel flex items-center gap-1">
-                      Anular
-                      </button>
-                    ) : <span className="text-gray-400 text-sm"></span>}
+                    <div className="btn-group mt-1">
+                      <Link
+                          to={`/sellerPayment/view/${payment._id}`}
+                          className="btn-secondary mr-2 flex items-center gap-1"
+                        >
+                        Ver
+                        </Link>
+                      {payment.status === "Activo" ? (
+                        <button onClick={() => handleCancel(payment._id)} className="btn-cancel flex items-center gap-1">
+                        Anular
+                        </button>
+                      ) : <span className="text-gray-400 text-sm"></span>}
+                    </div>
                   </td>
                 </tr>
               ))}

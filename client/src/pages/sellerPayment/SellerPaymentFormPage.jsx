@@ -97,6 +97,8 @@ function SellerPaymentFormPage() {
       return;
     }
 
+    const commissionType = data.commissionPaymentMethod || "Efectivo";
+
     try {
       const paymentData = {
         edition: data.editionId.value,
@@ -114,9 +116,11 @@ function SellerPaymentFormPage() {
         })) || [],
         commissionRate: commissionPercent,
         commissionAmount: commissionAmount,
+        commissionType: commissionType,
         date: data.date,
         observations: data.observations || "",
       };
+
 
       await createSellerPayment(paymentData);
       navigate("/sellerPayments");
@@ -132,238 +136,210 @@ function SellerPaymentFormPage() {
   }));
 
   return (
-    <div className="page-wrapper">
+    <div className="page-wide">
       <div className="form-card">
         <h2 className="title">Registrar Pago de Vendedor</h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className="form-grid">
-          <div className="form-section">
-            <label className="label">Edición</label>
-            <Controller
-              name="editionId"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  styles={customSelectStyles}
-                  options={editions.map((e) => ({
-                    value: e._id,
-                    label: e.name,
-                  }))}
-                />
-              )}
-            />
-          </div>
+          {/* Edición */}
+  <div>
+    <label className="label">Edición</label>
+    <Controller
+      name="editionId"
+      control={control}
+      render={({ field }) => (
+        <Select
+          {...field}
+          styles={customSelectStyles}
+          options={editions.map((e) => ({
+            value: e._id,
+            label: e.name,
+          }))}
+        />
+      )}
+    />
+  </div>
 
-          <div className="form-section">
-            <label className="label">Vendedor</label>
-            <Controller
-              name="sellerId"
-              control={control}
-              rules={{ required: "Debe seleccionar un vendedor" }}
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  options={sellerOptions}
-                  styles={customSelectStyles}
-                  placeholder="Seleccionar vendedor..."
-                  isClearable
-                />
-              )}
-            />
-            {errors.sellerId && <p className="form-error">{errors.sellerId.message}</p>}
-          </div>
+  {/* Vendedor */}
+  <div>
+    <label className="label">Vendedor</label>
+    <Controller
+      name="sellerId"
+      control={control}
+      rules={{ required: "Debe seleccionar un vendedor" }}
+      render={({ field }) => (
+        <Select
+          {...field}
+          options={sellerOptions}
+          styles={customSelectStyles}
+          placeholder="Seleccionar vendedor..."
+          isClearable
+        />
+      )}
+    />
+    {errors.sellerId && <p className="form-error">{errors.sellerId.message}</p>}
+  </div>
 
-          <div className="form-section">
-            <label className="label">Monto efectivo</label>
-            <input
-              type="number"
-              step="0.01"
-              className="form-input"
-              placeholder="Ej: 1000.00"
-              {...register("cashAmount", {
-                // Hacemos que el campo no sea obligatorio, pero que si se ingresa, sea válido
-                validate: value => value === "" || !isNaN(parseFloat(value)) || "Debe ser un número válido",
-              })}
-            />
-            {errors.cashAmount && <p className="form-error">{errors.cashAmount.message}</p>}
-          </div>
+  {/* Efectivo */}
+  <div>
+    <label className="label">Monto efectivo</label>
+    <input
+      type="number"
+      step="0.01"
+      className="form-input"
+      placeholder="Ej: 1000.00"
+      {...register("cashAmount")}
+    />
+    {errors.cashAmount && <p className="form-error">{errors.cashAmount.message}</p>}
+  </div>
 
-          <div className="form-section">
-            <label className="label">Monto transferencia</label>
-            <input
-              type="number"
-              step="0.01"
-              className="form-input"
-              placeholder="Ej: 500.00"
-              {...register("transferAmount", {
-                // Hacemos que el campo no sea obligatorio, pero que si se ingresa, sea válido
-                validate: value => value === "" || !isNaN(parseFloat(value)) || "Debe ser un número válido",
-              })}
-            />
-            {errors.transferAmount && <p className="form-error">{errors.transferAmount.message}</p>}
-          </div>
+  {/* Transferencia */}
+  <div>
+    <label className="label">Monto transferencia</label>
+    <input
+      type="number"
+      step="0.01"
+      className="form-input"
+      placeholder="Ej: 500.00"
+      {...register("transferAmount")}
+    />
+    {errors.transferAmount && <p className="form-error">{errors.transferAmount.message}</p>}
+  </div>
 
-          <div className="form-section">
-            <label className="label">Monto tarjeta única</label>
-            <input
-              type="number"
-              step="0.01"
-              className="form-input"
-              placeholder="Ej: 500.00"
-              {...register("tarjetaUnicaAmount", {
-                // Hacemos que el campo no sea obligatorio, pero que si se ingresa, sea válido
-                validate: value => value === "" || !isNaN(parseFloat(value)) || "Debe ser un número válido",
-              })}
-            />
-            {errors.tarjetaUnicaAmount && <p className="form-error">{errors.tarjetaUnicaAmount.message}</p>}
-          </div>
+  {/* Tarjeta Única */}
+  <div>
+    <label className="label">Monto tarjeta única</label>
+    <input
+      type="number"
+      step="0.01"
+      className="form-input"
+      placeholder="Ej: 500.00"
+      {...register("tarjetaUnicaAmount")}
+    />
+    {errors.tarjetaUnicaAmount && <p className="form-error">{errors.tarjetaUnicaAmount.message}</p>}
+  </div>
 
-          {/* 
-          <div className="form-section">
-            <label className="label">Monto cheque</label>
-            <input
-              type="number"
-              step="0.01"
-              className="form-input"
-              placeholder="Ej: 250.00"
-              {...register("checkAmount", {
-                // Hacemos que el campo no sea obligatorio, pero que si se ingresa, sea válido
-                validate: value => value === "" || !isNaN(parseFloat(value)) || "Debe ser un número válido",
-              })}
-            />
-            {errors.checkAmount && <p className="form-error">{errors.checkAmount.message}</p>}
-          </div>
-          */}
+  {/* Fecha */}
+  <div>
+    <label className="label">Fecha</label>
+    <input
+      type="date"
+      {...register("saleDate", { required: true })}
+      className="form-input"
+      defaultValue={dayjs().format("YYYY-MM-DD")}
+    />
+  </div>
 
-          <div className="form-section">
-            <label className="label">Cheques</label>
+  {/* Observaciones */}
+  <div className="md:col-span-2">
+    <label className="label">Notas</label>
+    <textarea
+      rows="3"
+      className="form-input"
+      placeholder="Notas (opcional)"
+      {...register("observations")}
+    ></textarea>
+  </div>
 
-            {checkFields.map((item, index) => (
-              <div key={item.id} className="quota-row">
-                <span className="form-label mt-4">Cheque N° {index + 1}</span>
-
-                <input
-                  type="text"
-                  placeholder="Número de cheque"
-                  {...register(`checks.${index}.checkNumber`, { required: true })}
-                  className="form-input"
-                />
-                <input
-                  type="text"
-                  placeholder="Banco"
-                  {...register(`checks.${index}.bank`, { required: true })}
-                  className="form-input"
-                />
-                <input
-                  type="text"
-                  placeholder="Plaza"
-                  {...register(`checks.${index}.branch`, { required: true })}
-                  className="form-input"
-                />
-                <input
-                  type="date"
-                  {...register(`checks.${index}.date`, { required: true })}
-                  className="form-input"
-                />
-                <input
-                  type="number"
-                  step="0.01"
-                  placeholder="Monto"
-                  {...register(`checks.${index}.amount`, { required: true })}
-                  className="form-input"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeCheck(index)}
-                  className="btn-cancel"
-                >
-                  Eliminar cheque
-                </button>
-              </div>
-            ))}
-
-            <button
-              type="button"
-              onClick={() =>
-                appendCheck({ checkNumber: "", bank: "", branch: "", date: "", amount: "" })
-              }
-              className="btn-secondary mt-2"
-            >
-              + Agregar cheque
-            </button>
-          </div>
-
-          <div className="form-section">
-            <label className="label">Fecha</label>
-            <input
-              type="date"
-              {...register("saleDate", { required: true })}
-              className="form-input"
-              defaultValue={dayjs().format("YYYY-MM-DD")} // Usa dayjs si ya lo tenés en el proyecto
-            />
-          </div>
-
-          <div className="form-section">
-            <label className="label">Notas</label>
-            <textarea
-              rows="3"
-              className="form-input"
-              placeholder="Notas (opcional)"
-              {...register("observations")}
-            ></textarea>
-          </div>
-
-          <div className="form-section">
-  <label className="label">Subtotal</label>
-  <input
-    type="text"
-    className="form-input bg-gray-100 text-gray-600"
-    value={subtotal.toFixed(2)}
-    readOnly
-  />
-</div>
-
-{selectedSeller && (
-  <div className="form-section">
-    <label className="label">Porcentaje Comisión</label>
+  {/* Totales */}
+  <div>
+    <label className="label">Subtotal</label>
     <input
       type="text"
       className="form-input bg-gray-100 text-gray-600"
-      value={`${commissionPercent}%`}
+      value={subtotal.toFixed(2)}
       readOnly
     />
   </div>
-)}
 
-{selectedSeller && (
-  <div className="form-section">
-    <label className="label">Monto Comisión</label>
-    <input
-      type="text"
-      className="form-input bg-gray-100 text-red-600"
-      value={`-${commissionAmount.toFixed(2)}`}
-      readOnly
-    />
+  {selectedSeller && (
+    <>
+      <div>
+        <label className="label">Porcentaje Comisión</label>
+        <input
+          type="text"
+          className="form-input bg-gray-100 text-gray-600"
+          value={`${commissionPercent}%`}
+          readOnly
+        />
+      </div>
+
+      <div>
+        <label className="label">Monto Comisión</label>
+        <input
+          type="text"
+          className="form-input bg-gray-100 text-red-600"
+          value={`-${commissionAmount.toFixed(2)}`}
+          readOnly
+        />
+      </div>
+
+      <div>
+        <label className="label font-semibold">Total Final</label>
+        <input
+          type="text"
+          className="form-input bg-gray-100 text-green-600 font-semibold"
+          value={finalTotal.toFixed(2)}
+          readOnly
+        />
+      </div>
+
+      {/* 👇 Nuevo campo visible solo si hay comisión */}
+      {commissionPercent > 0 && (
+        <div>
+          <label className="label">Comisión pagada en</label>
+          <div className="flex gap-4">
+            <label className="inline-flex items-center font-bold">
+              <input
+                type="radio"
+                value="Efectivo"
+                {...register("commissionPaymentMethod")}
+                className="mr-2"
+              />
+              Efectivo
+            </label>
+            <label className="inline-flex items-center font-bold">
+              <input
+                type="radio"
+                value="Transferencia"
+                {...register("commissionPaymentMethod")}
+                className="mr-2"
+              />
+              Transferencia
+            </label>
+          </div>
+        </div>
+      )}
+    </>
+  )}
+
+  {/* Cheques (mantengo como estaba, puede que necesite rediseño aparte) */}
+  <div className="md:col-span-2">
+    <label className="label">Cheques</label>
+    {checkFields.map((item, index) => (
+      <div key={item.id} className="grid grid-cols-2 md:grid-cols-6 gap-2 items-end mb-2">
+        <input type="text" placeholder="N°" {...register(`checks.${index}.checkNumber`)} className="form-input" />
+        <input type="text" placeholder="Banco" {...register(`checks.${index}.bank`)} className="form-input" />
+        <input type="text" placeholder="Plaza" {...register(`checks.${index}.branch`)} className="form-input" />
+        <input type="date" {...register(`checks.${index}.date`)} className="form-input" />
+        <input type="number" step="0.01" placeholder="Monto" {...register(`checks.${index}.amount`)} className="form-input" />
+        <button type="button" onClick={() => removeCheck(index)} className="btn-anular mb-4">Eliminar</button>
+      </div>
+    ))}
+    <button
+      type="button"
+      onClick={() => appendCheck({ checkNumber: "", bank: "", branch: "", date: "", amount: "" })}
+      className="btn-secondary mt-2"
+    >
+      + Agregar cheque
+    </button>
   </div>
-)}
 
-{selectedSeller && (
-  <div className="form-section">
-    <label className="label font-semibold">Total Final</label>
-    <input
-      type="text"
-      className="form-input bg-gray-100 text-green-600 font-semibold"
-      value={finalTotal.toFixed(2)}
-      readOnly
-    />
+  {/* Submit */}
+  <div className="md:col-span-2 text-right">
+    <button type="submit" className="btn-primary mt-4">Registrar Pago</button>
   </div>
-)}
-
-          <button type="submit" className="btn-primary mt-4">
-            Registrar Pago
-          </button>
-        </form>
+</form>
       </div>
     </div>
   );

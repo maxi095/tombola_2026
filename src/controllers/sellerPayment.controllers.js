@@ -19,6 +19,7 @@ export const createSellerPayment = async (req, res) => {
       // checkAmount = 0, ---> se calcula automáticamente desde el pre-save en el modelo
       commissionRate,
       commissionAmount,
+      commissionType,
       date,
       reference,
       observations
@@ -37,10 +38,10 @@ export const createSellerPayment = async (req, res) => {
     }
 
     // ✅ Calcular automáticamente el total de cheques
-    // const checkAmount = checks.reduce((sum, check) => sum + Number(check.amount || 0), 0);
+    const checkAmount = checks.reduce((sum, check) => sum + Number(check.amount || 0), 0);
 
     //const totalAmount = Number(cashAmount) + Number(transferAmount) + Number(checkAmount);
-    const totalAmount = Number(cashAmount) + Number(transferAmount) + Number(tarjetaUnicaAmount)
+    const totalAmount = Number(cashAmount) + Number(transferAmount) + Number(tarjetaUnicaAmount) + Number(checkAmount)
 
     if (totalAmount <= 0) {
       return res.status(400).json({
@@ -58,6 +59,7 @@ export const createSellerPayment = async (req, res) => {
       //checkAmount,
       commissionRate,
       commissionAmount,
+      commissionType,
       date,
       reference,
       observations,
@@ -209,6 +211,9 @@ export const cancelSellerPayment = async (req, res) => {
 export const getSellerPaymentById = async (req, res) => {
   try {
     const payment = await SellerPayment.findById(req.params.id)
+      .populate(
+          'edition'
+      )
       .populate({
         path: 'seller',
         populate: { path: 'person' }
@@ -223,3 +228,36 @@ export const getSellerPaymentById = async (req, res) => {
   }
 };
 
+export const updateSellerPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    const updated = await SellerPayment.findByIdAndUpdate(id, updates, {
+      new: true,
+      runValidators: true
+    })
+      .populate('edition')
+      .populate({
+        path: 'seller',
+        populate: { path: 'person' }
+      })
+      .populate({
+        path: 'createdBy',
+        populate: { path: 'person' }
+      })
+      .populate({
+        path: 'canceledBy',
+        populate: { path: 'person' }
+      });
+
+    if (!updated) {
+      return res.status(404).json({ message: "Pago no encontrado" });
+    }
+
+    res.json(updated);
+  } catch (error) {
+    console.error("❌ Error en updateSellerPayment:", error.message);
+    res.status(500).json({ message: "Error al actualizar el pago", error });
+  }
+};

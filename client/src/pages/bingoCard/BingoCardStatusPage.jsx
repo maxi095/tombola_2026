@@ -66,7 +66,7 @@ function BingoCardStatusPage() {
   )}
 
   <h1 className="text-6xl font-bold text-green-400 mb-10 text-center">
-    🔍 Estado del Cartón
+    Estado del Cartón
   </h1>
 
   <form
@@ -133,22 +133,21 @@ function BingoCardStatusPage() {
         <p>⚠️ El cartón {result.bingoCardNumber} tiene deuda.</p>
       ) : (
         <>
-          <p className="text-5xl mb-6">🎉 Cartón N° {result.bingoCardNumber}</p>
-          <p className="mb-3">📘 Edición: {result.editionName}</p>
-          <p className="mb-3">👤 Asociado nro: {result.clientNumber}</p>
-          <p className="mb-3">👤 Asociado: {result.client}</p>
-          <p className="mb-3">🤝 Vendedor nro: {result.sellerNumber}</p>
-          <p className="mb-3">🤝 Vendedor: {result.seller}</p>
+          <p className="text-5xl mb-8">• Cartón N° {result.bingoCardNumber} •</p>
+          <p className="mb-6">Asociado N°: {result.clientNumber}</p>
+          <p className="mb-6 text-5xl">Asociado: {result.client}</p>
+          <p className="mb-6">Vendedor: {result.seller}</p>
 
           {/* Mostrar el plan */}
-          <p className="mb-3">💳 Plan: {result.plan}</p>
+          <p className="mb-6">Plan: {result.plan}</p>
 
-          {/* Si el plan es CUOTA, mostrar si está al día */}
+          {/* Si el plan es CUOTA, mostrar si está al día 
           {result.plan === 'CUOTA' && (
-            <p className={`text-5xl mt-4 ${result.quotaUpToDate ? 'text-white' : 'text-red-600'}`}>
-              {result.quotaUpToDate ? '✅ Cuota al día' : '⚠️ Cuota vencida'}
+            <p className={`mt-4 ${result.quotaUpToDate ? 'text-white' : 'text-red-600'}`}>
+              {result.quotaUpToDate ? 'Cuota al día' : 'Cuota vencida'}
             </p>
           )}
+            */}
         </>
       )}
     </div>

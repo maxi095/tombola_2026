@@ -5,7 +5,8 @@ import {
   getSellerPaymentsBySeller,
   deleteSellerPayment,
   cancelSellerPayment,
-  getSellerPaymentById
+  getSellerPaymentById,
+  updateSellerPayment
 } from "../controllers/sellerPayment.controllers.js";
 
 import { authRequired } from "../middlewares/validateToken.js";
@@ -23,5 +24,7 @@ router.delete("/sellerPayments/:id", authRequired, checkRole(["Administrador"]),
 router.put('/cancelSellerPayment/:id', authRequired, checkRole(['Administrador']), cancelSellerPayment);
 
 router.get("/sellerPaymentById/:id", authRequired, checkRole(["Administrador"]), getSellerPaymentById);
+
+router.put('/sellerPayments/:id', authRequired, checkRole(['Administrador']), updateSellerPayment);
 
 export default router;

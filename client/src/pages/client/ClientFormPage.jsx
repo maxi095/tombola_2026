@@ -116,7 +116,7 @@ function ClientFormPage() {
             <label className="label">Email</label>
             <input
               type="email"
-              {...register("email", { required: "El email es requerido" })}
+              {...register("email")}
               className="form-input"
               placeholder="Correo electrónico"
             />

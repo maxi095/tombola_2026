@@ -32,8 +32,8 @@ function ReceiptContent({ payment, label, seller }) {
           <h2 className="text-base font-bold uppercase print:text-sm">
             Club Atlético y Biblioteca NEWELL´S OLD BOYS
           </h2>
-          <p className="text-[13px] text-gray-700 print:text-[11px]">CUIT 30-66814902-9</p>
-          <p className="text-[13px] text-gray-700 print:text-[11px]">
+          <p className="text-[13px] text-black print:text-[11px]">CUIT 30-66814902-9</p>
+          <p className="text-[13px] text-black print:text-[11px]">
             San Martín esq.San Juan - (5974) Laguna Larga - Córdoba
           </p>
         </div>
@@ -45,7 +45,7 @@ function ReceiptContent({ payment, label, seller }) {
           <h1 className="text-base font-semibold print:text-sm">
             Recibo de pago N° {payment.sellerPaymentNumber || "-"}
           </h1>
-          <span className="text-gray-500 text-sm italic print:text-xs">{label}</span>
+          <span className="text-black text-sm italic print:text-xs">{label}</span>
         </div>
       </header>
 
@@ -120,21 +120,21 @@ function ReceiptContent({ payment, label, seller }) {
             <table className="w-full text-sm border border-gray-300 print:text-xs">
               <thead className="bg-gray-100 border-b border-gray-300">
                 <tr>
-                  <th className="text-left px-2 py-1">N° Cheque</th>
-                  <th className="text-left px-2 py-1">Banco</th>
-                  <th className="text-left px-2 py-1">Plaza</th>
-                  <th className="text-left px-2 py-1">Fecha</th>
-                  <th className="text-right px-2 py-1">Importe</th>
+                  <th className="text-left px-2 py-2">N° Cheque</th>
+                  <th className="text-left px-2 py-2">Banco</th>
+                  <th className="text-left px-2 py-2">Plaza</th>
+                  <th className="text-left px-2 py-2">Fecha</th>
+                  <th className="text-right px-2 py-2">Importe</th>
                 </tr>
               </thead>
               <tbody>
                 {payment.checks.map((check, index) => (
                   <tr key={index} className="border-b border-gray-200">
-                    <td className="px-2 py-1">{check.checkNumber}</td>
-                    <td className="px-2 py-1">{check.bank}</td>
-                    <td className="px-2 py-1">{check.branch}</td>
-                    <td className="px-2 py-1">{dayjs(check.date).format("DD/MM/YYYY")}</td>
-                    <td className="px-2 py-1 text-right">{formattedCurrency(check.amount)}</td>
+                    <td className="px-2 py-2">{check.checkNumber}</td>
+                    <td className="px-2 py-2">{check.bank}</td>
+                    <td className="px-2 py-2">{check.branch}</td>
+                    <td className="px-2 py-2">{dayjs(check.date).format("DD/MM/YYYY")}</td>
+                    <td className="px-2 py-2 text-right">{formattedCurrency(check.amount)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -147,11 +147,11 @@ function ReceiptContent({ payment, label, seller }) {
       <footer className="mt-12 flex justify-between print:mt-8">
         <div className="text-center">
           <div className="border-t border-black w-32 mx-auto" />
-          <p className="text-sm text-gray-600 print:text-xs">Firma del Vendedor</p>
+          <p className="text-sm text-black print:text-xs">Firma del Vendedor</p>
         </div>
         <div className="text-center">
           <div className="border-t border-black w-32 mx-auto" />
-          <p className="text-sm text-gray-600 print:text-xs">Firma de la Organización</p>
+          <p className="text-sm text-black print:text-xs">Firma de la Organización</p>
         </div>
       </footer>
     </div>

@@ -13,6 +13,8 @@ function SalePage() {
 
   const [filters, setFilters] = useState({
     saleNumber: "",
+    clientName: "",
+    clientCity:"",
     status: "",
     date: ""
   });
@@ -49,9 +51,60 @@ function SalePage() {
       );
     }
 
+    if (filters.clientName) {
+      // Función para normalizar: quita tildes y pasa a minúsculas
+      const normalizeText = (text) =>
+        text
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase();
+
+      // Palabras a buscar, ya normalizadas
+      const terms = normalizeText(filters.clientName).split(/\s+/);
+
+      temp = temp.filter((sale) => {
+        const client = sale.client;
+        if (!client?.person) return false;
+
+        // Nombre completo normalizado
+        const fullName = normalizeText(
+          `${client.person.firstName} ${client.person.lastName}`
+        );
+
+        // Verifica que todas las palabras del filtro estén en el nombre completo
+        return terms.every((term) => fullName.includes(term));
+      });
+    }
+
+    if (filters.clientCity) {
+
+      // Función para normalizar: quita tildes y pasa a minúsculas
+      const normalizeText = (text) =>
+        text
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase();
+
+      // Palabras a buscar, ya normalizadas
+      const terms = normalizeText(filters.clientCity).split(/\s+/);
+
+      temp = temp.filter((sale) => {
+        const client = sale.client;
+        if (!client?.person?.city) return false;
+
+        // Nombre completo normalizado
+        const cityName = normalizeText(
+          `${client.person.city}`
+        );
+
+        // Verifica que todas las palabras del filtro estén en el nombre completo
+        return terms.every((term) => cityName.includes(term));
+      });
+    }
+
     if (filters.status === "") {
       temp = temp.filter(sale =>
-        sale.status === "Pagado" || sale.status === "Pendiente de pago"
+        sale.status === "Pagado" || sale.status === "Pendiente de pago" || sale.status === "Entregado sin cargo"
       );
     } else {
       temp = temp.filter(sale =>
@@ -112,6 +165,22 @@ function SalePage() {
           placeholder="Filtrar por número de venta"
           value={filters.saleNumber}
           onChange={handleFilterChange}
+        />  
+        <input
+          className="form-input"
+          type="text"
+          name="clientName"
+          placeholder="Nombre asociado"
+          value={filters.clientName}
+          onChange={handleFilterChange}
+        />
+        <input
+          className="form-input"
+          type="text"
+          name="clientCity"
+          placeholder="Localidad asociado"
+          value={filters.clientCity}
+          onChange={handleFilterChange}
         />
         <select
           className="form-input mt-1 mb-3"
@@ -121,6 +190,7 @@ function SalePage() {
         >
           <option value="">Todos</option>
           <option value="Pagado">Pagado</option>
+          <option value="Entregado sin cargo">Entregado sin cargo</option>
           <option value="Pendiente de pago">Pendiente de pago</option>
           <option value="Anulada">Anulada</option>
         </select>
@@ -153,7 +223,9 @@ function SalePage() {
                 <th className="table-cell">Edición</th>
                 <th className="table-cell">N° cartón</th>
                 <th className="table-cell">Vendedor</th>
-                <th className="table-cell">Cliente</th>
+                <th className="table-cell">Asociado</th>
+                <th className="table-cell">Teléfono asociado</th>
+                <th className="table-cell">Localidad</th>
                 <th className="table-cell">Estado</th>
                 <th className="table-cell">Fecha de Venta</th>
                 <th className="table-cell">Acciones</th>
@@ -169,13 +241,16 @@ function SalePage() {
                     {sale.seller?.person?.firstName || "Sin"} {sale.seller?.person?.lastName || ""}
                   </td>
                   <td className="table-cell">
-                    {sale.client?.person?.firstName || "Sin"} {sale.client?.person?.lastName || ""}
+                     {sale.client?.person?.lastName || ""} {sale.client?.person?.firstName || "Sin"}
                   </td>
+                   <td className="table-cell">{sale.client?.person?.phone || "Sin teléfono"}</td>
+                  <td className="table-cell">{sale.client?.person?.city || "Sin localidad"}</td>
                   <td className="table-cell">
                     <span
                       className={`status-label ${
                         sale.status === "Anulada" ? "status-anulada" : 
-                        sale.status === "Pendiente de pago" ? "status-pendiente" : "status-confirmada"
+                        sale.status === "Pendiente de pago" ? "status-pendiente" : 
+                        sale.status === "Pagado" ? "status-confirmada" : "status-sin-cargo"
                       }`}
                     >
                       {sale.status}

@@ -6,7 +6,8 @@ import {
     deleteQuotaRequest,
     updateQuotaRequest,
     getQuotasBySaleRequest,
-    getExpiredQuotasRequest
+    getExpiredQuotasRequest,
+    getQuotasFilterRequest
 } from "../api/quota.js"; // Asegúrate de que la ruta sea correcta
 
 const QuotaContext = createContext();
@@ -32,6 +33,26 @@ export const QuotaProvider = ({ children }) => {
             console.error(error);
         }
     }, []); // Asegúrate de que esto no cambie en futuras renderizaciones
+
+    const getQuotasFilter = useCallback(async ({ page = 1, limit = 10, filters = {}, sortBy } = {}) => {
+    try {
+        const params = {
+        page,
+        limit,
+        ...filters,
+        };
+
+        if (sortBy) params.sortBy = sortBy;
+
+        const res = await getQuotasFilterRequest(params);
+        setQuotas(res.data);
+        return res.data; // ✅ AHORA devuelve los datos esperados
+    } catch (error) {
+        setError(error);
+        console.error(error);
+        return null; // para evitar errores si algo falla
+    }
+    }, []);
 
     const getQuota = async (id) => {
         try {
@@ -106,7 +127,7 @@ export const QuotaProvider = ({ children }) => {
     }, [getQuotas]); // Añadido getQuotas a la lista de dependencias
 
     return (
-        <QuotaContext.Provider value={{ quotas, createQuota, updateQuota, deleteQuota, getQuotas, getQuota, getQuotasBySale, getExpiredQuotas, error }}>
+        <QuotaContext.Provider value={{ quotas, createQuota, updateQuota, deleteQuota, getQuotas, getQuota, getQuotasBySale, getExpiredQuotas, error, getQuotasFilter }}>
             {children}
         </QuotaContext.Provider>
     );

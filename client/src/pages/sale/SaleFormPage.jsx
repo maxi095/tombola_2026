@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useForm, Controller, get } from "react-hook-form";
 import Select from "react-select";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation  } from "react-router-dom";
 
 import { useSales } from "../../context/SaleContext";
 import { useClients } from "../../context/ClientContext";
@@ -37,6 +37,24 @@ function SaleFormPage() {
   
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
 
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const preselectedTab = searchParams.get("tab"); 
+  const preselectedSellerId = searchParams.get("sellerId");
+
+  const normalizeText = (text) =>
+    text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+  const customFilterOption = (option, rawInput) => {
+    const input = normalizeText(rawInput);
+    const terms = input.split(/\s+/); // separa por espacios
+
+    const label = normalizeText(option.label);
+
+    // verifica que todas las palabras estén presentes en el label
+    return terms.every(term => label.includes(term));
+  };
+
   useEffect(() => {
   const initializeSaleForm = async () => {
     if (editions.length) {
@@ -56,11 +74,21 @@ function SaleFormPage() {
         getClients(),
         getSellers(),
       ]);
+
+      if (preselectedSellerId && sellers.length) {
+        const seller = sellers.find((s) => s._id === preselectedSellerId);
+        if (seller) {
+          setValue("seller", {
+            value: seller._id,
+            label: `${seller.person.firstName} ${seller.person.lastName}`,
+          });
+        }
+      }
     }
   };
 
   initializeSaleForm();
-}, [editions, setValue]);
+}, [editions, setValue, preselectedSellerId]);
 
 
   const onSubmit = handleSubmit(async (data) => {
@@ -78,7 +106,12 @@ function SaleFormPage() {
     } else {
       await createSale(payload);
     }
-    navigate("/sales");
+
+    if (preselectedSellerId) {
+      navigate(`/seller/view/${preselectedSellerId}?tab=${preselectedTab || "ventas"}`);
+    } else {
+      navigate("/sales");
+    }
   });
 
   const handleClientCreated = async (newClient) => {
@@ -127,6 +160,7 @@ function SaleFormPage() {
               render={({ field }) => (
                 <Select
                   {...field}
+                  isDisabled={!!preselectedSellerId} // ✅ Bloquear si vino seteado
                   styles={customSelectStyles}
                   options={sellers.map((s) => ({
                     value: s._id,
@@ -152,6 +186,7 @@ function SaleFormPage() {
                         value: c._id,
                         label: `(${c.person.document}) ${c.person.firstName} ${c.person.lastName}`,
                       }))}
+                      filterOption={customFilterOption}
                     />
                   )}
                 />

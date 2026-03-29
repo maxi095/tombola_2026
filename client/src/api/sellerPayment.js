@@ -19,3 +19,5 @@ export const cancelSellerPaymentRequest = (id, payment) => axios.put(`/cancelSel
 
 export const getSellerPaymentByIdRequest = (id) =>
   axios.get(`/sellerPaymentById/${id}`);
+
+export const updateSellerPaymentRequest = (id, payment) => axios.put(`/sellerPayments/${id}`, payment)

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useSellers } from "../../context/SellerContext";
 import { useSales } from "../../context/SaleContext";
 import { useQuotas } from "../../context/QuotaContext";
@@ -17,8 +17,11 @@ import { useEditionFilter } from "../../context/EditionFilterContext";
 
 function SellerViewPage() {
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("general");
+  const searchParams = new URLSearchParams(location.search);
+  const defaultTab = searchParams.get("tab") || "general";
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const { getSeller } = useSellers();
   const { getSalesBySeller } = useSales();
   const { getQuotasBySale } = useQuotas();
@@ -43,6 +46,12 @@ function SellerViewPage() {
 
   const { selectedEdition } = useEditionFilter();
   const [filteredDetail, setFilteredDetail] = useState([]);
+
+  const [filterBingoCard, setFilterBingoCardNumber] = useState("");
+
+  const handleNuevaVenta = (sellerId) => {
+    navigate(`/sale/new?sellerId=${sellerId}`);
+  };
 
   useEffect(() => {
     const loadSellerData = async () => {
@@ -109,6 +118,11 @@ function SellerViewPage() {
 
   }, [selectedEdition, loading, bingoCards, sales, sellerPayments, quotasBySale]);
 
+  useEffect(() => {
+    const tab = new URLSearchParams(location.search).get("tab") || "general";
+    setActiveTab(tab);
+  }, [location.search]);
+
 
   const updateBingoCards = async () => {
     const cards = await getBingoCardsBySeller(id);
@@ -123,21 +137,43 @@ function SellerViewPage() {
   const commissionRate = seller.commissionRate || 0;
 
   let totalPagado = 0;
-  for (const quotas of Object.values(fQuotasBySale)) {
+for (const [saleId, quotas] of Object.entries(fQuotasBySale)) {
+  // Buscar la venta correspondiente
+  const sale = fSales.find(s => s._id === saleId);
+  
+  // Solo sumar si la venta existe y NO está anulada
+  if (sale && sale.status !== "Anulada") {
     totalPagado += quotas.reduce(
       (acc, q) => acc + (q.paymentDate ? q.amount : 0),
       0
     );
   }
+}
+
+    const getAmount = (payment) => 
+    (payment.cashAmount || 0) +
+    (payment.transferAmount || 0) +
+    (payment.tarjetaUnicaAmount || 0) +
+    (payment.checkAmount || 0);
 
   const totalPagosVendedorActivos = fSellerPayments
     .filter((payment) => payment.status !== "Anulado")
-    .reduce((acc, payment) => acc + payment.cashAmount + payment.transferAmount + payment.checkAmount, 0);
+    .reduce((acc, payment) => acc + getAmount(payment), 0);
 
 
   const totalComisiones = fSellerPayments
     .filter((payment) => payment.status !== "Anulado")
     .reduce((acc, payment) => acc + (payment.commissionAmount ?? 0), 0);
+
+  const filteredSales = fSales.filter(sale => {
+    const filterNumber =
+      filterBingoCard === "" ||
+      String(sale.bingoCard?.number || "") === filterBingoCard;
+
+      const filterStatus = sale.status !== "Anulada";
+
+    return filterNumber && filterStatus;
+  });
 
 
     const handleCancel = async (paymentId) => {
@@ -193,25 +229,41 @@ function SellerViewPage() {
         <div className="flex space-x-4 mb-6 border-b">
           <button
             className={`px-4 py-2 ${activeTab === "general" ? "border-b-4 border-blue-500 font-semibold" : "text-gray-500"}`}
-            onClick={() => setActiveTab("general")}
+            onClick={() => {
+              setActiveTab("general");
+              searchParams.set("tab", "general");
+              navigate(`${location.pathname}?${searchParams.toString()}`);
+            }}
           >
             General
           </button>
           <button
             className={`px-4 py-2 ${activeTab === "cartones" ? "border-b-4 border-blue-500 font-semibold" : "text-gray-500"}`}
-            onClick={() => setActiveTab("cartones")}
+            onClick={() => {
+              setActiveTab("cartones");
+              searchParams.set("tab", "cartones");
+              navigate(`${location.pathname}?${searchParams.toString()}`);
+            }}
           >
             Cartones
           </button>
           <button
             className={`px-4 py-2 ${activeTab === "ventas" ? "border-b-4 border-blue-500 font-semibold" : "text-gray-500"}`}
-            onClick={() => setActiveTab("ventas")}
+            onClick={() => {
+              setActiveTab("ventas");
+              searchParams.set("tab", "ventas");
+              navigate(`${location.pathname}?${searchParams.toString()}`);
+            }}
           >
             Ventas realizadas
           </button>
           <button
             className={`px-4 py-2 ${activeTab === "pagos" ? "border-b-4 border-blue-500 font-semibold" : "text-gray-500"}`}
-            onClick={() => setActiveTab("pagos")}
+            onClick={() => {
+              setActiveTab("pagos");
+              searchParams.set("tab", "pagos");
+              navigate(`${location.pathname}?${searchParams.toString()}`);
+            }}
           >
             Pagos del vendedor
           </button>
@@ -229,9 +281,9 @@ function SellerViewPage() {
   
             <h3 className="title mt-10 mb-4">Resumen</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-6 rounded-xl shadow">
-              <p><span className="font-semibold">Total ventas:</span> ${totalPagado.toFixed(2)}</p>
+              <p><span className="font-semibold">Total pagos vendedores:</span> ${totalPagosVendedorActivos.toFixed(2)}</p>
               <p><span className="font-semibold">Total comisiones:</span> ${totalComisiones.toFixed(2)}</p>
-              <p><span className="font-semibold">Total pagos:</span> ${totalPagosVendedorActivos.toFixed(2)}</p>
+              <p><span className="font-semibold">Conciliación ventas:</span> ${totalPagado.toFixed(2)}</p>
             </div>
           </>
         )}
@@ -306,60 +358,97 @@ function SellerViewPage() {
         {/* VENTAS REALIZADAS */}
         {activeTab === "ventas" && (
           <>
-            {fSales.length === 0 ? (
+            {/* Filtros + botón */}
+              <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-4">
+                <div className="flex gap-2 flex-wrap">
+                  <input
+                    type="text"
+                    placeholder="Buscar por N° de cartón"
+                    value={filterBingoCard}
+                    onChange={(e) => setFilterBingoCardNumber(e.target.value)}
+                    className="form-input"
+                  />
+                </div>
+
+                <button
+                  onClick={() => navigate(`/sale/new?sellerId=${id}&tab=ventas`)}
+                  className="btn-primary mb-3"
+                >
+                  Nueva venta
+                </button>
+              </div>
+
+            {/* Si no hay ventas después del filtro */}
+            {filteredSales.length === 0 ? (
               <p className="sub-title mt-10 mb-4">No hay ventas registradas.</p>
             ) : (
               <>
-                {/* Contador de registros */}
                 <div className="record-count">
-                  Mostrando <strong>{fSales.length}</strong> ventas
+                  Mostrando <strong>{filteredSales.length}</strong> ventas
                 </div>
-              <div className="table-wrapper">
-                <table className="data-table">
-                  <thead className="table-head">
-                    <tr>
-                      <th className="table-cell">N° venta</th>
-                      <th className="table-cell">Edición</th>
-                      <th className="table-cell">Cartón</th>
-                      <th className="table-cell">N° asociado</th>
-                      <th className="table-cell">Asociado</th>
-                      <th className="table-cell">Fecha de venta</th>
-                      <th className="table-cell">Estado</th>
-                      <th className="table-cell">Total Pagado</th>
-                      <th className="table-cell">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {fSales.map((sale) => {
-                      const quotas = quotasBySale[sale._id] || [];
-                      const pagado = quotas.reduce(
-                        (acc, q) => acc + (q.paymentDate ? q.amount : 0),
-                        0
-                      );
-                      return (
-                        <tr key={sale._id} className="border-t hover:bg-gray-50">
-                          <td className="table-cell">{sale.saleNumber || "N/A"}</td>
-                          <td className="table-cell">{sale.edition?.name || "N/A"}</td>
-                          <td className="table-cell">{sale.bingoCard?.number || "N/A"}</td>
-                          <td className="table-cell">{sale.client?.clientNumber}</td>
-                          <td className="table-cell">{sale.client?.person?.firstName} {sale.client?.person?.lastName}</td>
-                          <td className="table-cell">{dayjs(sale.createdAt).format("DD/MM/YYYY")}</td>
-                          <td className="table-cell">{sale.status}</td>
-                          <td className="table-cell">${pagado.toFixed(2)}</td>
-                          <td className="table-cell">
-                            <button
-                              onClick={() => navigate(`/sale/view/${sale._id}`)}
-                              className="btn-view"
-                            >
-                              Ver detalle
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+
+                <div className="table-wrapper">
+                  <table className="data-table">
+                    <thead className="table-head">
+                      <tr>
+                        <th className="table-cell">Edición</th>
+                        <th className="table-cell">Cartón</th>
+                        <th className="table-cell">Asociado</th>
+                        <th className="table-cell">Fecha de venta</th>
+                        <th className="table-cell">Estado</th>
+                        <th className="table-cell">Cuotas Pagas</th>
+                        <th className="table-cell">Total Pagado</th>
+                        <th className="table-cell">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredSales
+                        .slice()
+                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                        .map((sale) => {
+                          const quotas = quotasBySale[sale._id] || [];
+                          const pagado = quotas.reduce(
+                            (acc, q) => acc + (q.paymentDate ? q.amount : 0),
+                            0
+                          );
+                          const cuotasPagas = quotas.filter(q => q.paymentDate).length;
+                          return (
+                            <tr key={sale._id} className="border-t hover:bg-gray-50">
+                              <td className="table-cell">{sale.edition?.name || "N/A"}</td>
+                              <td className="table-cell">{sale.bingoCard?.number || "N/A"}</td>
+                              <td className="table-cell">
+                                {sale.client?.person?.firstName} {sale.client?.person?.lastName}
+                              </td>
+                              <td className="table-cell">
+                                {dayjs.utc(sale.saleDate).format("DD/MM/YYYY") || "N/A"}
+                              </td>
+                              <td className="table-cell">
+                                <span
+                                  className={`status-label ${
+                                    sale.status === "Anulada" ? "status-anulada" : 
+                                    sale.status === "Pendiente de pago" ? "status-pendiente" : 
+                                    sale.status === "Pagado" ? "status-confirmada" : "status-sin-cargo"
+                                  }`}
+                                >
+                                  {sale.status}
+                                </span>
+                              </td>
+                              <td className="table-cell">{cuotasPagas}</td>
+                              <td className="table-cell">${pagado.toFixed(2)}</td>
+                              <td className="table-cell">
+                                <button
+                                  onClick={() => navigate(`/sale/view/${sale._id}`)}
+                                  className="btn-view"
+                                >
+                                  Ver detalle
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
               </>
             )}
           </>
@@ -396,9 +485,9 @@ function SellerViewPage() {
                       <tr key={payment._id} className="border-t hover:bg-gray-50">
                         <td className="table-cell">{payment.sellerPaymentNumber || "Sin número"}</td>
                         <td className="table-cell">{payment.edition?.name || "N/A"}</td>
-                        <td className="table-cell">${(payment.cashAmount + payment.transferAmount + payment.checkAmount ?? 0).toFixed(2)}</td>
+                        <td className="table-cell">${getAmount(payment).toFixed(2)}</td>
                         <td className="table-cell">${(payment.commissionAmount ?? 0).toFixed(2)}</td>
-                        <td className="table-cell">${(((payment.cashAmount ?? 0) + (payment.transferAmount ?? 0) + (payment.checkAmount ?? 0)) - (payment.commissionAmount ?? 0)).toFixed(2)}</td>
+                        <td className="table-cell">${(getAmount(payment) - (payment.commissionAmount || 0)).toFixed(2)}</td>
                         <td className="table-cell">{dayjs(payment.date).format("DD/MM/YYYY")}</td>
                         <td className="table-cell">
                           {payment.status === "Anulado" ? (

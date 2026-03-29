@@ -182,19 +182,28 @@ export const getBingoCardStatus = async (req, res) => {
   
       const quotas = sale ? await Quota.find({ sale: sale._id }) : [];
   
-      // Comprobar si el plan es "CUOTA" o "PAGO CONTADO"
-
+      
+      {/* 
+      Comprobar si el plan es "CUOTA" o "PAGO CONTADO" (valida que todas las cuotas tengan misma fecha de pago)
       const arePaymentDatesEqual = quotas.every(quota => 
         quota.paymentDate === null ||
         dayjs(quota.paymentDate).isSame(dayjs(quotas[0].paymentDate), 'day')
       );
-      const plan = quotas.some(quota => quota.paymentDate === null) ? 'CUOTA' : (arePaymentDatesEqual ? 'PAGO CONTADO' : 'CUOTA');
+      const plan = quotas.some(quota => quota.paymentDate === null) ? 'Pago en cuotas' : (arePaymentDatesEqual ? 'Pago contado' : 'Pago en cuotas');
+
+       */}
+
+       // Si todas las cuotas están pagas => pago contado
+      const allQuotasPaid = quotas.length > 0 && quotas.every(quota => quota.paymentDate !== null);
+
+      const plan = allQuotasPaid ? 'Pago contado' : 'Pago en cuotas';
   
       // Verificar si las cuotas están al día (sin vencimiento)
       const now = dayjs();
       const hasDebt = quotas.some(q =>
         dayjs(q.dueDate).isBefore(now, 'day') && q.paymentDate === null
       );
+
   
       // Respuesta con la información de la venta y el estado del cartón
       const response = {

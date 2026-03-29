@@ -4,6 +4,7 @@ import { useQuotas } from "../../context/QuotaContext";
 import { useParams, useNavigate } from "react-router-dom";
 import QuotaPaymentModal from "../../components/QuotaPaymentModal";
 import FullPaymentModal from "../../components/FullPaymentModal";
+import NoChargeModal from "../../components/NoChargeModal";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 
@@ -19,6 +20,11 @@ function SaleViewPage() {
    const [isFullModalOpen, setIsFullModalOpen] = useState(false);
   const params = useParams();
   const navigate = useNavigate();
+
+  const [isNoChargeModalOpen, setIsNoChargeModalOpen] = useState(false);
+
+  const openNoChargeModal = () => setIsNoChargeModalOpen(true);
+  const closeNoChargeModal = () => setIsNoChargeModalOpen(false);
 
   useEffect(() => {
     const loadSale = async () => {
@@ -127,6 +133,66 @@ function SaleViewPage() {
     }
   };
 
+  const handleNoChargeSave = async (data) => {
+    try {
+      // 1) Marcar todas las cuotas como pagadas
+      const updatedQs = quotas.map((q) => ({
+        ...q,
+        paymentDate: data.date,
+        paymentMethod: "Entregado sin cargo",
+      }));
+      await Promise.all(updatedQs.map((q) => updateQuota(q._id, q)));
+
+      // 2) Actualizar la venta
+      await updateSale(sale._id, {
+        status: "Entregado sin cargo",
+        lastFullPayment: data.date,
+        fullPaymentMethod: "Otro",
+      });
+
+      // 3) Recargar cuotas
+      const refreshed = await getQuotasBySale(sale._id);
+      setQuotas(refreshed);
+
+      alert("Venta registrada como entregada sin cargo.");
+    } catch (err) {
+      console.error(err);
+      alert("Error al registrar la entrega sin cargo.");
+    } finally {
+      closeNoChargeModal();
+    }
+  };
+
+  const handleUndoNoCharge = async () => {
+    try {
+      if (!confirm("¿Estás seguro de que querés anular la entrega sin cargo?")) return;
+
+      // 1) Dejar todas las cuotas como impagas
+      const updatedQs = quotas.map((q) => ({
+        ...q,
+        paymentDate: null,
+        paymentMethod: "",
+      }));
+      await Promise.all(updatedQs.map((q) => updateQuota(q._id, q)));
+
+      // 2) Actualizar el estado de la venta
+      await updateSale(sale._id, {
+        status: "Pendiente de pago",
+        lastFullPayment: null,
+        fullPaymentMethod: "",
+      });
+
+      // 3) Recargar cuotas
+      const refreshed = await getQuotasBySale(sale._id);
+      setQuotas(refreshed);
+
+      alert("Entrega sin cargo anulada correctamente. La venta vuelve a estar pendiente de pago.");
+    } catch (err) {
+      console.error(err);
+      alert("Error al anular la entrega sin cargo.");
+    }
+  };
+
   const totalVenta = quotas.reduce((acc, q) => acc + (q.amount || 0), 0);
   const totalPagado = quotas.reduce((acc, q) => acc + (q.paymentDate ? q.amount : 0), 0);
   const commissionRate = sale.seller?.commissionRate || 0;
@@ -164,49 +230,59 @@ function SaleViewPage() {
 
   {quotas.length > 0 ? (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      {quotas.map((quota) => (
-        <div
-          key={quota._id}
-          className={`rounded-xl shadow-md p-4 border ${
-            quota.paymentDate ? "border-green-400 bg-green-100" : "border-gray-300 bg-white"
-          }`}
-        >
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">Cuota #{quota.quotaNumber}</h3>
-          <p><span className="font-semibold">Vencimiento:</span> {dayjs.utc(quota.dueDate).format('DD/MM/YYYY')}</p>
-          <p><span className="font-semibold">Monto:</span> ${quota.amount}</p>
-          <p><span className="font-semibold">Pago:</span> {quota.paymentDate ? dayjs.utc(quota.paymentDate).format('DD/MM/YYYY') : "Pendiente"}</p>
-          <p><span className="font-semibold">Método:</span> {quota.paymentMethod || "Pendiente"}</p>
+      {quotas.map((quota) => {
+        const isPaid = Boolean(quota.paymentDate);
+        const isNoCharge = quota.paymentMethod === "Entregado sin cargo";
 
-          {sale.status !== "Anulada" ? (
-            <div className="mt-4 flex gap-2">
-              {quota.paymentDate ? (
-                <button
-                  onClick={() => handleCancelPayment(quota)}
-                  className="btn-cancel flex items-center gap-1"
-                >
-                Anular Pago
-                </button>
-              ) : (
-                <button
-                  onClick={() => openModal(quota)}
-                  className="btn-registrar"
-                >
-                  Registrar Pago
-                </button>
-              )}
-            </div>
-          ) : (
-            <p className="text-sm text-gray-400 mt-2">No disponible</p>
-          )}
-        </div>
-      ))}
+        // Determinar color de la tarjeta
+        const cardColor = isNoCharge
+          ? "border-yellow-400 bg-yellow-100"
+          : isPaid
+          ? "border-green-400 bg-green-100"
+          : "border-gray-300 bg-white";
+
+        return (
+          <div
+            key={quota._id}
+            className={`rounded-xl shadow-md p-4 border ${cardColor}`}
+          >
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              Cuota #{quota.quotaNumber}
+            </h3>
+            <p><span className="font-semibold">Vencimiento:</span> {dayjs.utc(quota.dueDate).format('DD/MM/YYYY')}</p>
+            <p><span className="font-semibold">Monto:</span> ${quota.amount}</p>
+            <p><span className="font-semibold">Pago:</span> {isPaid ? dayjs.utc(quota.paymentDate).format('DD/MM/YYYY') : "Pendiente"}</p>
+            <p><span className="font-semibold">Método:</span> {quota.paymentMethod || "Pendiente"}</p>
+
+            {sale.status !== "Anulada" && !isNoCharge ? (
+              <div className="mt-4 flex gap-2">
+                {isPaid ? (
+                  <button
+                    onClick={() => handleCancelPayment(quota)}
+                    className="btn-cancel flex items-center gap-1"
+                  >
+                    Anular Pago
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => openModal(quota)}
+                    className="btn-registrar"
+                  >
+                    Registrar Pago
+                  </button>
+                )}
+              </div>
+            ) : null}
+          </div>
+        );
+      })}
     </div>
   ) : (
     <p className="empty-state">No hay cuotas asociadas a esta venta.</p>
   )}
   
-  {/* Botón de Pago Completo */}
-      {todasImpagas && (
+      {/* Botón de Pago Completo y Entregado sin cargo*/}
+      {todasImpagas && sale.status !== "Anulada" && (
         <div className="mb-4">
           <button
             onClick={openFullModal}
@@ -214,8 +290,25 @@ function SaleViewPage() {
           >
             Pago de Contado
           </button>
+          
+          <button
+            onClick={openNoChargeModal}
+            className="ml-4 btn-primary"
+          >
+            Entregado sin cargo
+          </button>
         </div>
       )}
+
+      {sale.status === "Entregado sin cargo" && (
+        <button
+          onClick={handleUndoNoCharge}
+          className="btn-primary"
+        >
+          Anular entrega sin cargo
+        </button>
+      )}
+
 
   <div className="mt-6">
     <button onClick={handleCancel} className="btn-view">
@@ -230,13 +323,18 @@ function SaleViewPage() {
     onSave={handleSaveQuota}
   />
   <FullPaymentModal
-        isOpen={isFullModalOpen}
-        onClose={closeFullModal}
-        quotas={quotas}
-        saleId={sale._id}
-        bingoCardId={sale.bingoCard._id}
-        onSave={handleFullPaymentSave}
-      />
+    isOpen={isFullModalOpen}
+    onClose={closeFullModal}
+    quotas={quotas}
+    saleId={sale._id}
+    bingoCardId={sale.bingoCard._id}
+    onSave={handleFullPaymentSave}
+  />
+  <NoChargeModal
+    isOpen={isNoChargeModalOpen}
+    onClose={closeNoChargeModal}
+    onSave={handleNoChargeSave}
+  />
 </div>
   );
 }

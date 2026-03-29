@@ -25,6 +25,9 @@ export const getDashboard = async (req, res) => {
         totalBingoCardsSold,
         totalSales,
         totalSalesPaid,
+        totalSalesNoCharge,
+        totalSalesPending,
+        totalSalesCanceled,
         totalBingoCardsAssigned, 
       ] = await Promise.all([
         Edition.findById(editionId),
@@ -32,6 +35,9 @@ export const getDashboard = async (req, res) => {
         BingoCard.countDocuments({ edition: editionId, status: 'Vendido' }),
         Sale.countDocuments({ edition: editionId }),
         Sale.countDocuments({ edition: editionId, status: 'Pagado' }),
+        Sale.countDocuments({ edition: editionId, status: 'Entregado sin cargo' }),
+        Sale.countDocuments({ edition: editionId, status: 'Pendiente de pago' }),
+        Sale.countDocuments({ edition: editionId, status: 'Anulada' }),
         BingoCard.countDocuments({ 
           edition: editionId, 
           seller: { $exists: true, $ne: null }   // filtra los que tienen seller asignado
@@ -103,7 +109,17 @@ export const getDashboard = async (req, res) => {
             totalTransfer: { $sum: '$transferAmount' },
             totalCheck: { $sum: '$checkAmount' },
             totalTarjetaUnica: { $sum: '$tarjetaUnicaAmount' },
-            totalCommission: { $sum: '$commissionAmount' }
+            totalCommission: { $sum: '$commissionAmount' },
+            totalCommissionCash: {
+              $sum: {
+                $cond: [{ $eq: ['$commissionType', 'Efectivo'] }, '$commissionAmount', 0]
+              }
+            },
+            totalCommissionTransfer: {
+              $sum: {
+                $cond: [{ $eq: ['$commissionType', 'Transferencia'] }, '$commissionAmount', 0]
+              }
+            }
           }
         }
       ]);
@@ -113,13 +129,15 @@ export const getDashboard = async (req, res) => {
       totalTransfer: 0,
       totalCheck: 0,
       totalTarjetaUnica: 0,
-      totalCommission: 0
+      totalCommission: 0,
+      totalCommissionCash: 0,
+      totalCommissionTransfer: 0
     };
 
     res.json({
       edition: editionExists.name,
       edicionId: editionExists._id,
-      expectedRevenueEdition: editionExists.quantityCartons * editionExists.cost,
+      expectedRevenueEdition: (editionExists.quantityCartons - totalSalesNoCharge) * editionExists.cost,
       bingoCards: {
         total: totalBingoCards,
         sold: totalBingoCardsSold,
@@ -129,7 +147,9 @@ export const getDashboard = async (req, res) => {
       sales: {
         total: totalSales,
         paid: totalSalesPaid,
-        pending: totalSales - totalSalesPaid
+        noCharge: totalSalesNoCharge,
+        pending: totalSalesPending,
+        canceled: totalSalesCanceled
       },
       quotas: {
         total: totalQuotas,
@@ -144,7 +164,10 @@ export const getDashboard = async (req, res) => {
         check: pagosVendedores.totalCheck,
         tarjetaUnica: pagosVendedores.totalTarjetaUnica,
         total: pagosVendedores.totalCash + pagosVendedores.totalTransfer + pagosVendedores.totalCheck + pagosVendedores.totalTarjetaUnica,
-        commissions: pagosVendedores.totalCommission
+        commissions: pagosVendedores.totalCommission,
+        totalCommissionCash: pagosVendedores.totalCommissionCash,
+        totalCommissionTransfer: pagosVendedores.totalCommissionTransfer
+
       }
     });
 

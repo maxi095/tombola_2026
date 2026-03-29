@@ -99,6 +99,10 @@
     @apply text-green-600; /* Confirmada */
   }
 
+  .status-sin-cargo {
+    @apply text-cyan-600; /* Confirmada */
+  }
+
   /* ------------------ Barra de Encabezado ------------------ */
   .header-bar {
     @apply flex justify-between items-center mb-6;
@@ -330,5 +334,34 @@
   .break-after-page {
     break-after: page;
     page-break-after: always; /* Para compatibilidad con navegadores antiguos */
+  }
+
+  * {
+    color: black !important;
+    border-color: black !important;
+  }
+
+  th, td {
+    color: black !important;
+    border-color: black !important;
+  }
+
+  .text-red-600 {
+    color: black !important;
+  }
+
+  .bg-gray-100 {
+    background-color: white !important;
+  }
+
+  .border-gray-300,
+  .border-gray-200 {
+    border-color: black !important;
+  }
+
+  .text-gray-700,
+  .text-gray-600,
+  .text-gray-500 {
+    color: black !important;
   }
 }

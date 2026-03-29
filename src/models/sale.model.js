@@ -24,7 +24,7 @@ const saleSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pendiente de pago', 'Pagado', 'Anulada'],
+        enum: ['Pendiente de pago', 'Pagado', 'Anulada', 'Entregado sin cargo'],
         default: 'Pendiente de pago'
     },
     saleNumber: {

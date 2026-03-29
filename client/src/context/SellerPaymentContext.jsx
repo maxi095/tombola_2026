@@ -5,7 +5,8 @@ import {
   createSellerPaymentRequest,
   deleteSellerPaymentRequest,
   cancelSellerPaymentRequest,
-  getSellerPaymentByIdRequest
+  getSellerPaymentByIdRequest,
+  updateSellerPaymentRequest
 } from '../api/sellerPayment';
 
 const SellerPaymentContext = createContext();
@@ -53,6 +54,16 @@ export const SellerPaymentProvider = ({ children }) => {
     }
   };
 
+  const updateSellerPayment = async (id, updates) => {
+    try {
+      const res = await updateSellerPaymentRequest(id, updates);
+      return res.data; // Esto actualiza el componente
+    } catch (error) {
+      console.error("Error actualizando el pago de vendedor:", error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     getSellerPayments();
   }, []);
@@ -66,7 +77,8 @@ export const SellerPaymentProvider = ({ children }) => {
         createSellerPayment,
         deleteSellerPayment,
         cancelSellerPayment,
-        getSellerPaymentById
+        getSellerPaymentById,
+        updateSellerPayment
       }}
     >
       {children}

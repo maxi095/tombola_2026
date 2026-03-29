@@ -9,6 +9,9 @@ export default function DashboardCartones() {
   const { dashboardData, loading, error, getDashboard } = useDashboard();
   const { selectedEdition } = useEditionFilter();
 
+  const [showRecaudoDetalle, setShowRecaudoDetalle] = useState(false);
+  const [showComisionesDetalle, setShowComisionesDetalle] = useState(false);
+
  
   // Cargar datos del dashboard según edición
   useEffect(() => {
@@ -41,6 +44,8 @@ export default function DashboardCartones() {
   const cartonesTotales = bingoCards?.total || 0;
   const cartonesAsignados = bingoCards?.totalAssigned || 0;
   const cartonesPagados = sales?.paid || 0;
+  const cartonesSinCargo = sales?.noCharge || 0;
+  const cartonesPendientePago = sales?.pending || 0;
   const cuotasVencidas = quotas?.overdue || 0;
   const cuotasPagas = quotas?.paid || 0;
   const dineroCuotasPagas = quotas?.totalPaidAmount || 0;
@@ -52,79 +57,115 @@ export default function DashboardCartones() {
   const dineroRecaudado = sellerPayments?.total || 0;
   const dineroEsperado = expectedRevenueEdition || 0;
   const comisiones = sellerPayments?.commissions || 0;
+  const comisionesEfectivo = sellerPayments?.totalCommissionCash || 0;
+  const comisionesTransferencia = sellerPayments?.totalCommissionTransfer || 0;
+
+
+
 
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+    <div className="p-6 max-w-6xl mx-auto">
+  <h1 className="text-3xl font-bold mb-6">Dashboard edición: {edition}</h1>
 
-      {editionId && (
-        <>
-          <h2 className="text-xl font-semibold mb-4">
-            Estadísticas de la edición: {edition}
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+  {editionId && (
+    <>
+      <section className="mb-6">
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <h3 className="text-lg font-semibold mb-2 text-gray-700">Cartones</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <KPI title="Total cartones" value={cartonesTotales} color="gray" />
+            <KPI title="Asignados" value={cartonesAsignados} color="blue" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <KPI
-              title="Cartones Vendidos"
+              title="Vendidos"
               value={`${cartonesVendidos} / ${cartonesTotales}`}
               progress={cartonesTotales ? cartonesVendidos / cartonesTotales : 0}
               color="blue"
             />
             <KPI
-              title="Cartones Pagados"
-              value={`${cartonesPagados} / ${cartonesVendidos}`}
-              progress={cartonesVendidos ? cartonesPagados / cartonesVendidos : 0}
-              color="blue"
-            />   
-            <KPI title="Cartones asignados" value={cartonesAsignados} color="red" />
-            <KPI title="Cuotas Vencidas" value={cuotasVencidas} color="red" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <KPI
-              title="Dinero recaudado pago vendedores"
-              value={`$${dineroRecaudado.toLocaleString()} / ${dineroEsperado.toLocaleString()}`}
-              progress={dineroEsperado ? dineroRecaudado / dineroEsperado : 0}
-              color="indigo"
-            />
-            <KPI
-              title="Comisiones"
-              value={`$${comisiones.toLocaleString()}`}
-              color="yellow"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <KPI
-              title="Recaudado en Efectivo"
-              value={`$${dineroRecaudadoEfectivo.toLocaleString()}`}
+              title="Pagados"
+              value={cartonesPagados}
               color="green"
             />
             <KPI
-              title="Recaudado por Transferencia"
-              value={`$${dineroRecaudadoTransferencia.toLocaleString()}`}
-              color="blue"
+              title="Entregados sin cargo"
+              value={cartonesSinCargo}
+              color="yellow"
             />
             <KPI
-              title="Recaudado por Cheque"
-              value={`$${dineroRecaudadoCheque.toLocaleString()}`}
-              color="gray"
-            />
-            <KPI
-              title="Recaudado por Tarjeta única"
-              value={`$${dineroRecaudadoTarjetaUnica.toLocaleString()}`}
-              color="gray"
+              title="Pendiente de pago"
+              value={cartonesPendientePago}
+              color="red"
             />
           </div>
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <KPI title="Conciliación por cuotas pagas" value={`$${dineroCuotasPagas.toLocaleString()}`} color="green" />
-            <KPI title="Cuotas pagas" value={cuotasPagas} color="green" />
+      <section className="mb-6">
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <h3 className="text-lg font-semibold mb-1 text-gray-700">Resumen de pagos</h3>
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
+            {/* KPI que se puede expandir */}
+            <div onClick={() => setShowRecaudoDetalle(prev => !prev)} className="cursor-pointer">
+              <KPI
+                title="Recaudado"
+                value={`$${dineroRecaudado.toLocaleString()} / ${dineroEsperado.toLocaleString()}`}
+                progress={dineroEsperado ? dineroRecaudado / dineroEsperado : 0}
+                color="indigo"
+              />
+            </div>
+            {showRecaudoDetalle && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                <KPI title="Efectivo" value={`$${dineroRecaudadoEfectivo.toLocaleString()}`} color="green" />
+                <KPI title="Transferencia" value={`$${dineroRecaudadoTransferencia.toLocaleString()}`} color="blue" />
+                <KPI title="Cheque" value={`$${dineroRecaudadoCheque.toLocaleString()}`} color="gray" />
+                <KPI title="Tarjeta única" value={`$${dineroRecaudadoTarjetaUnica.toLocaleString()}`} color="gray" />
+              </div>
+            )}       
           </div>
-        </>
-      )}
-    </div>
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
+            {/* KPI clickeable */}
+            <div onClick={() => setShowComisionesDetalle(prev => !prev)} className="cursor-pointer">
+              <KPI
+                title="Comisiones pagadas"
+                value={`$${comisiones.toLocaleString()}`}
+                color="yellow"
+              />
+            </div>
+            {/* Detalle expandible */}
+            {showComisionesDetalle && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                <KPI
+                  title="Comisión en efectivo"
+                  value={`$${comisionesEfectivo.toLocaleString()}`}
+                  color="green"
+                />
+                <KPI
+                  title="Comisión por transferencia"
+                  value={`$${comisionesTransferencia.toLocaleString()}`}
+                  color="blue"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="mb-6">
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <h3 className="text-lg font-semibold mb-2 text-gray-700">Cuotas</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <KPI title="Total recaudado por cuotas" value={`$${dineroCuotasPagas.toLocaleString()}`} color="green" />
+            <KPI title="Cuotas pagas" value={cuotasPagas} color="green" />
+            <KPI title="Cuotas vencidas" value={cuotasVencidas} color="red" />
+          </div>
+        </div>
+      </section>
+    </>
+  )}
+</div>
   );
 
   // Componente KPI

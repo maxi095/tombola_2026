@@ -3,6 +3,10 @@ import axios from './axios';
 // Obtener todas las cuotas
 export const getQuotasRequest = () => axios.get('/quotas');
 
+export const getQuotasFilterRequest = (params = {}) => {
+  return axios.get('/quotasList', { params });
+};
+
 // Obtener una cuota por ID
 export const getQuotaRequest = (id) => axios.get(`/quota/${id}`);
 

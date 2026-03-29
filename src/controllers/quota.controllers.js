@@ -12,6 +12,85 @@ export const getQuotas = async (req, res) => {
     }
 };
 
+// Obtener cuotas con paginación y filtros
+export const getQuotasV2 = async (req, res) => {
+  try {
+    // Paginación
+    const page = parseInt(req.query.page) || 1; // Página actual
+    const limit = parseInt(req.query.limit) || 10; // Cuotas por página
+    const skip = (page - 1) * limit;
+
+    // Filtros
+    const filter = {};
+
+    // Filtro por estado de pago
+    if (req.query.paid === 'true') {
+      filter.paymentDate = { $ne: null };
+    } else if (req.query.paid === 'false') {
+      filter.paymentDate = null;
+    }
+
+    // Filtro por método de pago
+    if (req.query.paymentMethod) {
+      filter.paymentMethod = req.query.paymentMethod;
+    }
+
+    // Filtro por fecha de vencimiento desde/hasta
+    if (req.query.dueFrom || req.query.dueTo) {
+      filter.dueDate = {};
+      if (req.query.dueFrom) filter.dueDate.$gte = new Date(req.query.dueFrom);
+      if (req.query.dueTo) filter.dueDate.$lte = new Date(req.query.dueTo);
+    }
+
+    // Filtro por ID de venta (sale)
+    if (req.query.saleId) {
+      filter.sale = req.query.saleId;
+    }
+
+    if (req.query.quotaNumber) {
+      filter.quotaNumber = parseInt(req.query.quotaNumber);
+    }
+
+    // Orden (por defecto: más recientes primero, luego bingo y cuota descendente)
+    let sort = {};
+    if (req.query.sortBy) {
+      const [field, direction] = req.query.sortBy.split(':'); // Ej: sortBy=dueDate:asc
+      sort[field] = direction === 'desc' ? -1 : 1;
+    } else {
+      sort = {
+        updatedAt: -1,   // Últimas actualizaciones primero
+      };
+    }
+
+    // Consulta principal
+    const [total, quotas] = await Promise.all([
+      Quota.countDocuments(filter),
+      Quota.find(filter)
+        .populate({
+          path: "sale",
+          populate: [
+            { path: "seller", model: "Seller", populate: { path: "person", model: "Person" } },
+            { path: "client", model: "Client", populate: { path: "person", model: "Person" } },
+            { path: "bingoCard", model: "BingoCard" },
+            { path: "edition", model: "Edition" },
+          ],
+        })
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+    ]);
+
+    res.json({
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      quotas
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const getExpiredQuotas = async (req, res) => {
     try {
       const today = dayjs().startOf("day").toDate();
@@ -23,6 +102,7 @@ export const getExpiredQuotas = async (req, res) => {
       })
         .populate({
           path: "sale",
+          match: { status: { $ne: "Anulada" } }, 
           populate: [
             { path: "seller", model: "Seller", populate: { path: "person", model: "Person" } },
             { path: "client", model: "Client", populate: { path: "person", model: "Person" } },
@@ -31,7 +111,10 @@ export const getExpiredQuotas = async (req, res) => {
           ],
         });
   
-      res.json(quotas);
+      // Filtrar cuotas donde sale no sea null (porque match puede dejarlo null)
+      const filteredQuotas = quotas.filter(quota => quota.sale !== null);
+  
+      res.json(filteredQuotas);
     } catch (error) {
       console.error("Error al obtener cuotas vencidas:", error);
       return res.status(500).json({ message: error.message });

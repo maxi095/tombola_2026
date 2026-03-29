@@ -51,6 +51,11 @@ const sellerPaymentSchema = new mongoose.Schema({
     required: true,
     min: 0
   },
+  commissionType: {
+    type: String,
+    enum: ['Efectivo', 'Transferencia'],
+    default: 'Efectivo'
+  },
   date: {
     type: Date,
     default: Date.now

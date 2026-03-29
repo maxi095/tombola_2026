@@ -3,19 +3,25 @@
 export const customSelectStyles = {
   control: (provided, state) => ({
     ...provided,
-    backgroundColor: 'white',
-    borderColor: state.isFocused ? '#2563EB' : '#D1D5DB', // azul tailwind o gris claro
-    color: '#111827', // text-gray-900
-    borderRadius: '0.375rem', // rounded-md
+    backgroundColor: state.isDisabled ? '#F3F4F6' : 'white', // gris claro si deshabilitado
+    borderColor: state.isDisabled
+      ? '#D1D5DB'
+      : state.isFocused
+      ? '#2563EB'
+      : '#D1D5DB',
+    color: state.isDisabled ? '#9CA3AF' : '#111827',
+    borderRadius: '0.375rem',
     minHeight: '40px',
-    boxShadow: state.isFocused ? '0 0 0 1px #2563EB' : 'none',
+    boxShadow: state.isFocused && !state.isDisabled ? '0 0 0 1px #2563EB' : 'none',
+    cursor: state.isDisabled ? 'not-allowed' : 'default',
+    opacity: state.isDisabled ? 0.7 : 1,
     '&:hover': {
-      borderColor: '#2563EB',
+      borderColor: state.isDisabled ? '#D1D5DB' : '#2563EB',
     },
   }),
-  singleValue: (provided) => ({
+  singleValue: (provided, state) => ({
     ...provided,
-    color: '#111827', // text-gray-900
+    color: state.isDisabled ? '#4B5563' : '#111827', // más oscuro: gray-600 si disabled
   }),
   menu: (provided) => ({
     ...provided,
@@ -35,22 +41,23 @@ export const customSelectStyles = {
     padding: '10px 12px',
     cursor: 'pointer',
   }),
-  placeholder: (provided) => ({
+  placeholder: (provided, state) => ({
     ...provided,
-    color: '#6B7280', // text-gray-400
+    color: state.isDisabled ? '#D1D5DB' : '#6B7280', // gris más claro si disabled
   }),
-  dropdownIndicator: (provided) => ({
+  dropdownIndicator: (provided, state) => ({
     ...provided,
-    color: '#9CA3AF', // gray-400
+    color: state.isDisabled ? '#D1D5DB' : '#9CA3AF',
     '&:hover': {
-      color: '#6B7280', // gray-500
+      color: state.isDisabled ? '#D1D5DB' : '#6B7280',
     },
   }),
   indicatorSeparator: () => ({
     display: 'none',
   }),
-  input: (provided) => ({
+  input: (provided, state) => ({
     ...provided,
-    color: '#111827', // text-gray-900
+    color: state.isDisabled ? '#4B5563' : '#111827', // también gray-600
   }),
 };
+
