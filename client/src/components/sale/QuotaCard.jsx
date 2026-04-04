@@ -22,56 +22,54 @@ function QuotaCard({ quota, saleStatus, onPay, onCancel }) {
   return (
     <Card 
       key={quota._id} 
-      className={`group relative overflow-hidden transition-all duration-300 py-3.5 px-3 border-l-4 ${
+      className={`group relative overflow-hidden transition-all duration-300 py-3 px-3 border-l-4 ${
         isPaid 
           ? 'border-green-200 border-l-green-600 bg-gradient-to-br from-green-50/40 via-green-50/10 to-transparent' 
           : 'border-slate-100 border-l-transparent hover:border-primary/20 hover:shadow-md'
       }`}
     >
       <div className="relative z-10 flex flex-col h-full justify-between gap-3">
-        {/* Nivel 1: Status & Index ✨🚀 */}
+        {/* Nivel 1: Status & Timeline ✨🚀 */}
         <div className="flex items-center justify-between">
-          <div className={`w-6 h-6 rounded-lg flex items-center justify-center font-black text-[10px] shadow-sm ${
-            isPaid ? 'bg-green-600 text-white shadow-green-200' : 'bg-white text-slate-400 border border-slate-100'
-          }`}>
-            {quota.quotaNumber}
+          <div className="flex items-center gap-2">
+            <div className={`w-5 h-5 rounded flex items-center justify-center font-black text-[9px] shadow-sm ${
+              isPaid ? 'bg-green-600 text-white shadow-green-200' : 'bg-white text-slate-400 border border-slate-100'
+            }`}>
+              {quota.quotaNumber}
+            </div>
+            <Badge variant={isNoCharge ? 'warning' : isPaid ? 'success' : 'default'} size="xs" className="font-bold tracking-tighter uppercase whitespace-nowrap">
+              {isNoCharge ? 'SIN CARGO' : (isPaid ? 'PAGADO' : 'PENDIENTE')}
+            </Badge>
           </div>
-          <Badge variant={isNoCharge ? 'warning' : isPaid ? 'success' : 'default'} size="xs" className="font-bold tracking-tighter uppercase whitespace-nowrap">
-            {isNoCharge ? 'SIN CARGO' : (isPaid ? 'PAGADO' : 'PENDIENTE')}
-          </Badge>
+          {isPaid && quota.paymentDate && (
+            <span className="text-[9px] font-black text-green-600/60 uppercase tracking-tighter font-manrope">
+              {dayjs.utc(quota.paymentDate).format('DD/MM/YY')}
+            </span>
+          )}
         </div>
 
-        {/* Nivel 2: Monto Dominante (Protección de Truncado) 🏹⚖️ */}
-        <div className="flex flex-col items-center py-1">
+        {/* Nivel 2: Monto Dominante 🏹⚖️ */}
+        <div className="flex flex-col items-center py-0.5">
           <span className={`text-lg font-black font-manrope leading-none transition-colors tracking-tight ${
             isPaid ? 'text-green-700' : 'text-primary'
           }`}>
             {formatCurrency(quota.amount)}
           </span>
-          <div className="flex items-center gap-1.5 text-[9px] text-slate-400 font-bold mt-2 opacity-70">
-            <Calendar size={10} className={isPaid ? 'text-green-300' : 'text-slate-300'} />
+          <div className="flex items-center gap-1.5 text-[8px] text-slate-400 font-bold mt-1.5 opacity-60">
+            <Calendar size={9} className={isPaid ? 'text-green-300' : 'text-slate-300'} />
             {dayjs.utc(quota.dueDate).format('DD MMM YY')}
           </div>
         </div>
 
-        {/* Nivel 3: Acciones e Info Secundaria ✨💎 */}
-        <div className="space-y-2">
-          {isPaid && (
-            <div className="flex items-center justify-center gap-1.5 text-[8px] text-green-600/70 font-semibold bg-green-500/5 py-1 px-2 rounded border border-green-500/10 transition-all duration-300 truncate">
-              <Zap size={9} className="text-green-500 shrink-0" fill="currentColor" />
-              <span className="uppercase tracking-tighter truncate">
-                {quota.paymentMethod} • {dayjs.utc(quota.paymentDate).format('DD/MM/YY')}
-              </span>
-            </div>
-          )}
-
+        {/* Nivel 3: Acción Unificada ✨💎 */}
+        <div className="pt-1">
           {saleStatus !== "Anulada" && !isNoCharge && (
             <div className="flex gap-2">
               {isPaid ? (
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="w-full text-[8px] py-1 h-7 text-red-500/60 hover:text-red-700 hover:bg-red-50 border-red-50 font-bold"
+                  className="w-full text-[8px] py-1 h-7 text-red-500/60 hover:text-red-700 hover:bg-red-50 border-red-50 font-bold leading-none"
                   onClick={() => onCancel(quota)}
                   icon={RotateCcw}
                 >
@@ -81,7 +79,7 @@ function QuotaCard({ quota, saleStatus, onPay, onCancel }) {
                 <Button 
                   variant="primary" 
                   size="sm" 
-                  className="w-full text-[9px] py-1 h-8 uppercase tracking-widest font-black shadow-sm transition-transform active:scale-95"
+                  className="w-full text-[9px] py-1 h-8 uppercase tracking-widest font-black shadow-sm transition-transform active:scale-95 leading-none"
                   onClick={() => onPay(quota)}
                   icon={CreditCard}
                 >

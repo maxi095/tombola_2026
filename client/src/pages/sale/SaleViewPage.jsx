@@ -160,7 +160,7 @@ function SaleViewPage() {
 
   return (
     <div className="flex flex-col px-12 animate-in fade-in duration-700 pb-24">
-      <PageHeader 
+      <PageHeader
         title={`Venta N° ${sale.saleNumber || "Pte"}`}
         breadcrumbs={[
           { label: "Ventas", href: "/sales" },
@@ -182,46 +182,49 @@ function SaleViewPage() {
         ]}
       />
 
-      <div className="flex flex-col gap-6">
-        {/* NIVEL 2: FICHA TÉCNICA HORIZONTAL (SLIM VERSION) ✨🚀 */}
-        <Card className="overflow-hidden border-t-2 border-t-primary/30 shadow-sm">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 py-0.5">
+      <div className="flex flex-col gap-2">
+        {/* NIVEL 2: FICHA TÉCNICA ULTRA-SLIM (ZERO AIR) ✨🚀 */}
+        <Card 
+          padding="p-0" 
+          hover={false}
+          className="overflow-hidden border-t border-t-primary/20 shadow-sm py-2 px-6"
+        >
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 divide-x divide-slate-50">
             
-            <div className="flex flex-col items-center justify-center border-r border-slate-50 last:border-0 px-2 py-2 group">
-              <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5 group-hover:text-primary transition-colors">Cartón</p>
-              <p className="text-lg font-black text-primary/80 font-manrope">#{sale.bingoCard?.number || "N/A"}</p>
+            <div className="flex flex-col items-center justify-center group py-1">
+              <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Cartón</span>
+              <span className="text-sm font-black text-primary font-manrope leading-none">#{sale.bingoCard?.number || "N/A"}</span>
             </div>
 
-            <div className="flex flex-col items-center justify-center border-r border-slate-50 last:border-0 px-2 py-2 group">
-              <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5 group-hover:text-primary transition-colors">Edición</p>
-              <p className="text-lg font-black text-primary/80 font-manrope">{sale.edition?.name || "N/A"}</p>
+            <div className="flex flex-col items-center justify-center group py-1">
+              <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Edición</span>
+              <span className="text-sm font-black text-primary font-manrope leading-none">{sale.edition?.name || "N/A"}</span>
             </div>
 
-            <div className="flex flex-col items-center justify-center border-r border-slate-50 last:border-0 px-4 py-2 group">
-              <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5 group-hover:text-primary transition-colors">Asociado</p>
-              <h4 className="text-[13px] font-black text-slate-700 tracking-tight font-manrope leading-none text-center truncate w-full">
+            <div className="flex flex-col items-center justify-center group py-1 px-2">
+              <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Asociado</span>
+              <span className="text-[12px] font-black text-slate-700 tracking-tight font-manrope leading-none truncate w-full text-center">
                 {sale.client?.person?.firstName} {sale.client?.person?.lastName}
-              </h4>
-              <p className="text-[8px] font-bold text-slate-300 mt-1 tracking-tighter">DNI {sale.client?.person?.document}</p>
+              </span>
             </div>
 
-            <div className="flex flex-col items-center justify-center border-r border-slate-50 last:border-0 px-4 py-2 group">
-              <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5 group-hover:text-primary transition-colors">Vendedor</p>
-              <p className="text-[13px] font-black text-slate-600 font-manrope truncate w-full text-center">
+            <div className="flex flex-col items-center justify-center group py-1 px-2">
+              <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Vendedor</span>
+              <span className="text-[12px] font-black text-slate-600 font-manrope leading-none truncate w-full text-center">
                 {sale.seller?.person?.firstName} {sale.seller?.person?.lastName}
-              </p>
+              </span>
             </div>
 
-            <div className="flex flex-col items-center justify-center border-r border-slate-50 last:border-0 px-2 py-2 group">
-              <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5 group-hover:text-primary transition-colors">Fecha</p>
-              <p className="text-[13px] font-black text-slate-600 font-manrope">
-                {dayjs.utc(sale.saleDate).format('DD/MM/YYYY')}
-              </p>
+            <div className="flex flex-col items-center justify-center group py-1">
+              <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Fecha</span>
+              <span className="text-[12px] font-black text-slate-600 font-manrope leading-none">
+                {dayjs.utc(sale.saleDate).format('DD/MM/YY')}
+              </span>
             </div>
 
-            <div className="flex flex-col items-center justify-center px-2 py-2">
-              <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5 text-center">Estado</p>
-              <Badge variant={sale.status === 'Anulada' ? 'error' : 'default'} size="xs" className="font-bold uppercase py-0 px-2">
+            <div className="flex flex-col items-center justify-center py-1">
+              <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1 text-center">Estado</span>
+              <Badge variant={sale.status === 'Anulada' ? 'error' : 'default'} size="xs" className="font-bold uppercase py-0 px-1.5 text-[8px] leading-none h-3.5 min-h-0 border-0">
                 {sale.status}
               </Badge>
             </div>
@@ -238,17 +241,17 @@ function SaleViewPage() {
             </div>
             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{quotas.length} Transacciones</p>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             {quotas.map((quota) => {
               const isNext = firstPendingQuota?._id === quota._id;
               return (
                 <div key={quota._id} className={isNext ? "ring-2 ring-primary ring-offset-4 rounded-2xl animate-pulse-subtle" : ""}>
-                  <QuotaCard 
-                    quota={quota} 
-                    saleStatus={sale.status} 
-                    onPay={handlePay} 
-                    onCancel={handleCancelPayment} 
+                  <QuotaCard
+                    quota={quota}
+                    saleStatus={sale.status}
+                    onPay={handlePay}
+                    onCancel={handleCancelPayment}
                   />
                 </div>
               );
