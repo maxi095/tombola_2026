@@ -1,9 +1,37 @@
 import ReactModal from "react-modal";
 import { useState, useEffect } from "react";
+import { 
+  Zap, 
+  Calendar, 
+  X, 
+  CheckCircle2, 
+  Banknote,
+  CreditCard,
+  User as UserIcon,
+  ShieldCheck,
+  Hash
+} from "lucide-react";
 import dayjs from "dayjs";
+
+// Componentes Elite UI
+import InputField from "./ui/InputField";
+import EliteSelect from "./ui/Select";
+import Button from "./ui/Button";
 
 ReactModal.setAppElement("#root");
 
+const PAYMENT_METHODS = [
+  { value: "Efectivo", label: "Efectivo" },
+  { value: "Tarjeta", label: "Tarjeta" },
+  { value: "Transferencia", label: "Transferencia" },
+  { value: "Cheque", label: "Cheque" },
+  { value: "Otro", label: "Otro" }
+];
+
+/**
+ * FullPaymentModal V4.5 - Premium Volume Action
+ * Gestión de pagos de contado con soporte dinámico para datos bancarios/tarjeta.
+ */
 const FullPaymentModal = ({ 
   isOpen, 
   onClose, 
@@ -21,7 +49,6 @@ const FullPaymentModal = ({
   const [cardPlan, setPlan] = useState("");
   const [authCode, setAuthNumber] = useState("");
 
-  // Total de cuotas sumadas
   const totalAmount = quotas.reduce((sum, q) => sum + q.amount, 0);
 
   useEffect(() => {
@@ -37,7 +64,6 @@ const FullPaymentModal = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Preparar payload
     const fullPaymentData = {
       saleId,
       bingoCardId,
@@ -51,122 +77,145 @@ const FullPaymentModal = ({
   };
 
   return (
-<ReactModal
-  isOpen={isOpen}
-  onRequestClose={onClose}
-  className="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl overflow-y-auto max-h-[90vh]"
-  overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
->
-  <div className="form-card">
-    <h2 className="title">Pago de Contado</h2>
+    <ReactModal
+      isOpen={isOpen}
+      onRequestClose={onClose}
+      className="outline-none"
+      overlayClassName="fixed inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-md z-[100] p-4"
+    >
+      <div className="bg-white/90 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl w-full max-w-2xl border border-white/50 overflow-hidden animate-in zoom-in-95 duration-300">
+        {/* Header de Alto Impacto */}
+        <div className="bg-primary p-10 text-white relative">
+          <button 
+            onClick={onClose}
+            className="absolute top-8 right-8 p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all"
+          >
+            <X size={20} />
+          </button>
+          <div className="flex items-center gap-5 mb-3">
+            <div className="p-4 bg-white/10 rounded-[1.5rem] shadow-inner">
+              <Zap size={32} className="text-yellow-400 fill-yellow-400" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-black tracking-tight font-manrope">
+                Pago de Contado
+              </h2>
+              <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.3em]">
+                LiquidaciÃ³n Institucional de Venta
+              </p>
+            </div>
+          </div>
+        </div>
 
-    <form onSubmit={handleSubmit} className="form-grid">
-      {/* Método de Pago */}
-      <div className="form-section">
-        <label className="label">Método de Pago</label>
-        <select
-          className="form-input"
-          value={method}
-          onChange={e => setMethod(e.target.value)}
-          required
-        >
-          <option value="Efectivo">Efectivo</option>
-          <option value="Tarjeta">Tarjeta</option>
-          <option value="Transferencia">Transferencia</option>
-          <option value="Cheque">Cheque</option>
-          <option value="Otro">Otro</option>
-        </select>
+        <div className="p-10">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Resumen de LiquidaciÃ³n */}
+            <div className="flex items-center justify-between p-8 bg-primary/5 rounded-[2rem] border border-primary/10 shadow-sm">
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total a Liquidar</p>
+                <h3 className="text-4xl font-black text-primary font-manrope">
+                  ${totalAmount.toFixed(2)}
+                </h3>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Cuotas Incluidas</p>
+                <div className="flex items-center justify-end gap-2">
+                  <Hash size={14} className="text-primary/40" />
+                  <span className="text-xl font-black text-primary">{quotas.length}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <Banknote size={14} /> MÃ©todo Principal
+                </label>
+                <EliteSelect
+                  options={PAYMENT_METHODS}
+                  value={PAYMENT_METHODS.find(m => m.value === method)}
+                  onChange={(option) => setMethod(option.value)}
+                />
+              </div>
+
+              <InputField
+                label="Fecha Contable"
+                type="date"
+                icon={Calendar}
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+              />
+            </div>
+
+            {/* SECCIÃ“N DINÃMICA: TARJETA */}
+            {method === "Tarjeta" && (
+              <div className="p-8 bg-slate-50/50 rounded-[2rem] border border-slate-100 space-y-6 animate-in slide-in-from-top-4 duration-500">
+                <div className="flex items-center gap-3 mb-2">
+                  <CreditCard className="text-primary" size={18} />
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">InformaciÃ³n de PlÃ¡stico</h4>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <InputField
+                    label="Titular"
+                    placeholder="Como figura en la tarjeta"
+                    icon={UserIcon}
+                    value={cardHolder}
+                    onChange={(e) => setCardHolder(e.target.value)}
+                    required
+                  />
+                  <InputField
+                    label="NÃºmero de Tarjeta"
+                    placeholder="0000 0000 0000 0000"
+                    icon={CreditCard}
+                    value={cardNumber}
+                    onChange={(e) => setCardNumber(e.target.value)}
+                    required
+                  />
+                  <InputField
+                    label="Plan / Cuotas"
+                    placeholder="Ej: Plan 3 Cuotas"
+                    icon={Zap}
+                    value={cardPlan}
+                    onChange={(e) => setPlan(e.target.value)}
+                    required
+                  />
+                  <InputField
+                    label="Cod. AutorizaciÃ³n"
+                    placeholder="NÂ° de ticket"
+                    icon={ShieldCheck}
+                    value={authCode}
+                    onChange={(e) => setAuthNumber(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Botones de Control */}
+            <div className="flex items-center gap-6 pt-6">
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="flex-1"
+                onClick={onClose}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="submit" 
+                variant="primary" 
+                className="flex-[2] py-4"
+                icon={CheckCircle2}
+              >
+                Confirmar LiquidaciÃ³n
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
-
-      {/* Fecha de Pago */}
-      <div className="form-section">
-        <label className="label">Fecha de Pago</label>
-        <input
-          type="date"
-          className="form-input"
-          value={date}
-          onChange={e => setDate(e.target.value)}
-          required
-        />
-      </div>
-
-      {/* Campos extra si es Tarjeta */}
-      {method === "Tarjeta" && (
-        <>
-          <div className="form-section">
-            <label className="label">Titular de Tarjeta</label>
-            <input
-              type="text"
-              className="form-input"
-              value={cardHolder}
-              onChange={e => setCardHolder(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="form-section">
-            <label className="label">Número de Tarjeta</label>
-            <input
-              type="text"
-              className="form-input"
-              value={cardNumber}
-              onChange={e => setCardNumber(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="form-section">
-            <label className="label">Plan</label>
-            <input
-              type="text"
-              className="form-input"
-              value={cardPlan}
-              onChange={e => setPlan(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="form-section">
-            <label className="label">Importe (Total cuotas)</label>
-            <input
-              type="text"
-              className="form-input bg-gray-100 cursor-not-allowed"
-              value={`$${totalAmount.toFixed(2)}`}
-              readOnly
-            />
-          </div>
-
-          <div className="form-section col-span-2">
-            <label className="label">N° de Autorización</label>
-            <input
-              type="text"
-              className="form-input"
-              value={authCode}
-              onChange={e => setAuthNumber(e.target.value)}
-              required
-            />
-          </div>
-        </>
-      )}
-
-      {/* Botones */}
-      <div className="col-span-2 flex justify-end mt-4 space-x-2">
-        <button
-          type="button"
-          className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition"
-          onClick={onClose}
-        >
-          Cancelar
-        </button>
-        <button type="submit" className="btn-primary">
-          Confirmar Pago
-        </button>
-      </div>
-    </form>
-  </div>
-</ReactModal>
-
-
+    </ReactModal>
   );
 };
 

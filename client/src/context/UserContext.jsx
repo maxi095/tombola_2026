@@ -1,81 +1,89 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { getUserRequest, getUsersRequest, createUserRequest, updateUserRequest, deleteUserRequest, getStudentsRequest, getDirectorsRequest, createStudentRequest } from "../api/user";
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { 
+    getUserRequest, 
+    getUsersRequest, 
+    createUserRequest, 
+    updateUserRequest, 
+    deleteUserRequest 
+} from "../api/user";
 
 const UserContext = createContext();
 
 export const useUsers = () => {
     const context = useContext(UserContext);
     if (!context) {
-        throw new Error("useUsers must be used within a UserProvider");
+        throw new Error("useUsers debe usarse dentro de un UserProvider");
     }
     return context;
 };
 
 export const UserProvider = ({ children }) => {
     const [users, setUsers] = useState([]); 
+    const [loading, setLoading] = useState(false);
 
-    const getUser = async (id) => {
+    const getUser = useCallback(async (id) => {
         try {
             const res = await getUserRequest(id);
             return res.data;
         } catch (error) {
-            console.error(error);
+            console.error("Error al obtener usuario:", error);
         }
-    };
+    }, []);
     
-    const getUsers = async () => {
+    const getUsers = useCallback(async () => {
+        setLoading(true);
         try {
             const res = await getUsersRequest();
-            setUsers(res.data); // Asegúrate de que 'res.data' sea un arreglo
+            setUsers(res.data);
         } catch (error) {
-            console.error(error);
+            console.error("Error al listar usuarios:", error);
+        } finally {
+            setLoading(false);
         }
-    };
+    }, []);
 
-    const createUser = async (user) => {
-        const res = await createUserRequest(user);
-        setUsers((prev) => [...prev, res.data]); // Agrega el nuevo usuario a la lista
-    };
-
-    const createStudent = async (user) => {
-        const res = await createStudentRequest(user);
-        setUsers((prev) => [...prev, res.data]); // Agrega el nuevo estudiante a la lista
-    };
-
-    const updateUser = async (id, user) => {
-        const res = await updateUserRequest(id, user); // Corrige el uso de la función
-        setUsers((prev) => prev.map(u => (u._id === id ? res.data : u)));
-    };
-
-    const deleteUser = async (id) => {
-        await deleteUserRequest(id); // Corrige el uso de la función
-        setUsers((prev) => prev.filter(u => u._id !== id));
-    };
-
-    const getStudents = async () => {
+    const createUser = useCallback(async (user) => {
         try {
-            const res = await getStudentsRequest();
-            setUsers(res.data); // Asegúrate de que 'res.data' sea un arreglo
+            const res = await createUserRequest(user);
+            setUsers((prev) => [...prev, res.data]);
+            return res.data;
         } catch (error) {
-            console.error(error);
+            console.error("Error al crear usuario:", error);
+            throw error;
         }
-    };
+    }, []);
 
-    const getDirectors = async () => {
+    const updateUser = useCallback(async (id, user) => {
         try {
-            const res = await getDirectorsRequest();
-            setUsers(res.data); // Asegúrate de que 'res.data' sea un arreglo
+            const res = await updateUserRequest(id, user);
+            setUsers((prev) => prev.map(u => (u._id === id ? res.data : u)));
+            return res.data;
         } catch (error) {
-            console.error(error);
+            console.error("Error al actualizar usuario:", error);
+            throw error;
         }
-    };
+    }, []);
 
-    useEffect(() => {
-        getUsers();
+    const deleteUser = useCallback(async (id) => {
+        try {
+            await deleteUserRequest(id);
+            setUsers((prev) => prev.filter(u => u._id !== id));
+        } catch (error) {
+            console.error("Error al eliminar usuario:", error);
+            throw error;
+        }
     }, []);
 
     return (
-        <UserContext.Provider value={{ users, createUser, updateUser, deleteUser, getUsers, getUser, getStudents, getDirectors, createStudent }}>
+        <UserContext.Provider value={{ 
+            users, 
+            loading,
+            createUser, 
+            updateUser, 
+            deleteUser, 
+            getUsers, 
+            getUser 
+        }}>
             {children}
         </UserContext.Provider>
     );

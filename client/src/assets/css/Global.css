@@ -15,8 +15,9 @@
   --danger-color: #EF4444; 
   --white: #FFFFFF; /* Blanco Puro */
 
-  --primary-color: #D4AF37; /* Dorado suave, elegante pero neutro */
-  --secondary-color: #2E2E2E; /* Gris oscuro en lugar de negro absoluto */
+  --primary-color: #1B3B5A;
+  --color-primary: #1B3B5A;
+  --secondary-color: #0F2235;
   --background-color-light: #FAFAF9; /* Gris muy claro, casi blanco */
   --background-color-dark: #1E1E1E; /* Negro suave, minimalista */
   --background-color-secondary: #F5F5F5; /* Gris neutro claro, para secciones */
@@ -237,8 +238,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .form-input:focus {
-  outline: none; /* Elimina el borde de enfoque predeterminado */
-  box-shadow: 0 0 0 3px rgba(62, 132, 203, 0.5); /* Sombra azul para enfoque */
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(27, 59, 90, 0.15); /* Sombra Navy sutil */
 }
 
 .form-textarea {

@@ -1,0 +1,68 @@
+# 🦾 Reglas Maestras: Premium 2026 v4.6 (Atomic & Integrity Full)
+
+Este archivo define el comportamiento obligatorio de cualquier asistente de IA en **Gestión Tómbola**. El incumplimiento de estas reglas fragmentará la arquitectura del sistema.
+
+## 📚 Consulta Obligatoria de Documentación (Knowledge First)
+
+Antes de cualquier cambio en UI, **debes leer y aplicar**:
+1. `docs/standard-2026/GUIA_UX_UI_2026.md` (Leyes de Integridad y Semántica).
+2. `docs/standard-2026/03-PATRONES_COMPONENTES.md` (Uso de Table, Badge, FilterBar, Feedback).
+3. `docs/standard-2026/04-FORMULARIOS_ALTA_GAMA.md` (Uso de Card, InputField, Select).
+
+---
+
+## ⚖️ Ley de Integridad Funcional (Scope de Modernización)
+
+**PROHIBIDO** alterar la lógica de negocio o la estructura de datos legacy sin autorización explícita.
+- **Respeto al Input**: Si el formulario original tiene `X` campos, la modernización debe mantener exactamente esos `X` campos. No se quitan ni agregan campos.
+- **Mecánica vs Motor**: Nuestra misión es **UX/UI Modernization**. Reemplazamos la "Mecánica Visual" sin tocar el "Motor de Negocio" (APIs, Schemas, Controladores).
+
+---
+
+## 🏗️ Ley de Componentes Atómicos
+
+**PROHIBIDO** construir layouts manuales con Tailwind si ya existe un componente en `client/src/components/ui/`. 
+- **Tablas**: Usar `<Table />`, `<TBody />`, etc. Nunca usar `<table>` nativo.
+- **Secciones**: Usar `<Card title="..." icon={...}>`. Nunca divs con `rounded-3xl` manuales.
+- **Inputs**: Usar `<InputField />` y `<Select />`. Gestionan internamente etiquetas y errores.
+- **Feedback**: Usar `showToast` de `useFeedback` para éxitos y `<ConfirmModal />` para bajas.
+- **Listados**: La estructura obligatoria es: `<PageHeader />` -> `<FilterBar />` -> `<Card padding="p-0">` -> `<Table />` ->  `<TBody />` -> `<Pagination />`, etc. Nunca usar `<table>` nativo.
+---
+
+## 🎨 ADN Visual e Identidad (Fidelidad Premium)
+
+- **Navy Institucional**: El color primario es `#1B3B5A`. Usar la clase `text-primary` o `bg-primary`.
+- **TopBar / Header**: En niveles de listado raíz, el `<PageHeader />` debe ser **Flush** (sin margen superior `mt-10`).
+- **Tipografía**: `Manrope` para jerarquía de títulos (`font-black`), `Inter/Sans` para datos y sistema.
+- **Densidad Técnica**: Seguir las reglas de `v4.4` (Header `py-5`, Card `p-10`).
+
+---
+
+## 🚫 Prohibición de Resúmenes y Omisiones
+
+Si el usuario pide documentar o implementar:
+- **No omitir código**: Prohibido el uso de comentarios tipo `// ... resto del código`. Se debe incluir la estructura completa de clases y la lógica de Hook/Props relevante.
+- **Mantener Nombres Técnicos**: No traduzcas nombres de componentes o clases de Tailwind en las explicaciones.
+
+---
+
+## 📦 Gestión de Librerías (Lucide React) y Nomenclatura Estricta (Wording)
+
+- **Verificación de Exportaciones**: Queda prohibido importar iconos "nuevos" sin verificar su existencia en `node_modules/lucide-react/package.json`.
+- **Icons Fallback**: En caso de duda, usa iconos básicos como `Layout`, `Package`, `ShoppingCart`, `Users`.
+- **Gestión**: `Gestión de [Módulo]` (Listados).
+- **Alta**: `Alta de [Módulo]` (Creación).
+- **Editar**: `Editar [Módulo]` (Edición).
+- **Acciones**: `Nuevo [Objeto]`, `Crear [Objeto]`, `Guardar Cambios`.
+---
+
+## 🔄 Workflow de Implementación (Atomic Path)
+
+1. **Analizar**: Verificar qué módulo se está editando y buscar el componente necesario en `ui/`.
+2. **Referenciar**: Citar el documento de estándar que justifica el nuevo diseño.
+3. **Modularizar**: Si un patrón se repite (ej. un nuevo filtro), crear primero el átomo/componente antes de ensuciar la página.
+4. **Implementar**: Escribir el código completo, sin resúmenes.
+5. **Documentar**: Si el cambio introduce un nuevo patrón visual, DEBES actualizar `GUIA_UX_UI_2026.md`.
+
+> [!IMPORTANT]
+> **Calidad Institucional**: No aceptamos MVPs. Construimos software que se siente como una herramienta financiera de alto nivel: robusta, limpia y semánticamente perfecta. Si tu código se ve "genérico", has fallado.

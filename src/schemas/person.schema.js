@@ -7,5 +7,6 @@ export const createPersonSchema = z.object({
     lastName: z.string({
         required_error: 'Last name is required',
     }),
+    email: z.string().email().optional().or(z.literal('')),
 
 });

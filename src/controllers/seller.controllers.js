@@ -43,7 +43,7 @@ export const createSeller = async (req, res) => {
       } = req.body;
   
       // Validar datos obligatorios
-      if (!firstName || !lastName || !document || !email) {
+      if (!firstName || !lastName || !document) {
         return res.status(400).json({ message: "Faltan campos obligatorios" });
       }
   

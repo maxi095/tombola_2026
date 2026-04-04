@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
-import Select from "react-select";
+// Se renombra a ReactSelect para evitar colisiones con el componente corporativo EliteSelect
+import ReactSelect from "react-select";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDraws } from "../../context/DrawContext";
 import { useEditions } from "../../context/EditionContext";
@@ -112,7 +113,7 @@ useEffect(() => {
               control={control}
               rules={{ required: "La edición es obligatoria" }}
               render={({ field }) => (
-                <Select
+                <ReactSelect
                   {...field}
                   styles={customSelectStyles}
                   options={editions.map((e) => ({

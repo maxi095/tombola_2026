@@ -117,13 +117,10 @@ function SellerFormPage() {
             <label className="label">Email</label>
             <input
               type="email"
-              {...register("email", { required: "El email es requerido" })}
+              {...register("email")}
               className="form-input"
               placeholder="Correo electrónico"
             />
-            {errors.email && (
-              <p className="form-error">{errors.email.message}</p>
-            )}
           </div>
 
           <div className="form-section">

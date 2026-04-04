@@ -8,19 +8,34 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#2563eb",  // azul (bg-blue-600)
-          light: "#3b82f6",    // hover
-          dark: "#1d4ed8",
+          DEFAULT: "var(--color-primary)",
+          dark: "var(--color-primary-dark)",
         },
-        graySoft: "#f9fafb", // fondo claro para formularios
+        secondary: "var(--color-secondary)",
+        tertiary: "var(--color-tertiary)",
+        main: "var(--text-main)",
+        muted: "var(--text-muted)",
+        inverse: "var(--text-inverse)",
+        surface: "var(--bg-surface)",
+        body: "var(--bg-main)",
       },
       borderRadius: {
-        xl: "1rem",
-        md: "0.375rem",
+        'premium-card': "var(--radius-card)",
+        'premium-input': "var(--radius-input)",
+        'premium-btn': "var(--radius-btn)",
       },
       boxShadow: {
-        card: "0 1px 3px rgba(0,0,0,0.1)",
+        'premium': "var(--shadow-premium)",
+        'premium-hover': "var(--shadow-active)",
       },
+      fontFamily: {
+        manrope: ['Manrope', 'sans-serif'],
+        inter: ['Inter', 'sans-serif'],
+      },
+      spacing: {
+        'page-x': "var(--page-px)",
+        'page-y': "var(--page-pt)",
+      }
     },
   },
   plugins: [],

@@ -1,4 +1,149 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Brand Colors - Navy Corporativo Real */
+  --color-primary: #1B3B5A;
+  --color-primary-dark: #0F2235;
+  --color-secondary: #43A047;
+  --color-tertiary: #FFB300;
+  
+  /* Surface & Backgrounds */
+  --bg-main: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-muted: #F1F5F9;
+  
+  /* Text Colors - High Contrast */
+  --text-main: #1B3B5A;
+  --text-muted: #475569; /* Slate-600 */
+  --text-inverse: #FFFFFF;
+
+  /* Spacing & Layout Tokens */
+  --page-px: 3rem;   /* px-12 */
+  --page-pt: 2.5rem; /* pt-10 */
+  
+  /* Shape & Elevation (Standard Premium 2026) */
+  --radius-card: 40px; 
+  --radius-input: 24px;
+  --radius-btn: 18px;
+  
+  /* Shadows - Navy Neutral Elevation */
+  --shadow-premium: 0 15px 45px -10px rgba(15, 34, 53, 0.05);
+  --shadow-active: 0 12px 30px -5px rgba(15, 34, 53, 0.15);
+  
+  /* Borders */
+  --border-light: #E2E8F0;
+  --border-subtle: rgba(226, 232, 240, 0.5);
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  margin: 0;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+}
+
+/* Custom layout classes */
+.app-layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.content-area {
+  padding: 0; /* Removing fixed padding for complete control */
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Sidebar styles */
+.sidebar-container {
+  width: 260px;
+  background-color: var(--white);
+  border-right: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+/* Table overrides for Standard 2026 */
+.modern-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.modern-table th {
+  background-color: #F8FAFC;
+  padding: 1rem 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.modern-table td {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #F1F5F9;
+  vertical-align: middle;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge-admin {
+  background-color: #EEF2FF;
+  color: #4338CA;
+  border: 1px solid #C7D2FE;
+}
+
+.badge-vendedor {
+  background-color: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
+}
+
+/* Button variants */
+.btn-primary-cl {
+  background-color: var(--primary);
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.btn-primary-cl:hover {
+  filter: brightness(1.2);
+  transform: translateY(-1px);
+}

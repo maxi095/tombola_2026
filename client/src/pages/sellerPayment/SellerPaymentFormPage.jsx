@@ -1,7 +1,8 @@
 import { useForm, Controller, useWatch, useFieldArray } from "react-hook-form";
 import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import Select from "react-select";
+// Se renombra a ReactSelect para evitar colisiones con el componente corporativo EliteSelect
+import ReactSelect from "react-select";
 
 import { useSellerPayments } from "../../context/SellerPaymentContext";
 import { useSellers } from "../../context/SellerContext";
@@ -148,7 +149,7 @@ function SellerPaymentFormPage() {
       name="editionId"
       control={control}
       render={({ field }) => (
-        <Select
+        <ReactSelect
           {...field}
           styles={customSelectStyles}
           options={editions.map((e) => ({
@@ -168,7 +169,7 @@ function SellerPaymentFormPage() {
       control={control}
       rules={{ required: "Debe seleccionar un vendedor" }}
       render={({ field }) => (
-        <Select
+        <ReactSelect
           {...field}
           options={sellerOptions}
           styles={customSelectStyles}
