@@ -1,4 +1,4 @@
-import { Calendar, CreditCard, RotateCcw, Zap } from "lucide-react";
+import { Calendar, CreditCard, RotateCcw } from "lucide-react";
 import dayjs from "dayjs";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
@@ -7,88 +7,102 @@ import { formatCurrency } from "../../libs/formatters";
 
 /**
  * QuotaCard - Sale Installment Management Component
- * Estándar 2026: Success Glass para pagos y estados reactivos.
+ * Estándar 2026: Zero-Air Restoration V8.1 (Success Glass Identity).
  * 
  * @param {Object} props
  * @param {Object} props.quota - The quota data
  * @param {string} props.saleStatus - Overall sale status
  * @param {Function} props.onPay - Handler for payment modal
  * @param {Function} props.onCancel - Handler for payment cancellation
+ * @param {boolean} props.isNext - Highlight next pending quota
  */
-function QuotaCard({ quota, saleStatus, onPay, onCancel }) {
-  const isPaid = Boolean(quota.paymentDate);
-  const isNoCharge = quota.paymentMethod === "Entregado sin cargo";
+function QuotaCard({ quota, saleStatus, onPay, onCancel, isNext }) {
+  
+  // Robust payment detection
+  // We check for both: backend status (Pagado/Pagada) and paymentDate
+  const isPaid = quota.status?.toLowerCase().includes('pagad') || Boolean(quota.paymentDate) || (quota.payments && quota.payments.length > 0);
+  const isCanceled = quota.status === 'Anulada';
+
+  const getStatusStyles = () => {
+    if (isPaid) return 'border-emerald-500 bg-emerald-50/20 shadow-emerald-50/40';
+    if (isCanceled) return 'border-red-500 bg-red-50/10 opacity-60';
+    if (isNext) return 'border-primary bg-white shadow-premium';
+    return 'border-slate-100 bg-white';
+  };
 
   return (
     <Card 
-      key={quota._id} 
-      className={`group relative overflow-hidden transition-all duration-300 py-3 px-3 border-l-4 ${
-        isPaid 
-          ? 'border-green-200 border-l-green-600 bg-gradient-to-br from-green-50/40 via-green-50/10 to-transparent' 
-          : 'border-slate-100 border-l-transparent hover:border-primary/20 hover:shadow-md'
-      }`}
+      padding="p-0"
+      hover={false}
+      className={`
+        relative overflow-hidden transition-all duration-300 border-l-4 py-2.5 px-4 shadow-sm
+        ${isNext && !isPaid ? 'ring-2 ring-primary/20 ring-offset-2' : ''}
+        ${getStatusStyles()}
+      `}
     >
-      <div className="relative z-10 flex flex-col h-full justify-between gap-3">
-        {/* Nivel 1: Status & Timeline ✨🚀 */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className={`w-5 h-5 rounded flex items-center justify-center font-black text-[9px] shadow-sm ${
-              isPaid ? 'bg-green-600 text-white shadow-green-200' : 'bg-white text-slate-400 border border-slate-100'
-            }`}>
-              {quota.quotaNumber}
-            </div>
-            <Badge variant={isNoCharge ? 'warning' : isPaid ? 'success' : 'default'} size="xs" className="font-bold tracking-tighter uppercase whitespace-nowrap">
-              {isNoCharge ? 'SIN CARGO' : (isPaid ? 'PAGADO' : 'PENDIENTE')}
-            </Badge>
-          </div>
-          {isPaid && quota.paymentDate && (
-            <span className="text-[9px] font-black text-green-600/60 uppercase tracking-tighter font-manrope">
-              {dayjs.utc(quota.paymentDate).format('DD/MM/YY')}
+      {/* NIVEL 1: HEADER COMPACTO (N° + ESTADO + CRONOLOGÍA) ✨🚀 */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Badge variant="flat" size="xs" className="font-black h-5 w-5 flex items-center justify-center rounded-sm bg-slate-100 text-slate-600 border-none">
+            {quota.quotaNumber || quota.number}
+          </Badge>
+          <Badge 
+            variant={isPaid ? 'success' : 'outline'} 
+            size="xs" 
+            className="font-black uppercase py-0 px-1.5 text-[8px] h-4"
+          >
+            {isPaid ? 'PAGADO' : 'PENDIENTE'}
+          </Badge>
+        </div>
+        
+        {/* CRONOLOGÍA FUSIONADA V8.1 ✨💎 */}
+        {isPaid && (
+          <div className="flex items-center gap-1 text-emerald-600">
+            <span className="text-[9px] font-black font-manrope">
+              {dayjs.utc(quota.paymentDate || (quota.payments && quota.payments[0]?.paymentDate)).format('DD/MM/YY')}
             </span>
-          )}
-        </div>
-
-        {/* Nivel 2: Monto Dominante 🏹⚖️ */}
-        <div className="flex flex-col items-center py-0.5">
-          <span className={`text-lg font-black font-manrope leading-none transition-colors tracking-tight ${
-            isPaid ? 'text-green-700' : 'text-primary'
-          }`}>
-            {formatCurrency(quota.amount)}
-          </span>
-          <div className="flex items-center gap-1.5 text-[8px] text-slate-400 font-bold mt-1.5 opacity-60">
-            <Calendar size={9} className={isPaid ? 'text-green-300' : 'text-slate-300'} />
-            {dayjs.utc(quota.dueDate).format('DD MMM YY')}
           </div>
-        </div>
+        )}
+      </div>
 
-        {/* Nivel 3: Acción Unificada ✨💎 */}
-        <div className="pt-1">
-          {saleStatus !== "Anulada" && !isNoCharge && (
-            <div className="flex gap-2">
-              {isPaid ? (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full text-[8px] py-1 h-7 text-red-500/60 hover:text-red-700 hover:bg-red-50 border-red-50 font-bold leading-none"
-                  onClick={() => onCancel(quota)}
-                  icon={RotateCcw}
-                >
-                  Anular
-                </Button>
-              ) : (
-                <Button 
-                  variant="primary" 
-                  size="sm" 
-                  className="w-full text-[9px] py-1 h-8 uppercase tracking-widest font-black shadow-sm transition-transform active:scale-95 leading-none"
-                  onClick={() => onPay(quota)}
-                  icon={CreditCard}
-                >
-                  Cobrar
-                </Button>
-              )}
-            </div>
-          )}
+      {/* NIVEL 2: MONTO + VENCIMIENTO (FOCO OPERATIVO) 🏹⚖️ */}
+      <div className="flex flex-col items-center justify-center mb-3">
+        <span className={`text-xl font-black font-manrope tracking-tight leading-none ${isPaid ? 'text-emerald-700' : 'text-slate-800'}`}>
+          {formatCurrency(quota.amount)}
+        </span>
+        <div className="flex items-center gap-1 mt-1.5 text-slate-400">
+          <Calendar size={10} strokeWidth={2.5} className="opacity-60" />
+          <span className="text-[10.5px] font-black uppercase tracking-wider font-manrope">
+            {dayjs.utc(quota.dueDate).format('DD MMM YY')}
+          </span>
         </div>
+      </div>
+
+      {/* NIVEL 3: ACCIONES (RESTORATION 2026) 🚀 */}
+      <div className="mt-auto">
+        {saleStatus !== 'Anulada' && (
+          <>
+            {!isPaid ? (
+              <Button 
+                variant="primary"
+                onClick={() => onPay(quota)}
+                className="w-full h-8 font-black text-[9px] uppercase tracking-widest transition-all shadow-md active:scale-95 py-0"
+                icon={CreditCard}
+              >
+                Cobrar
+              </Button>
+            ) : (
+              <Button 
+                variant="error-light"
+                onClick={() => onCancel(quota)}
+                className="w-full h-8 font-black text-[8px] uppercase tracking-widest opacity-80 hover:opacity-100 transition-all border border-red-50 py-0"
+                icon={RotateCcw}
+              >
+                Anular
+              </Button>
+            )}
+          </>
+        )}
       </div>
     </Card>
   );
