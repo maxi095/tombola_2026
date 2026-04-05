@@ -1,23 +1,20 @@
-import ReactModal from "react-modal";
-import { 
-  Gift, 
-  Calendar, 
-  X, 
+import {
+  Gift,
+  Calendar,
   CheckCircle2,
   Info
 } from "lucide-react";
 import dayjs from "dayjs";
 import { useState, useEffect } from "react";
 
-// Componentes Elite UI
+// Estímulo Elite UI
+import Modal from "./ui/Modal";
 import InputField from "./ui/InputField";
 import Button from "./ui/Button";
 
-ReactModal.setAppElement("#root");
-
 /**
- * NoChargeModal V4.2 - Premium Special Action
- * Gestión de entregas de cortesía/sin cargo con trazabilidad de fecha.
+ * NoChargeModal V8.1 - Premium Special Action
+ * Gestión de entregas de cortesía/sin cargo bajo estándar Elite 2026.
  */
 const NoChargeModal = ({ isOpen, onClose, onSave }) => {
   const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
@@ -33,75 +30,55 @@ const NoChargeModal = ({ isOpen, onClose, onSave }) => {
     onSave({ date });
   };
 
+  const footer = (
+    <>
+      <Button
+        type="button"
+        variant="ghost"
+        className="px-6 font-black text-[10px] uppercase tracking-widest text-slate-400 hover:text-slate-600"
+        onClick={onClose}
+      >
+        Cancelar
+      </Button>
+      <Button
+        type="submit"
+        form="no-charge-form"
+        className="flex-[1.5] h-12 bg-amber-500 hover:bg-amber-600 text-white font-black shadow-lg shadow-amber-500/20"
+        icon={CheckCircle2}
+      >
+        Confirmar Bonificación
+      </Button>
+    </>
+  );
+
   return (
-    <ReactModal
+    <Modal
       isOpen={isOpen}
-      onRequestClose={onClose}
-      className="outline-none"
-      overlayClassName="fixed inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-md z-[100] p-4"
+      onClose={onClose}
+      title="Entrega Sin Cargo"
+      subtitle="Acción de Cortesía Institucional"
+      icon={Gift}
+      variant="warning"
+      footer={footer}
     >
-      <div className="bg-white/90 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl w-full max-w-lg border border-white/50 overflow-hidden animate-in zoom-in-95 duration-300">
-        {/* Header de DistinciÃ³n */}
-        <div className="bg-amber-500 p-8 text-white relative shadow-lg">
-          <button 
-            onClick={onClose}
-            className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all"
-          >
-            <X size={20} />
-          </button>
-          <div className="flex items-center gap-4 mb-2">
-            <div className="p-3 bg-white/10 rounded-2xl">
-              <Gift size={24} />
-            </div>
-            <h2 className="text-2xl font-black tracking-tight font-manrope">
-              Entrega Sin Cargo
-            </h2>
-          </div>
-          <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.2em]">
-            AcciÃ³n de CortesÃa Institucional
+      <form id="no-charge-form" onSubmit={handleSubmit} className="space-y-8">
+        <div className="p-6 bg-amber-50 rounded-3xl border border-amber-100 flex gap-4 animate-in slide-in-from-top-2">
+          <Info className="text-amber-500 shrink-0" size={20} />
+          <p className="text-xs font-bold text-amber-900 leading-relaxed">
+            Esta operación marcará todas las cuotas como bonificadas. Se requiere registro de fecha para auditoría.
           </p>
         </div>
 
-        <div className="p-8">
-          <div className="mb-8 p-6 bg-amber-50 rounded-3xl border border-amber-100 flex gap-4">
-            <Info className="text-amber-500 shrink-0" size={20} />
-            <p className="text-xs font-medium text-amber-900 leading-relaxed">
-              Esta operaciÃ³n marcarÃ¡ todas las cuotas como bonificadas. Se requiere registro de fecha para auditorÃa.
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <InputField
-              label="Fecha de Entrega"
-              type="date"
-              icon={Calendar}
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-            />
-
-            {/* Acciones */}
-            <div className="flex items-center gap-4 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="flex-1"
-                onClick={onClose}
-              >
-                Cancelar
-              </Button>
-              <Button 
-                type="submit" 
-                className="flex-[1.5] bg-amber-500 hover:bg-amber-600 text-white shadow-xl shadow-amber-500/20"
-                icon={CheckCircle2}
-              >
-                Confirmar Especial
-              </Button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </ReactModal>
+        <InputField
+          label="Fecha de Entrega"
+          type="date"
+          icon={Calendar}
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          required
+        />
+      </form>
+    </Modal>
   );
 };
 

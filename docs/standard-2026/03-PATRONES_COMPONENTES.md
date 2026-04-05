@@ -215,3 +215,30 @@ Las migas de pan deben reflejar la jerarquía de navegación de forma predecible
   ]}
 />
 ```
+
+---
+
+## 💹 Gestión de Pagos: QuotaCard Elite v8.1
+
+El componente de gestión de cuotas es el referente de **Alta Densidad Operativa**. ✨🚀
+
+### 1. Arquitectura "Zero-Air"
+- **Contenedor**: Debe usar `<Card padding="p-0" />` para neutralizar el aire residual.
+- **Espaciado**: Manual mediante `py-2.5 px-4` en el `className` para control vertical total. 👑
+
+### 2. Estándar "Success Glass" (v8.1)
+Para facilitar la auditoría visual rápida en planes de pago masivos:
+- **Estado PAGADO**: 
+    - Borde: `border-emerald-500`.
+    - Fondo: Gradiente suave `bg-emerald-50/20`.
+    - Texto Monto: `text-emerald-700`.
+- **Estado PENDIENTE**: 
+    - Borde: `border-slate-100` (o `primary` si es la próxima a cobrar).
+    - Fondo: `bg-white`.
+
+### 3. Fusión de Cronología
+Para ahorrar espacio, nunca usar bloques de texto inferiores para la fecha de cobro.
+- **Implementación**: La fecha de pago se inyecta en la cabecera (Nivel 1) junto al Badge de estado, liberando el área inferior para el vencimiento dominante (`text-[10.5px]`). 🏹⚖️✨🚀
+
+> [!TIP]
+> Mantener siempre el **Vencimiento** con un icono de calendario de `size={10}` para dar contexto semántico rápido sin ocupar altura. ✨💎

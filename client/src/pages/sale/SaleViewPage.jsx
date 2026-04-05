@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSales } from "../../context/SaleContext";
 import { useQuotas } from "../../context/QuotaContext";
+import { useFeedback } from "../../context/FeedbackContext";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Wallet,
@@ -41,6 +42,7 @@ dayjs.extend(utc);
 function SaleViewPage() {
   const { getSale, updateSale } = useSales();
   const { getQuotasBySale, updateQuota } = useQuotas();
+  const { showToast } = useFeedback();
   const [sale, setSale] = useState(null);
   const [quotas, setQuotas] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -86,8 +88,10 @@ function SaleViewPage() {
       await updateQuota(quota._id, { ...quota, paymentDate: null, paymentMethod: null });
       const refreshedQuotas = await getQuotasBySale(sale._id);
       setQuotas(refreshedQuotas);
+      showToast("Pago institucional anulado", "info");
     } catch (error) {
       console.error(error);
+      showToast("Error al anular pago", "error");
     }
   };
 
@@ -96,8 +100,10 @@ function SaleViewPage() {
       await updateQuota(updatedQuota._id, updatedQuota);
       const refreshedQuotas = await getQuotasBySale(sale._id);
       setQuotas(refreshedQuotas);
+      showToast("Cobro registrado correctamente", "success");
     } catch (error) {
       console.error(error);
+      showToast("Error al registrar cobro", "error");
     }
     setIsModalOpen(false);
   };
@@ -115,8 +121,10 @@ function SaleViewPage() {
       }
       const refreshed = await getQuotasBySale(sale._id);
       setQuotas(refreshed);
+      showToast("Liquidación de contado realizada con éxito", "success");
     } catch (err) {
       console.error(err);
+      showToast("Error en liquidación de contado", "error");
     } finally {
       setIsFullModalOpen(false);
     }
@@ -129,8 +137,10 @@ function SaleViewPage() {
       await updateSale(sale._id, { status: "Entregado sin cargo", lastFullPayment: data.date, fullPaymentMethod: "Otro" });
       const refreshed = await getQuotasBySale(sale._id);
       setQuotas(refreshed);
+      showToast("Bonificación de entrega sin cargo aplicada", "success");
     } catch (err) {
       console.error(err);
+      showToast("Error al procesar bonificación", "error");
     } finally {
       setIsNoChargeModalOpen(false);
     }
@@ -144,8 +154,10 @@ function SaleViewPage() {
       await updateSale(sale._id, { status: "Pendiente de pago", lastFullPayment: null, fullPaymentMethod: "" });
       const refreshed = await getQuotasBySale(sale._id);
       setQuotas(refreshed);
+      showToast("Bonificación de entrega sin cargo revertida", "info");
     } catch (err) {
       console.error(err);
+      showToast("Error al revertir bonificación", "error");
     }
   };
 

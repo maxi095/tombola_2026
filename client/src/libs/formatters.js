@@ -102,8 +102,41 @@ export const formatNumber = (number) => {
 };
 
 /**
+ * Formatea un CUIT como string (XX-XXXXXXXX-X).
+ * @param {string|number} cuit - El valor a formatear.
+ * @returns {string} - El CUIT formateado: "20-12345678-9"
+ */
+export const formatCuit = (cuit) => {
+  const clean = stripNonDigits(cuit);
+  if (clean.length === 0) return '';
+  
+  if (clean.length <= 2) return clean;
+  if (clean.length <= 10) return `${clean.slice(0, 2)}-${clean.slice(2)}`;
+  return `${clean.slice(0, 2)}-${clean.slice(2, 10)}-${clean.slice(10, 11)}`;
+};
+
+/**
+ * Formateador inteligente de documentos (DNI / CUIT).
+ * Detecta automÃ¡ticamente por longitud: 7-8 -> DNI, 11 -> CUIT.
+ * @param {string|number} value - El valor a formatear.
+ * @returns {string} - El documento formateado segÃºn su tipo.
+ */
+export const formatIdentityDocument = (value) => {
+  if (!value) return '';
+  const clean = stripNonDigits(value);
+  
+  // Si tiene 11 dÃgitos, es CUIT
+  if (clean.length === 11) {
+    return formatCuit(clean);
+  }
+  
+  // Por defecto (o si tiene <= 8 dÃgitos), aplicar formato de puntos (DNI)
+  return formatNumber(clean);
+};
+
+/**
  * AbrevaciÃ³n de formatNumber para documentos (DNI).
  * @param {number|string} dni - El documento a formatear.
  * @returns {string} - El DNI formateado.
  */
-export const formatDocument = (dni) => formatNumber(dni);
+export const formatDocument = (dni) => formatIdentityDocument(dni);

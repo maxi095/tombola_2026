@@ -60,15 +60,18 @@ Los formularios se dividen en "Dimensiones de Información".
 
 ---
 
-## 5. Densidad Técnica y Eficiencia de Espacio (v4.4)
+## 5. Densidad Técnica y Eficiencia de Espacio (v4.4 / v8.1)
 
-Para herramientas de gestión masiva, la visibilidad "Above the Fold" es prioritaria sobre el espacio en blanco estético.
+Para herramientas de gestión masiva, la visibilidad "Above the Fold" es prioritaria sobre el espacio en blanco estético. Todo panel de auditoría o cobranzas debe seguir el patrón de **Alta Densidad 05**.
 
 ### 📐 Reglas de Oro de Altura
-- **PageHeader**: Padding vertical máximo de `py-5`. Título principal en `text-3xl` para optimizar el área de trabajo inicial.
-- **Card Padding**: El estándar de aire interno es `p-10` (escritorio) y `p-8` (móvil). Evitar exceder estas medidas en formularios.
+- **PageHeader**: Padding vertical máximo de `py-5`. Título principal en `text-3xl` para optimizar el área de trabajo inicial. KPIs dinámicos integrados en subtítulo. ✨🚀
+- **Card Padding**: El estándar de aire interno es `p-10` (escritorio) y `p-8` (móvil). **EXCEPCIÓN**: Para vistas operativas, usar patrón **Zero-Air** (`padding="p-0"`) con control manual de píxeles. 🏹⚖️
 - **Header de Card**: Iconos de `24px` en contenedores de `w-12 h-12`. El margen inferior de la cabecera debe ser de `mb-10` con `pb-8`.
-- **Grid Gaps**: Usar `gap-y-6` para separar campos. Esto mantiene la legibilidad sin dispersar la información.
+- **Grid Gaps**: Usar `gap-y-6` para separar campos en formularios. Usar `gap-2` para agrupar bloques de dashboards técnicos.
+
+> [!TIP]
+> Ver [05-VISTAS_ALTA_DENSIDAD.md](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/05-VISTAS_ALTA_DENSIDAD.md) para la implementación detallada de tableros operativos masivos. ✨💎
 
 ---
 
