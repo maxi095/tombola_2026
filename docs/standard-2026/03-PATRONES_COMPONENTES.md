@@ -54,6 +54,23 @@ Todo listado institucional debe orquestarse con estos tres componentes para aseg
 </Card>
 ```
 
+### 🧱 Celdas Atómicas Especializadas (v9.4) ✨💎🚀
+
+Para garantizar la coherencia total y optimizar la densidad en notebooks HD, **está prohibido** maquetar manualmente el contenido decorativo de las celdas de ventas, usuarios o importes. Se deben usar los átomos integrados en `Table.jsx`:
+
+1.  **`<OperationCell label="Operación" number={saleNumber} />`**:
+    - **Uso**: Identificadores de transacciones y estados de operación.
+    - **Visual**: Doble línea (Label `slate-400` + Nro `primary` Bold). ✨💎
+2.  **`<StockCell main={numero} sub={nombreEdicion} />`**:
+    - **Uso**: Celdas que referencian cartones, ediciones o stock físico.
+    - **Visual**: Icono `Ticket` en recuadro índigo institucional con fondo `indigo-50`. 🏹⚖️
+3.  **`<UserCell name={nombre} sub={localidad} variant="primary|secondary" />`**:
+    - **Uso**: Vendedores (secondary - gris) y Asociados (primary - navy).
+    - **Visual**: Iconografía `UserIcon` y `MapPin` integrada para trazabilidad geográfica rápida. 🗺️
+4.  **`<AmountCell value={importe} />`**:
+    - **Uso**: Totales, cuotas y pagos financieros.
+    - **Visual**: Alineación derecha, color `emerald-600` (Éxito Financiero) y fondo sutil de éxito. 💸
+
 ### 🏷️ Sistema de Badges Atómicos
 Usar exclusivamente el componente `<Badge />`. No crear píldoras manuales con Tailwind.
 - **Primary**: Navy (#1B3B5A) - Usado para Administradores o estados críticos.

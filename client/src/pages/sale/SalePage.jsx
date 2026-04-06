@@ -11,10 +11,8 @@ import {
   ExternalLink,
   FilterX,
   Loader2,
-  MapPin,
-  User as UserIcon,
-  CreditCard,
-  Ticket
+  Ticket,
+  CreditCard
 } from "lucide-react";
 
 // Infraestructura Premium 2026
@@ -25,16 +23,16 @@ import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
 import InputField from "../../components/ui/InputField";
 import FilterBar from "../../components/ui/FilterBar";
-import { Table, THead, TBody, TH, TD } from "../../components/ui/Table";
+import { Table, THead, TBody, TH, TR, TD, OperationCell, StockCell, UserCell } from "../../components/ui/Table";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import { useFeedback } from "../../context/FeedbackContext";
 import { exportToExcel } from "../../libs/excelExport";
-// Se renombra a EliteSelect para evitar conflictos de identificación con Babel/Vite
 import EliteSelect from "../../components/ui/Select";
 
 /**
- * SalePage V5.5 - Consola de Operaciones Administrativas
+ * SalePage V5.6 - Consola de Operaciones Administrativas
  * Gestión centralizada de ventas con Omni-Search y trazabilidad de cuotas.
+ * Refactorizada con Celdas Atómicas Elite. 🏹⚖️✨💎
  */
 function SalePage() {
   const { getSales, sales, cancelSale, loading } = useSales();
@@ -58,12 +56,10 @@ function SalePage() {
   const filteredSales = useMemo(() => {
     let temp = Array.isArray(sales) ? sales : [];
 
-    // 1. Filtro global de edición
     if (selectedEdition) {
       temp = temp.filter(sale => sale.edition?._id === selectedEdition);
     }
 
-    // 2. Omni-Search Inteligente (Multidimensional)
     if (omniSearch) {
       const search = omniSearch.toLowerCase()
         .normalize("NFD")
@@ -87,18 +83,14 @@ function SalePage() {
       });
     }
 
-    // 3. Filtro por Estado
     if (statusFilter !== "all") {
       temp = temp.filter(sale => sale.status === statusFilter);
     } else {
-      // Por defecto omitimos anuladas si no se filtra específicamente, o las mostramos todas? 
-      // El legacy filtraba activas por defecto.
       temp = temp.filter(sale =>
         sale.status === "Pagado" || sale.status === "Pendiente de pago" || sale.status === "Entregado sin cargo"
       );
     }
 
-    // 4. Filtro por Fecha
     if (dateFilter) {
       temp = temp.filter(sale => dayjs.utc(sale.saleDate).format("YYYY-MM-DD") === dateFilter);
     }
@@ -116,10 +108,8 @@ function SalePage() {
       "client.person.document": "DNI Asociado",
       "status": "Estado",
       "saleDate": "Fecha"
-      // Nota: El detalle de cuotas se manejará en una transformación de data antes de exportar
     };
 
-    // Transformación para exportar con detalle de cuotas
     const exportData = filteredSales.map(sale => {
       const paidInstallments = (sale.installments || []).filter(i => i.status === "Pagado").length;
       const totalInstallments = (sale.installments || []).length;
@@ -181,7 +171,7 @@ function SalePage() {
         ]}
       />
 
-      <div className="pb-24">
+      <div className="pb-8">
         <FilterBar>
           <div className="flex-1 min-w-[320px]">
             <InputField
@@ -223,127 +213,104 @@ function SalePage() {
 
           <Button
             variant="ghost"
+            icon={FilterX}
             className="h-12 px-5 rounded-2xl bg-slate-50 text-slate-600 border border-slate-200 shadow-sm hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all font-black text-[10px] uppercase tracking-widest gap-2"
             onClick={clearFilters}
           >
-            <FilterX size={16} />
             Limpiar
           </Button>
         </FilterBar>
 
-        <Card padding="p-0 overflow-hidden">
+        <Card padding="p-0 overflow-hidden shadow-sm border-slate-200/60">
           {loading ? (
             <div className="py-40 flex flex-col items-center gap-6">
               <Loader2 className="animate-spin text-primary opacity-20" size={64} />
               <p className="text-[11px] font-black text-muted tracking-widest uppercase animate-pulse">Sincronizando Operaciones...</p>
             </div>
           ) : (
-            <>
-              <Table>
-                <THead>
-                  <TH>Identificación</TH>
-                  <TH>Cartón / Edición</TH>
-                  <TH>Vendedor</TH>
-                  <TH>Asociado / Localidad</TH>
-                  <TH>Estado</TH>
-                  <TH>Fecha</TH>
-                  <TH className="text-right px-8">ACCIONES</TH>
-                </THead>
-                <TBody>
-                  {filteredSales.length === 0 ? (
-                    <tr>
-                      <td colSpan="7" className="py-20 text-center text-slate-300 font-medium italic">Sin ventas para este criterio</td>
-                    </tr>
-                  ) : (
-                    filteredSales.map((sale) => (
-                      <tr key={sale._id} className="group hover:bg-slate-50/40 transition-all duration-300">
-                        <TD>
-                          <div className="flex flex-col">
-                            <span className="text-[11px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">Operación</span>
-                            <span className="text-sm font-black text-primary font-manrope">#{sale.saleNumber || "---"}</span>
-                          </div>
-                        </TD>
-                        <TD>
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-500 shrink-0">
-                              <Ticket size={14} />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-sm font-black text-slate-700 leading-none mb-1">{sale.bingoCard?.number || "SIN Nº"}</span>
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{sale.edition?.name || "Global"}</span>
-                            </div>
-                          </div>
-                        </TD>
-                        <TD>
-                          <div className="flex items-start gap-2 max-w-[170px]">
-                            <UserIcon size={12} className="text-slate-300 mt-1 shrink-0" />
-                            <span className="text-[11px] font-bold text-slate-600 leading-tight">
-                              {sale.seller?.person ? `${sale.seller.person.firstName} ${sale.seller.person.lastName}` : "No asig."}
-                            </span>
-                          </div>
-                        </TD>
-                        <TD>
-                          <div className="flex flex-col gap-2 max-w-[200px]">
-                            <div className="flex items-start gap-2">
-                              <UserIcon size={12} className="text-primary mt-1 shrink-0 opacity-40" />
-                              <span className="text-xs font-black text-primary leading-tight">
-                                {sale.client?.person ? `${sale.client.person.lastName} ${sale.client.person.firstName}` : "S/D"}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 pl-4">
-                              <MapPin size={10} className="text-slate-300 shrink-0" />
-                              <span className="text-[10px] font-bold text-slate-400 truncate">{sale.client?.person?.city || "Sin localidad"}</span>
-                            </div>
-                          </div>
-                        </TD>
-                        <TD>
-                          <Badge
-                            variant={
-                              sale.status === "Pagado" ? "success" :
-                                sale.status === "Anulada" ? "danger" :
-                                  sale.status === "Pendiente de pago" ? "warning" : "secondary"
-                            }
-                            className="gap-1.5"
+            <Table>
+              <THead>
+                <TH>Nro venta</TH>
+                <TH>Cartón / Edición</TH>
+                <TH>Vendedor</TH>
+                <TH>Asociado / Localidad</TH>
+                <TH>Estado</TH>
+                <TH>Fecha</TH>
+                <TH className="text-right px-8">ACCIONES</TH>
+              </THead>
+              <TBody>
+                {filteredSales.length === 0 ? (
+                  <TR>
+                    <TD colSpan="7" className="py-20 text-center text-slate-300 font-medium italic">Sin ventas para este criterio</TD>
+                  </TR>
+                ) : (
+                  filteredSales.map((sale) => (
+                    <TR key={sale._id}>
+                      <OperationCell number={sale.saleNumber} />
+                      
+                      <StockCell 
+                        main={sale.bingoCard?.number || "SIN Nº"} 
+                        sub={sale.edition?.name || "Global"} 
+                      />
+
+                      <UserCell 
+                        variant="secondary"
+                        name={sale.seller?.person ? `${sale.seller.person.firstName} ${sale.seller.person.lastName}` : "No asig."}
+                      />
+
+                      <UserCell 
+                        variant="primary"
+                        name={sale.client?.person ? `${sale.client.person.lastName} ${sale.client.person.firstName}` : "S/D"}
+                        sub={sale.client?.person?.city || "Sin localidad"}
+                      />
+
+                      <TD>
+                        <Badge
+                          variant={
+                            sale.status === "Pagado" ? "success" :
+                              sale.status === "Anulada" ? "danger" :
+                                sale.status === "Pendiente de pago" ? "warning" : "secondary"
+                          }
+                          className="gap-1.5"
+                        >
+                          <CreditCard size={10} />
+                          {sale.status}
+                        </Badge>
+                      </TD>
+                      <TD>
+                        <div className="text-xs font-black text-slate-500">
+                          {dayjs.utc(sale.saleDate).format('DD/MM/YYYY')}
+                        </div>
+                      </TD>
+                      <TD className="text-right px-8">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="bg-slate-50 hover:bg-primary hover:text-white"
+                            onClick={() => navigate(`/sale/view/${sale._id}`)}
+                            icon={ExternalLink}
                           >
-                            <CreditCard size={10} />
-                            {sale.status}
-                          </Badge>
-                        </TD>
-                        <TD>
-                          <div className="text-xs font-black text-slate-500">
-                            {dayjs.utc(sale.saleDate).format('DD/MM/YYYY')}
-                          </div>
-                        </TD>
-                        <TD className="text-right px-8">
-                          <div className="flex justify-end gap-2">
+                            Detalle
+                          </Button>
+                          {sale.status !== "Anulada" && (
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="bg-slate-50 hover:bg-primary hover:text-white"
-                              onClick={() => navigate(`/sale/view/${sale._id}`)}
-                              icon={ExternalLink}
+                              className="text-slate-400 hover:text-red-600 hover:bg-red-50"
+                              onClick={() => handleCancelClick(sale._id)}
+                              icon={Ban}
                             >
-                              Detalle
+                              Anular
                             </Button>
-                            {sale.status !== "Anulada" && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-slate-400 hover:text-red-600 hover:bg-red-50"
-                                onClick={() => handleCancelClick(sale._id)}
-                                icon={Ban}
-                              >
-                                Anular
-                              </Button>
-                            )}
-                          </div>
-                        </TD>
-                      </tr>
-                    ))
-                  )}
-                </TBody>
-              </Table>
-            </>
+                          )}
+                        </div>
+                      </TD>
+                    </TR>
+                  ))
+                )}
+              </TBody>
+            </Table>
           )}
         </Card>
       </div>

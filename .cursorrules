@@ -51,9 +51,9 @@ Si el usuario pide documentar o implementar:
 - **Verificación de Exportaciones**: Queda prohibido importar iconos "nuevos" sin verificar su existencia en `node_modules/lucide-react/package.json`.
 - **Icons Fallback**: En caso de duda, usa iconos básicos como `Layout`, `Package`, `ShoppingCart`, `Users`.
 - **Gestión**: `Gestión de [Módulo]` (Listados).
-- **Alta**: `Alta de [Módulo]` (Creación).
+- **Registro**: `Registrar [Módulo]` (Alta de datos).
 - **Editar**: `Editar [Módulo]` (Edición).
-- **Acciones**: `Nuevo [Objeto]`, `Crear [Objeto]`, `Guardar Cambios`.
+- **Acciones**: `Crear [Objeto]`, `Guardar Cambios`.
 ---
 
 ## 🔄 Workflow de Implementación (Atomic Path)

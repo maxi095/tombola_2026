@@ -2,6 +2,17 @@
 
 Este estándar define la arquitectura para paneles de gestión masiva donde la visibilidad "Above the Fold" (sin scroll) es la prioridad operacional absoluta.
 
+## ⚓ Resiliencia HD (Estrategia 1366px) ✨🚀
+
+Para garantizar una experiencia premium en notebooks de 15.6", se aplican reglas de **compactación quirúrgica**:
+
+1.  **KPIs Sin Iconos**: En resoluciones menores a `1536px (2xl)`, se ocultan los iconos de los KPICards en cabecera para priorizar la visualización completa de los montos monetarios. 🏹⚖️
+2.  **Gap Compacto**: El espaciado entre métricas disminuye de `gap-8` a `gap-4/6` en HD para evitar el scroll horizontal en la cabecera fija. ✨💎
+3.  **Botones Slim-Line**: Los botones de acción en cabecera deben usar un padding horizontal reducido (`px-5` / `px-6`) y texto dinámico (ocultar palabras secundarias en pantallas pequeñas).
+4.  **Reflow de Grilla**: Las grillas de 5 columnas (como en `QuotaCard`) deben bajar a **4 columnas** en resolución `xl (1280px - 1440px)` para mantener el ancho operativo de cada tarjeta. 🚀
+
+---
+
 ## 🛡️ Patrón Zero-Air (Safe Density Control)
 
 Para herramientas de cobranza, ventas o auditoría, se debe anular el padding por defecto de los contenedores institucionales para tener control quirúrgico del espacio.

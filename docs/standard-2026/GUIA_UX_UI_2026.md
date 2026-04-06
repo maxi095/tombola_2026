@@ -21,12 +21,12 @@ La forma en que nombramos las acciones define la profesionalidad del sistema.
 ### 🏷️ Títulos de Pantalla (`PageHeader`)
 Se debe usar una nomenclatura jerárquica y clara:
 - **Listados**: Siempre usar el prefijo `Gestión de...`. (Ej: *Gestión de Usuarios*, *Gestión de Ventas*).
-- **Altas**: Siempre usar el prefijo `Alta de...`. (Ej: *Alta de Usuario*).
+- **Registro**: Siempre usar el prefijo `Registrar...`. (Ej: *Registrar Usuario*).
 - **Edición**: Siempre usar el prefijo `Editar...`. (Ej: *Editar Usuario*).
 
 ### 🔘 Botones y Acciones
 Evitar términos genéricos. Ser específico con el objeto:
-- **Creación**: `Nuevo [Objeto]` (Ej: *Nuevo Usuario*).
+- **Creación**: `Crear [Objeto]` (Ej: *Crear Usuario*).
 - **Confirmación final**: `Crear [Objeto]` o `Guardar Cambios`.
 - **Navegación**: `Volver` (no "Atrás").
 
@@ -71,7 +71,11 @@ Para herramientas de gestión masiva, la visibilidad "Above the Fold" es priorit
 - **Grid Gaps**: Usar `gap-y-6` para separar campos en formularios. Usar `gap-2` para agrupar bloques de dashboards técnicos.
 
 > [!TIP]
-> Ver [05-VISTAS_ALTA_DENSIDAD.md](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/05-VISTAS_ALTA_DENSIDAD.md) para la implementación detallada de tableros operativos masivos. ✨💎
+> - [00-ATLAS_DOCUMENTAL.md](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/00-ATLAS_DOCUMENTAL.md) (Mapa de Navegación Maestro) 🗺️
+> - [01-SISTEMA_DISENO.md](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/01-SISTEMA_DISENO.md) (DNA Visual & Tokens Elite v5.0) ✨💎
+> - [05-VISTAS_ALTA_DENSIDAD.md](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/05-VISTAS_ALTA_DENSIDAD.md) (Zero-Air & Resiliencia HD) 🏹⚖️
+> - [06-MODALES_ELITE.md](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/06-MODALES_ELITE.md) (Estandarización de variantes y resúmenes) ✨💎
+> - [07-FLUIDEZ_OPERATIVA.md](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/07-FLUIDEZ_OPERATIVA.md) (Layout Elástico y Filtros Dinámicos) 🚀
 
 ---
 

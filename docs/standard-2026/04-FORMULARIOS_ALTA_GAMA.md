@@ -94,7 +94,7 @@ Muestra el signo `$ ` como **prefijo estÃ¡tico** (fuera del valor editable) pa
 ## ⚙️ Reglas de Oro en Formularios
 1. **Sticky PageHeader**: Toda pÃ¡gina de formulario debe tener un `<PageHeader />` fijo con botones de "Volver" y "Guardar Cambios".
 2. **Nomenclatura SemÃ¡ntica**: 
-   - Altas: `title="Alta de [Objeto]"` y `label="Crear [Objeto]"`.
+   - Registro: `title="Registrar [Objeto]"` y `label="Crear [Objeto]"`.
    - Ediciones: `title="Editar [Objeto]"` y `label="Guardar Cambios"`.
 3. **ValidaciÃ³n Reactiva**: Usar `react-hook-form` con mensajes de error descriptivos (`errors.fieldName?.message`).
 4. **Modo EdiciÃ³n de Claves**: En `/edit`, las contraseÃ±as se ocultan tras un botÃ³n de "Restablecer ContraseÃ±a" para evitar cambios accidentales.

@@ -2,18 +2,20 @@ import { useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useEditionFilter } from "../context/EditionFilterContext";
 import { useEditions } from "../context/EditionContext";
-import { Search, Bell, ChevronDown, LogOut, Settings, User as UserIcon } from "lucide-react";
+import { useLayout } from "../context/LayoutContext";
+import { Search, Bell, ChevronDown, LogOut, Settings, User as UserIcon, Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 // Se renombra a EliteSelect para evitar conflictos de identificación con Babel/Vite
 import EliteSelect from "./ui/Select";
 
 /**
- * BarraTareas - Premium 2026 v4.3 (Atomic Integration)
+ * BarraTareas - Premium 2026 v4.4 (Flow Integration)
  * Incluye el Filtro Maestro de Ediciones y gestión de perfil institucional.
  */
 export default function BarraTareas() {
   const { user, logout, isAuthenticated } = useAuth();
   const { selectedEdition, setSelectedEdition } = useEditionFilter();
   const { editions, getEditions } = useEditions();
+  const { isSidebarCollapsed, toggleSidebar } = useLayout();
 
   // 1) Cargar ediciones al detectar autenticación
   useEffect(() => {
@@ -35,6 +37,15 @@ export default function BarraTareas() {
 
       {/* SECTOR IZQUIERDO: Búsqueda Global y Selector de Edición */}
       <div className="flex items-center gap-8 flex-1 max-w-3xl">
+
+        {/* 🍔 Trigger de Libertad: Toggle Layout ✨💎 */}
+        <button 
+          onClick={toggleSidebar}
+          className="p-2.5 rounded-xl bg-slate-50 text-slate-400 hover:text-primary hover:bg-primary/5 transition-all active:scale-95 group"
+          title={isSidebarCollapsed ? "Expandir Menú" : "Colapsar Menú"}
+        >
+          {isSidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
+        </button>
 
         {/* Selector de Edición Maestro */}
         <div className="flex items-center gap-3 border-r border-slate-100 pr-8">

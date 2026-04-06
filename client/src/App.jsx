@@ -62,67 +62,75 @@ import { UserProvider } from "./context/UserContext";
 import UserPage from "./pages/user/UserPage";
 import UserFormPage from "./pages/user/UserFormPage";
 import { FeedbackProvider } from "./context/FeedbackContext";
+import { LayoutProvider, useLayout } from "./context/LayoutContext";
 import Toast from "./components/ui/Toast";
 
 function App() {
   return (
     <FeedbackProvider>
-      <AuthProvider>
-        <EditionProvider>
-          <EditionFilterProvider>
-            <BingoCardProvider>
-              <QuotaProvider>
-                <PersonProvider>
-                  <SellerProvider>
-                    <SellerPaymentProvider>
-                      <ClientProvider>
-                        <SalesProvider>
-                          <DashboardProvider>
-                            <DrawProvider>
-                              <UserProvider>
-                                <BrowserRouter>
-                                  <Layout />
-                                </BrowserRouter>
-                              </UserProvider>
-                            </DrawProvider>
-                          </DashboardProvider>
-                        </SalesProvider>
-                      </ClientProvider>
-                    </SellerPaymentProvider>
-                  </SellerProvider>
-                </PersonProvider>
-              </QuotaProvider>
-            </BingoCardProvider>
-          </EditionFilterProvider>
-        </EditionProvider>
-      </AuthProvider>
+      <LayoutProvider>
+        <AuthProvider>
+          <EditionProvider>
+            <EditionFilterProvider>
+              <BingoCardProvider>
+                <QuotaProvider>
+                  <PersonProvider>
+                    <SellerProvider>
+                      <SellerPaymentProvider>
+                        <ClientProvider>
+                          <SalesProvider>
+                            <DashboardProvider>
+                              <DrawProvider>
+                                <UserProvider>
+                                  <BrowserRouter>
+                                    <Layout />
+                                  </BrowserRouter>
+                                </UserProvider>
+                              </DrawProvider>
+                            </DashboardProvider>
+                          </SalesProvider>
+                        </ClientProvider>
+                      </SellerPaymentProvider>
+                    </SellerProvider>
+                  </PersonProvider>
+                </QuotaProvider>
+              </BingoCardProvider>
+            </EditionFilterProvider>
+          </EditionProvider>
+        </AuthProvider>
+      </LayoutProvider>
     </FeedbackProvider>
   );
 }
 
 function Layout() {
   const location = useLocation();
-
+  const { isSidebarCollapsed, isSidebarHovered } = useLayout(); // Inyectamos isSidebarHovered
   const isDrawDisplay = location.pathname.startsWith("/draw/display/");
-
   const hideNavbar = ["/bingoCardStatus", "/login", "/"]
     .includes(location.pathname) || isDrawDisplay;
-
   const hideSidebar = ["/bingoCardStatus", "/login", "/register", "/"]
     .includes(location.pathname) ||
     location.pathname.startsWith("/sellerPayment/") && location.pathname.endsWith("/print") ||
     isDrawDisplay;
-
+  // EL TRUCO ÉLITE:
+  const structuralWidth = isSidebarCollapsed ? '70px' : '260px'; // El margen real
+  const visualWidth = (isSidebarCollapsed && !isSidebarHovered) ? '70px' : '260px'; // El ancho visual
   return (
     <div className="app-layout bg-slate-50 flex min-h-screen">
       <Toast />
       {!hideSidebar && (
-        <div className="w-[260px] fixed h-full z-40 bg-white">
+        <div 
+          className="fixed h-full z-[60] bg-white border-r border-slate-100 transition-all duration-300 ease-in-out overflow-hidden shadow-2xl shadow-slate-900/5"
+          style={{ width: visualWidth }} // Usamos visualWidth para el Sidebar
+        >
           <SidebarWrapper />
         </div>
       )}
-
-      <div className={`main-container flex-1 flex flex-col ${!hideSidebar ? 'ml-[260px]' : ''}`}>
+      <div
+        className="main-container flex-1 flex flex-col transition-all duration-300 ease-in-out"
+        style={{ marginLeft: !hideSidebar ? structuralWidth : '0px' }} // El contenido NO se mueve por el hover
+      >
         {!hideNavbar && (
           <header className={`h-16 border-b border-slate-100 bg-white sticky top-0 z-50`}>
             <BarraTareas />
