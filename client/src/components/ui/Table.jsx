@@ -22,26 +22,26 @@ export const THead = ({ children }) => (
   </thead>
 );
 
-export const TBody = ({ children }) => (
-  <tbody className="divide-y divide-slate-50">
+export const TBody = ({ children, striped = true }) => (
+  <tbody className={`divide-y divide-slate-50 ${striped ? "[&_tr:nth-child(even)]:bg-slate-50/30" : ""}`}>
     {children}
   </tbody>
 );
 
 export const TR = ({ children, className = "" }) => (
-  <tr className={`hover:bg-slate-50/50 transition-colors duration-200 ${className}`}>
+  <tr className={`hover:bg-slate-50/50 transition-colors duration-200 group/row ${className}`}>
     {children}
   </tr>
 );
 
-export const TH = ({ children, className = "" }) => (
-  <th className={`px-4 py-4 text-[11px] font-black text-muted uppercase tracking-[0.15em] bg-slate-50/50 ${className}`}>
+export const TH = ({ children, className = "", align = "left" }) => (
+  <th className={`px-4 py-4 text-[11px] font-black text-muted uppercase tracking-[0.15em] bg-slate-50/50 text-${align} ${className}`}>
     {children}
   </th>
 );
 
-export const TD = ({ children, className = "" }) => (
-  <td className={`px-4 py-4 text-sm ${className}`}>
+export const TD = ({ children, className = "", align = "left" }) => (
+  <td className={`px-4 py-4 text-sm text-${align} ${className}`}>
     {children}
   </td>
 );

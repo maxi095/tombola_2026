@@ -34,7 +34,7 @@ const ColumnPicker = ({
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
-    
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -43,7 +43,7 @@ const ColumnPicker = ({
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       ref={pickerRef}
       className="absolute right-0 top-12 w-80 bg-white border border-slate-200/60 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[32px] z-[101] p-6 animate-in slide-in-from-top-4 duration-300 ring-4 ring-slate-100/50"
     >
@@ -112,7 +112,7 @@ const ColumnPicker = ({
 
       {/* Footer / Aviso 📐 */}
       <div className="mt-5 text-[9px] font-bold text-slate-300 uppercase tracking-widest text-center italic border-t border-slate-50 pt-3">
-        La vista se guardará automáticamente 🧠
+        La vista se guardará automáticamente
       </div>
     </div>
   );

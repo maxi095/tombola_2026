@@ -114,13 +114,13 @@ function Layout() {
     location.pathname.startsWith("/sellerPayment/") && location.pathname.endsWith("/print") ||
     isDrawDisplay;
   // EL TRUCO ÉLITE:
-  const structuralWidth = isSidebarCollapsed ? '70px' : '260px'; // El margen real
-  const visualWidth = (isSidebarCollapsed && !isSidebarHovered) ? '70px' : '260px'; // El ancho visual
+  const structuralWidth = isSidebarCollapsed ? '70px' : '220px'; // El margen real
+  const visualWidth = (isSidebarCollapsed && !isSidebarHovered) ? '70px' : '220px'; // El ancho visual
   return (
     <div className="app-layout bg-slate-50 flex min-h-screen">
       <Toast />
       {!hideSidebar && (
-        <div 
+        <div
           className="fixed h-full z-[60] bg-white border-r border-slate-100 transition-all duration-300 ease-in-out overflow-hidden shadow-2xl shadow-slate-900/5"
           style={{ width: visualWidth }} // Usamos visualWidth para el Sidebar
         >

@@ -48,13 +48,13 @@ const Sidebar = () => {
         to={to}
         onClick={() => setSidebarHovered(false)}
         title={isSidebarCollapsed && !isSidebarHovered ? children : ""}
-        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive(to)
+        className={`flex items-center gap-2.5 px-3 py-1.5 rounded-xl transition-all duration-200 group ${isActive(to)
           ? 'bg-blue-50 text-blue-900 shadow-sm shadow-blue-900/5'
           : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
           }`}
       >
-        <div className={`p-1.5 rounded-lg transition-colors shrink-0 ${isActive(to) ? 'bg-blue-900 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-900'}`}>
-          <Icon size={18} />
+        <div className={`p-1 rounded-lg transition-colors shrink-0 ${isActive(to) ? 'bg-blue-900 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-900'}`}>
+          <Icon size={16} />
         </div>
         {isVisuallyExpanded && (
           <div className="flex-1 flex items-center justify-between min-w-0 animate-in fade-in slide-in-from-left-2 duration-300">
@@ -72,7 +72,8 @@ const Sidebar = () => {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className={`px-4 py-6 flex items-center transition-all duration-300 ${!isVisuallyExpanded ? 'justify-center border-b border-slate-50 mb-2' : 'gap-3 px-6'}`}>
+      {/* Cabecera compactada (py-6 -> py-4) */}
+      <div className={`px-4 py-4 flex items-center transition-all duration-300 ${!isVisuallyExpanded ? 'justify-center border-b border-slate-50 mb-2' : 'gap-3 px-6'}`}>
         <div className="w-10 h-10 bg-blue-900 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-900/20 transform rotate-3 shrink-0">
           <Layout size={24} />
         </div>
@@ -99,27 +100,28 @@ const Sidebar = () => {
         <SidebarLink to="/draws" icon={Calendar}>Sorteos</SidebarLink>
 
         {user?.roles === 'Administrador' && (
-          <div className={`pt-4 mt-4 border-t border-slate-50 ${!isVisuallyExpanded ? 'px-0' : ''}`}>
+          <div className={`pt-2 mt-2 border-t border-slate-50 ${!isVisuallyExpanded ? 'px-0' : ''}`}>
             <SidebarLink to="/users" icon={Users}>Usuarios</SidebarLink>
           </div>
         )}
       </nav>
 
-      <div className={`p-4 bg-slate-50/50 mt-auto border-t border-slate-100 transition-all duration-300 ${!isVisuallyExpanded ? 'px-2' : 'px-4'}`}>
+      {/* Pie compactado (p-4 -> p-3) */}
+      <div className={`p-3 bg-slate-50/50 mt-auto border-t border-slate-100 transition-all duration-300 ${!isVisuallyExpanded ? 'px-2' : 'px-4'}`}>
         {isVisuallyExpanded ? (
           <SidebarLink to="/profile" icon={Settings}>Ajustes</SidebarLink>
         ) : (
-          <Link to="/profile" title="Ajustes" className="flex items-center justify-center p-2 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-900 mb-2">
+          <Link to="/profile" title="Ajustes" className="flex items-center justify-center p-2 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-900 mb-1">
             <Settings size={18} />
           </Link>
         )}
         <button
           onClick={logout}
           title={!isVisuallyExpanded ? "Cerrar Sesión" : ""}
-          className={`flex items-center gap-3 py-3 rounded-xl text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all group w-full text-left ${!isVisuallyExpanded ? 'px-2 items-center justify-center' : 'px-4'}`}
+          className={`flex items-center gap-2.5 py-2 rounded-xl text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all group w-full text-left ${!isVisuallyExpanded ? 'px-2 items-center justify-center' : 'px-4'}`}
         >
-          <div className="p-1.5 rounded-lg bg-slate-100 text-slate-400 group-hover:bg-red-100 group-hover:text-red-600 shrink-0">
-            <LogOut size={18} />
+          <div className="p-1 rounded-lg bg-slate-100 text-slate-400 group-hover:bg-red-100 group-hover:text-red-600 shrink-0">
+            <LogOut size={16} />
           </div>
           {isVisuallyExpanded && (
             <span className="text-[13px] font-bold animate-in fade-in slide-in-from-left-2 duration-300">Cerrar Sesión</span>
