@@ -35,13 +35,13 @@ export const TR = ({ children, className = "" }) => (
 );
 
 export const TH = ({ children, className = "" }) => (
-  <th className={`px-8 py-6 text-[11px] font-black text-muted uppercase tracking-[0.2em] bg-slate-50/50 ${className}`}>
+  <th className={`px-4 py-4 text-[11px] font-black text-muted uppercase tracking-[0.15em] bg-slate-50/50 ${className}`}>
     {children}
   </th>
 );
 
 export const TD = ({ children, className = "" }) => (
-  <td className={`px-8 py-6 text-sm ${className}`}>
+  <td className={`px-4 py-4 text-sm ${className}`}>
     {children}
   </td>
 );
