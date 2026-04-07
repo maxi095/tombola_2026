@@ -1,13 +1,51 @@
-# 🦾 Reglas Maestras: Premium 2026 v4.6 (Atomic & Integrity Full)
+# 🦾 Reglas Maestras: Premium 2026 v5.0 (Cerebro Blindado) ✨🚀
 
-Este archivo define el comportamiento obligatorio de cualquier asistente de IA en **Gestión Tómbola**. El incumplimiento de estas reglas fragmentará la arquitectura del sistema.
+Este archivo define el comportamiento obligatorio del agente en **Gestión Tómbola**. El incumplimiento de estas normas fragmenta la arquitectura institucional.
 
-## 📚 Consulta Obligatoria de Documentación (Knowledge First)
+## 📚 Consulta Obligatoria (Knowledge Loop)
 
-Antes de cualquier cambio en UI, **debes leer y aplicar**:
-1. `docs/standard-2026/GUIA_UX_UI_2026.md` (Leyes de Integridad y Semántica).
-2. `docs/standard-2026/03-PATRONES_COMPONENTES.md` (Uso de Table, Badge, FilterBar, Feedback).
-3. `docs/standard-2026/04-FORMULARIOS_ALTA_GAMA.md` (Uso de Card, InputField, Select).
+Antes de cualquier cambio, **debes leer y aplicar**:
+1. `docs/standard-2026/08-GLOSARIO_WORDING.md` (Leyes de Nomenclatura Estricta). **PRIORIDAD MÁXIMA**.
+2. `docs/standard-2026/03-PATRONES_COMPONENTES.md` (Uso de Table, useTableColumns y FilterBar).
+3. `docs/standard-2026/05-VISTAS_ALTA_DENSIDAD.md` (Densidad Zero-Air).
+
+---
+
+## ⚖️ Ley de Integridad Semántica (Wording Absolute)
+
+**PROHIBIDO** improvisar etiquetas. Referenciar siempre el Estándar 08.
+- **Acciones**: Siempre `Crear [Objeto]`, `Exportar`, `Guardar cambios`. Nunca "Nuevo", "Vincular" o "Grabar". 🏹⚖️
+- **Títulos**: `Gestión de...` para listados; `Registrar...` para altas; `Editar...` para cambios.
+- **Estados**: Usar `Anulada` exclusivamente (no "Cancelada").
+
+---
+
+## 🏗️ Ley de Componentes y Hooks Atómicos
+
+**PROHIBIDO** construir layouts manuales si ya existe un componente en `client/src/components/ui/`.
+- **Listados**: La estructura obligatoria es: `<PageHeader />` -> `<FilterBar />` -> `<Card padding="p-0">` -> `<Table />`.
+- **Tablas Dinámicas**: Es OBLIGATORIO usar el hook `useTableColumns` (v17.1) para gestionar visibilidad y blindar la columna de `ACCIONES` al final del array mediante el flag `isFixed: true`. ⚖️
+- **Inputs**: Usar `<InputField />` y `<Select />`. Gestionan internamente etiquetas y errores.
+
+---
+
+## 🎨 ADN Visual (Identidad Elite)
+
+- **Navy Institucional**: El color primario es `#1B3B5A`. Usar clases `text-primary` o `bg-primary`.
+- **Iconografía**: Usar exclusivamente iconos de `lucide-react` validados en `package.json`.
+- **Densidad**: En vistas operativas de alta densidad, usar patrón **Zero-Air** (`p-0`).
+
+---
+
+## 🔄 Workflow de Sincronización (Atomic Path)
+
+1. **Analizar**: Verificar el módulo y buscar componentes en `ui/`.
+2. **Consultar**: Leer el Glosario 08 para asegurar el Wording correcto.
+3. **Implementar**: Usar hooks atómicos (`useTableColumns`, `useFeedback`) y componentes UI. No omitir código.
+4. **Documentar**: Actualizar el `task.md` y si hay un nuevo patrón, inyectarlo en `03-PATRONES_COMPONENTES.md`.
+
+> [!IMPORTANT]
+> **Calidad Institucional**: Construimos software que se siente como una herramienta financiera de alto nivel. Si el código se ve "genérico" o la nomenclatura es inconsistente, has fallado. No aceptamos MVPs. ✨💎🚀
 
 ---
 
@@ -15,9 +53,6 @@ Antes de cualquier cambio en UI, **debes leer y aplicar**:
 
 **PROHIBIDO** alterar la lógica de negocio o la estructura de datos legacy sin autorización explícita.
 - **Respeto al Input**: Si el formulario original tiene `X` campos, la modernización debe mantener exactamente esos `X` campos. No se quitan ni agregan campos.
-- **Mecánica vs Motor**: Nuestra misión es **UX/UI Modernization**. Reemplazamos la "Mecánica Visual" sin tocar el "Motor de Negocio" (APIs, Schemas, Controladores).
-
----
 
 ## 🏗️ Ley de Componentes Atómicos
 

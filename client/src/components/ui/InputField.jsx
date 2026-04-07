@@ -13,7 +13,7 @@ const InputField = forwardRef(({
   prefix,
   ...props 
 }, ref) => {
-  const baseInput = "w-full bg-slate-50 border-2 border-transparent rounded-premium-input px-6 py-4 text-sm font-semibold text-primary focus:bg-white focus:ring-8 focus:ring-primary/5 focus:border-primary/10 placeholder:text-slate-300 transition-all outline-none duration-300";
+  const baseInput = "w-full bg-white border border-slate-200/60 shadow-sm rounded-premium-input px-6 py-4 text-sm font-semibold text-primary focus:ring-8 focus:ring-primary/5 focus:border-primary/20 placeholder:text-slate-300 transition-all outline-none duration-300";
   
   return (
     <div className={`space-y-2.5 ${className}`}>

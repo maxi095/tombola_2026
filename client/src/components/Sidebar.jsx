@@ -91,7 +91,7 @@ const Sidebar = () => {
         <SidebarLink to="/sales" icon={ShoppingCart}>Ventas</SidebarLink>
         <SidebarLink to="/salesTarjetaUnica" icon={ShoppingCart}>Tarjeta Única</SidebarLink>
         <SidebarLink to="/allQuotas" icon={FileText}>Historial</SidebarLink>
-        <SidebarLink to="/quotas" icon={Wallet}>Cuotas</SidebarLink>
+        <SidebarLink to="/quotas" icon={Wallet}>Cuotas Vencidas</SidebarLink>
         <SidebarLink to="/clients" icon={CheckCircle}>Asociados</SidebarLink>
         <SidebarLink to="/sellers" icon={Briefcase}>Vendedores</SidebarLink>
         <SidebarLink to="/sellerPayments" icon={Wallet}>Pagos</SidebarLink>

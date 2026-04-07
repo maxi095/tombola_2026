@@ -116,7 +116,7 @@ export const getBingoCardsWithSales = async (req, res) => {
               seller: sale.seller?.person
                 ? {
                     _id: sale.seller._id,
-                    personId: sale.seller.person._id,
+                    fullName: `${sale.seller.person.firstName} ${sale.seller.person.lastName}`.trim(),
                     firstName: sale.seller.person.firstName,
                     lastName: sale.seller.person.lastName
                   }
@@ -124,9 +124,10 @@ export const getBingoCardsWithSales = async (req, res) => {
               client: sale.client?.person
                 ? {
                     _id: sale.client._id,
-                    personId: sale.client.person._id,
+                    fullName: `${sale.client.person.firstName} ${sale.client.person.lastName}`.trim(),
                     firstName: sale.client.person.firstName,
-                    lastName: sale.client.person.lastName
+                    lastName: sale.client.person.lastName,
+                    city: sale.client.person.city || "S/D"
                   }
                 : null
             }

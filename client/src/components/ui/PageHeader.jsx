@@ -11,7 +11,8 @@ export default function PageHeader({
   subtitle,
   breadcrumbs = [],
   actions = [],
-  stats = []
+  stats = [],
+  compact = false // Nueva prop para Alta Densidad v13.0 🏹⚖️
 }) {
   return (
     <>
@@ -28,7 +29,7 @@ export default function PageHeader({
         </div>
       )}
 
-      <div className={`sticky top-0 z-40 bg-slate-50/95 backdrop-blur-md -mx-12 px-12 py-5 border-b border-slate-200/50 flex flex-wrap lg:flex-nowrap lg:items-center justify-between gap-y-4 gap-x-6 mb-8 transition-all duration-300`}>
+      <div className={`sticky top-0 z-40 bg-slate-50/95 backdrop-blur-md -mx-12 px-12 py-5 border-b border-slate-200/50 flex flex-wrap lg:flex-nowrap lg:items-center justify-between gap-y-4 gap-x-6 ${compact ? 'mb-2' : 'mb-8'} transition-all duration-300`}>
         <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8 flex-1 min-w-0">
           <div className="space-y-0.5 shrink-0">
             <h1 className="text-2xl lg:text-3xl font-black text-primary tracking-tighter font-manrope truncate">

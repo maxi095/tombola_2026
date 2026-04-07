@@ -24,34 +24,33 @@ Los colores están centralizados para transmitir autoridad, confianza y solidez 
 El sistema utiliza una escala dual optimizada para lectura técnica densa y jerarquía institucional.
 
 1.  **Manrope (Logo y Títulos)**:
-    - **Uso**: `h1`, `h2`, `h3`, `h4`.
-    - **Estilo**: `font-black` (900). Proyecta robustez.
+    - **Uso**: `h1`, `h2`, `h3`, `h4`, y KPIs.
+    - **Estilo**: `font-black` (900). Proyecta robustez y autoridad financiera. ✨💎
 2.  **Inter (Interfaz y Datos)**:
     - **Uso**: Cuerpo de texto, tablas, formularios, etiquetas.
-    - **Estilo**: `font-bold` para datos, `font-medium` para metadatos.
+    - **Estilo**: `font-bold` para datos de alto valor, `font-medium` para secundarios.
 
-> [!TIP]
-> **Labels**: Las etiquetas de los formularios deben ser `text-[11px]`, `uppercase`, `font-black` y con `tracking-widest`. ✨💎
+### Etiquetas de Formulario (Labels) 🏹⚖️
+- **Estilo Estricto**: `text-[11px]`, `uppercase`, `font-black`, `tracking-widest`.
+- **Efecto**: Proyecta precisión técnica y orden.
 
 ---
 
-## 📐 3. Geometría y Sombras (Elite Mastery) ✨💎
+## 📐 3. Densidad y Espaciado (Layout Tokens)
 
-### Redondeo Institucional (`rounded-premium-card`)
-- **Contenedores Mayores** (Cards, Modales, FilterBar): `rounded-[32px]`.
-- **Átomos Internos** (Botones, Inputs, Badges): `rounded-xl` (12px) o `rounded-2xl` (16px).
-
-### Sombras (`shadow-premium`)
-- **Base**: `shadow-[0_8px_30px_rgb(0,0,0,0.015)]`.
-- **Interacción**: `shadow-xl shadow-primary/5` (en hover).
+- **Page Contenedor**: Padding horizontal de `px-12` (Escritorio).
+- **PageHeader Slim**: Altura máxima de `py-5`. KPIs integrados para ahorrar scroll vertical. ✨🚀
+- **Card Padding**: 
+    - **Formularios**: `p-10` (Aire Institucional).
+    - **Operativos/Tablas**: **Elite Zero-Air** (`p-0`).
 
 ---
 
 ## 🛡️ 4. Reglas Prohibidas
 
-- **Colores Genéricos**: Prohibido usar `text-blue-500` o `bg-red-500` nativo. Siempre usar clases corporativas o tokens del `:root`.
+- **Colores Genéricos**: Prohibido usar `text-blue-500` o `bg-red-500` nativo. Siempre usar tokens.
 - **Bordes Irregulares**: Ningún componente debe salirse de la escala de 12px/16px/32px.
-- **Aire Residual**: En vistas operativas de alta densidad, usar patrón **Zero-Air** (`p-0`).
+- **Sinónimos Semánticos**: Si el botón es para grabar, se llama **"Guardar cambios"**. (Ref: [08-GLOSARIO_WORDING](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/08-GLOSARIO_WORDING.md)).
 
 ---
-**Actualización Letal:** Abril 2026 | **Hito:** Unificación Total del Canon Documental.
+**Actualización Crítica:** 07 de Abril 2026 | **Hito:** Blindaje de Identidad Total.

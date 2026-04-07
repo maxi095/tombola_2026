@@ -34,7 +34,9 @@ Este panel monitorea la transición hacia el sistema atómico **Standard 2026**.
 | **Login** | 🟢 Mitigado | Parcial (Inyectado) | Conectado (Vía Puente) |
 | **Home/Dashboard** | 🔵 En Proceso | Parcial | Conectado (Vía Puente) |
 | **Usuarios** | ✅ **Modernizado** | **100% Atómico (v4.3)** | **DESCONECTADO** |
-| **Ventas / Ediciones** | 🔴 Pendiente | Ninguno (Legacy Layout) | Conectado (Crítico) |
+| **Ventas / Ediciones** | ✅ **Modernizado** | **100% Atómico (v19.5)** | **DESCONECTADO** |
+| **Cuotas / Morosidad** | ✅ **Modernizado** | **100% Atómico (v19.5)** | **DESCONECTADO** |
+| **Tarjeta Única** | ✅ **Modernizado** | **100% Atómico (v19.5)** | **DESCONECTADO** |
 
 > [!IMPORTANT]
 > Los módulos marcados como **✅ Modernizado** NO deben importar archivos de `client/src/assets/css/`. Cualquier ajuste visual debe realizarse mediante componentes en `client/src/components/ui/` o `index.css`.

@@ -1,22 +1,25 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useBingoCards } from "../../context/BingoCardContext";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import dayjs from "dayjs";
-import { 
-  Ticket, 
-  Search, 
-  FileSpreadsheet, 
-  ExternalLink, 
-  User as UserIcon,
-  Tag,
+import {
+  Ticket,
+  Search,
+  FileSpreadsheet,
+  ExternalLink,
   CheckCircle2,
   Clock,
-  FilterX,
-  Loader2
+  Loader2,
+  Calendar,
+  Settings2,
+  ChevronDown,
+  Database,
+  ArrowRightLeft,
+  UserX
 } from "lucide-react";
 
-// Infraestructura Premium 2026
+// Infraestructura Premium 2026 ⚓ 🛡️
 import { useEditionFilter } from "../../context/EditionFilterContext";
 import Card from "../../components/ui/Card";
 import PageHeader from "../../components/ui/PageHeader";
@@ -24,16 +27,27 @@ import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
 import InputField from "../../components/ui/InputField";
 import FilterBar from "../../components/ui/FilterBar";
-import { Table, THead, TBody, TH, TD } from "../../components/ui/Table";
-import Pagination from "../../components/ui/Pagination";
+import {
+  Table,
+  THead,
+  TBody,
+  TR,
+  TH,
+  TD,
+  StockCell,
+  UserCell
+} from "../../components/ui/Table";
+import ColumnPicker from "../../components/ui/ColumnPicker";
 import { exportToExcel } from "../../libs/excelExport";
 import { useFeedback } from "../../context/FeedbackContext";
-// Se renombra a EliteSelect para evitar conflictos de identificación con Babel/Vite
 import EliteSelect from "../../components/ui/Select";
 
+// HOOK DE LAYOUT DINÁMICO v19.5 ✨💎🚀
+import { useTableColumns } from "../../hooks/useTableColumns";
+
 /**
- * BingoCardPage V4.9 - Unificación de Interfaz
- * Inventario de cartones integrado al sistema de FilterBar oficial.
+ * BingoCardPage V19.5.4 - Polished Audit Hub 🏹⚖️✨💎🚀
+ * Refinamiento visual de badges y placeholders unificados.
  */
 export default function BingoCardPage() {
   const { getBingoCardsWithSales, bingoCardsWithSales, loading } = useBingoCards();
@@ -42,10 +56,25 @@ export default function BingoCardPage() {
   const { showToast } = useFeedback();
   const navigate = useNavigate();
 
-  const [globalSearch, setGlobalSearch] = useState("");
+  const [omniSearch, setOmniSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [assignmentFilter, setAssignmentFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+
+  // CONFIGURACIÓN DE COLUMNAS v19.5.4 (Audit Sync) 🛡️
+  const initialColumns = [
+    { id: 'card', label: 'CARTÓN / EDICIÓN', isMandatory: true },
+    { id: 'status', label: 'ESTADO' },
+    { id: 'assignedTo', label: 'ASIGNADO A...', isMandatory: true },
+    { id: 'soldBy', label: 'VENDIDO POR' },
+    { id: 'associate', label: 'ASOCIADO / LOCALIDAD', isMandatory: true },
+    { id: 'date', label: 'FECHA VENTA' },
+    { id: 'actions', label: 'ACCIONES', isFixed: true, isMandatory: true }
+  ];
+
+  const columnManager = useTableColumns("BingoCardsCrossAuditPage_v4", initialColumns);
+  const { visibleColumns } = columnManager;
 
   useEffect(() => {
     if (user) {
@@ -60,18 +89,17 @@ export default function BingoCardPage() {
       filtered = filtered.filter(card => card.edition?._id === selectedEdition);
     }
 
-    if (globalSearch) {
-      const search = globalSearch.toLowerCase();
+    if (omniSearch) {
+      const search = omniSearch.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       filtered = filtered.filter(card => {
         const cardNumber = String(card.number);
-        const sellerName = card.seller?.person 
-          ? `${card.seller.person.firstName} ${card.seller.person.lastName}`.toLowerCase() 
+        const assignedSeller = card.seller?.person
+          ? `${card.seller.person.firstName} ${card.seller.person.lastName}`.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
           : "";
-        const clientName = card.sale?.client
-          ? `${card.sale.client.firstName} ${card.sale.client.lastName}`.toLowerCase()
-          : "";
-        
-        return cardNumber.includes(search) || sellerName.includes(search) || clientName.includes(search);
+        const saleSeller = card.sale?.seller?.fullName?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || "";
+        const clientName = card.sale?.client?.fullName?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || "";
+
+        return cardNumber.includes(search) || assignedSeller.includes(search) || saleSeller.includes(search) || clientName.includes(search);
       });
     }
 
@@ -88,41 +116,56 @@ export default function BingoCardPage() {
     if (dateFilter) {
       filtered = filtered.filter(card => {
         const saleDate = card.sale?.saleDate;
-        return saleDate && dayjs.utc(saleDate).format("YYYY-MM-DD") === dateFilter;
+        return saleDate && dayjs(saleDate).format("YYYY-MM-DD") === dateFilter;
       });
     }
 
     return filtered;
-  }, [bingoCardsWithSales, globalSearch, statusFilter, assignmentFilter, dateFilter, selectedEdition]);
+  }, [bingoCardsWithSales, omniSearch, statusFilter, assignmentFilter, dateFilter, selectedEdition]);
+
+  const activeFilters = useMemo(() => {
+    const list = [];
+    if (omniSearch) list.push({ key: 'search', label: 'Búsqueda', value: omniSearch });
+    if (statusFilter !== 'all') list.push({ key: 'status', label: 'Estado', value: statusFilter });
+    if (assignmentFilter !== 'all') list.push({ key: 'assignment', label: 'Asignación', value: assignmentFilter === 'assigned' ? 'Con Vendedor' : 'Sin Vendedor' });
+    if (dateFilter) list.push({ key: 'date', label: 'Fecha', value: dayjs(dateFilter).format('DD/MM/YYYY') });
+    return list;
+  }, [omniSearch, statusFilter, assignmentFilter, dateFilter]);
+
+  const handleRemoveFilter = useCallback((key) => {
+    if (key === 'search') setOmniSearch("");
+    if (key === 'status') setStatusFilter("all");
+    if (key === 'assignment') setAssignmentFilter("all");
+    if (key === 'date') setDateFilter("");
+  }, []);
+
+  const handleClearFilters = useCallback(() => {
+    setOmniSearch("");
+    setStatusFilter("all");
+    setAssignmentFilter("all");
+    setDateFilter("");
+    showToast("Inventario restablecido", "info");
+  }, [showToast]);
 
   const handleExport = () => {
     const columnMap = {
       "edition.name": "Edición",
       "number": "N° Cartón",
       "status": "Estado",
-      "seller.person.firstName": "Vendedor",
-      "sale.client.firstName": "Asociado",
-      "sale.saleDate": "Fecha Venta"
+      "seller.person.lastName": "Asignado a",
+      "sale.seller.fullName": "Vendido por",
+      "sale.client.fullName": "Asociado",
+      "sale.client.city": "Localidad",
+      "sale.saleDate": "Fecha"
     };
-    exportToExcel(filteredCards, "Inventario_Cartones_Tombola", columnMap);
-    showToast("Exportando inventario filtrado...", "info");
-  };
-
-  const clearFilters = () => {
-    setGlobalSearch("");
-    setStatusFilter("all");
-    setAssignmentFilter("all");
-    setDateFilter("");
-    showToast("Filtros restablecidos", "info");
+    exportToExcel(filteredCards, "Auditoria_Inventario_Bingo", columnMap);
   };
 
   return (
-    <div className="flex flex-col px-12 animate-in fade-in duration-700">
-      
+    <div className="flex flex-col px-12 animate-in fade-in duration-700 bg-slate-50/50 min-h-screen">
       <PageHeader
         title="Inventario de Cartones"
-        subtitle="Monitoreo de estado, asignaciones y trazabilidad de ventas en tiempo real."
-        breadcrumbs={[{ label: "Cartones", href: "#" }]}
+        compact={true}
         actions={[
           {
             label: "Exportar",
@@ -131,169 +174,216 @@ export default function BingoCardPage() {
             onClick: handleExport
           }
         ]}
+        stats={[
+          {
+            label: "Volumen Auditoría",
+            value: filteredCards.length,
+            icon: ArrowRightLeft,
+            variant: "primary"
+          }
+        ]}
       />
 
-      <div className="pb-24">
-        
-        <FilterBar>
-          <div className="flex-1 min-w-[280px]">
-             <InputField
-               label="Búsqueda Inteligente"
-               placeholder="Nro, Vendedor o Asociado..."
-               icon={Search}
-               value={globalSearch}
-               onChange={(e) => setGlobalSearch(e.target.value)}
-             />
+      <div className="pb-10 flex-1 flex flex-col min-h-0">
+        <Card padding="p-0" className="flex-1 flex flex-col min-h-0 shadow-sm border-slate-200/60 overflow-visible bg-white">
+
+          <div className="flex items-center justify-between elite-audit-bar px-6">
+            <div className="flex-1 min-h-[32px]">
+              <FilterBar
+                variant="slim"
+                activeFilters={activeFilters}
+                onRemoveFilter={handleRemoveFilter}
+                onClearFilters={handleClearFilters}
+                title="Panel de filtros"
+              >
+                <div className="flex-1 min-w-[300px]">
+                  <InputField
+                    placeholder="Buscar por Nro, Vendedor o Asociado..."
+                    icon={Search}
+                    value={omniSearch}
+                    onChange={(e) => setOmniSearch(e.target.value)}
+                    className="!space-y-0"
+                  />
+                </div>
+
+                <div className="w-[180px]">
+                  <EliteSelect
+                    options={[
+                      { value: "all", label: "Todos los Vendedores" },
+                      { value: "assigned", label: "Asignados" },
+                      { value: "unassigned", label: "Sin Asignar" }
+                    ]}
+                    value={{
+                      value: assignmentFilter,
+                      label: assignmentFilter === "all" ? "Vendedores: Todos" : (assignmentFilter === "assigned" ? "✅ Asignados" : "❌ Sin Asignar")
+                    }}
+                    onChange={(selected) => setAssignmentFilter(selected.value)}
+                    isSearchable={false}
+                  />
+                </div>
+
+                <div className="w-[180px]">
+                  <EliteSelect
+                    options={[
+                      { value: "all", label: "Todos los Estados" },
+                      { value: "Vendido", label: "Vendido" },
+                      { value: "Disponible", label: "Disponible" }
+                    ]}
+                    value={{ value: statusFilter, label: statusFilter === "all" ? "Estados: Todos" : (statusFilter === "Vendido" ? "🟡 Vendido" : "🟢 Disponible") }}
+                    onChange={(selected) => setStatusFilter(selected.value)}
+                    isSearchable={false}
+                  />
+                </div>
+
+                <div className="w-[180px]">
+                  <InputField
+                    type="date"
+                    icon={Calendar}
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    className="!space-y-0"
+                  />
+                </div>
+              </FilterBar>
+            </div>
+
+            <div className="relative shrink-0 flex items-center pr-4">
+              <button
+                onClick={() => setIsPickerOpen(!isPickerOpen)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all active:scale-95 group ${isPickerOpen ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200/40'}`}
+              >
+                <Settings2 size={13} className={isPickerOpen ? 'animate-spin-slow' : 'opacity-60'} />
+                <span className="text-[10px] font-black uppercase tracking-[0.1em]">Personalizar Columnas</span>
+                <ChevronDown size={11} className={`opacity-40 transition-transform ${isPickerOpen ? 'rotate-180' : 'group-hover:translate-y-0.5'}`} />
+              </button>
+
+              <div className="absolute right-0 top-11 z-[100]">
+                <ColumnPicker
+                  {...columnManager}
+                  isOpen={isPickerOpen}
+                  onClose={() => setIsPickerOpen(false)}
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="w-[180px]">
-            <EliteSelect
-              label="Filtrar Estado"
-              options={[
-                { value: "all", label: "Todos los Estados" },
-                { value: "Sorteando", label: "🟡 Vendido" },
-                { value: "Disponible", label: "🟢 Disponible" },
-                { value: "Cancelado", label: "🔴 Cancelado" }
-              ]}
-              value={{ 
-                value: statusFilter, 
-                label: statusFilter === "all" ? "Todos los Estados" : statusFilter === "Sorteando" ? "🟡 Vendido" : statusFilter === "Disponible" ? "🟢 Disponible" : "🔴 Cancelado"
-              }}
-              onChange={(selected) => setStatusFilter(selected.value)}
-              isSearchable={false}
-            />
-          </div>
-
-          <div className="w-[180px]">
-            <EliteSelect
-              label="Asignación"
-              options={[
-                { value: "all", label: "Sin Filtrar" },
-                { value: "assigned", label: "Con Vendedor" },
-                { value: "unassigned", label: "Sin Vendedor" }
-              ]}
-              value={{ 
-                value: assignmentFilter, 
-                label: assignmentFilter === "all" ? "Sin Filtrar" : assignmentFilter === "assigned" ? "Con Vendedor" : "Sin Vendedor" 
-              }}
-              onChange={(selected) => setAssignmentFilter(selected.value)}
-              isSearchable={false}
-            />
-          </div>
-
-          <div className="w-[160px]">
-            <InputField
-              label="Fecha de Venta"
-              type="date"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-            />
-          </div>
-
-          <Button 
-            variant="ghost" 
-            className="h-12 px-5 rounded-2xl bg-slate-50 text-slate-600 border border-slate-200 shadow-sm hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all font-black text-[10px] uppercase tracking-widest gap-2" 
-            onClick={clearFilters}
-          >
-             <FilterX size={16} />
-             Limpiar
-          </Button>
-        </FilterBar>
-
-        <Card padding="p-0 overflow-hidden">
-          {loading ? (
-             <div className="py-40 flex flex-col items-center gap-6">
+          <div className="overflow-auto custom-scrollbar min-h-0 flex-1 bg-white">
+            {loading ? (
+              <div className="py-40 flex flex-col items-center gap-6">
                 <Loader2 className="animate-spin text-primary opacity-20" size={64} />
-                <p className="text-[11px] font-black text-muted tracking-widest uppercase animate-pulse">Refrescando Inventario...</p>
-             </div>
-          ) : (
-            <>
-              <Table>
+                <p className="text-[11px] font-black text-muted tracking-widest uppercase animate-pulse">Cruzando Datos...</p>
+              </div>
+            ) : filteredCards.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center text-slate-300 italic">
+                <Database className="w-12 h-12 text-slate-100 mb-4" />
+                <h3 className="text-sm font-bold text-slate-400 font-manrope tracking-tight">Sin registros para esta auditoría</h3>
+                <Button variant="ghost" size="sm" onClick={handleClearFilters} className="mt-4">Limpiar Filtros</Button>
+              </div>
+            ) : (
+              <Table className="overflow-hidden">
                 <THead>
-                  <TH>Cartón</TH>
-                  <TH>Estado</TH>
-                  <TH>Vendedor</TH>
-                  <TH>Asociado</TH>
-                  <TH>Fecha</TH>
-                  <TH className="text-right px-8">ACCIONES</TH>
+                  {visibleColumns.map(col => (
+                    <TH key={col.id} className={col.id === 'actions' ? 'text-right px-10 font-black' : ''}>{col.label}</TH>
+                  ))}
                 </THead>
                 <TBody>
-                  {filteredCards.length === 0 ? (
-                    <tr>
-                      <td colSpan="6" className="py-20 text-center text-slate-300 font-medium italic">Sin resultados para tu búsqueda actual</td>
-                    </tr>
-                  ) : (
-                    filteredCards.map((card) => (
-                      <tr key={card._id} className="group hover:bg-slate-50/40 transition-all duration-300">
-                        <TD>
-                          <div className="flex items-center gap-4">
-                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center border shadow-inner group-hover:rotate-6 transition-all ${
-                              card.status === "Vendido" ? "bg-emerald-50 text-emerald-500 border-emerald-100" : "bg-indigo-50 text-indigo-500 border-indigo-100"
-                            }`}>
-                              <Ticket size={16} />
+                  {filteredCards.map((card) => (
+                    <TR key={card._id} className="group transition-all duration-300">
+                      {visibleColumns.map(col => {
+                        if (col.id === 'card') return (
+                          <StockCell
+                            key={col.id}
+                            main={`Cartón #${card.number}`}
+                            sub={card.edition?.name || "Global"}
+                          />
+                        );
+                        if (col.id === 'status') return (
+                          <TD key={col.id}>
+                            <Badge variant={card.status === "Vendido" ? "success" : "secondary"} className="gap-2 px-3 h-6">
+                              {card.status === "Vendido" ? <CheckCircle2 size={10} /> : <Clock size={10} />}
+                              <span className="text-[10px] uppercase font-black tracking-widest">{card.status}</span>
+                            </Badge>
+                          </TD>
+                        );
+                        if (col.id === 'assignedTo') return (
+                          <TD key={col.id}>
+                            {card.seller?.person ? (
+                              <UserCell
+                                variant="secondary"
+                                name={`${card.seller.person.firstName} ${card.seller.person.lastName}`}
+                              />
+                            ) : (
+                              <Badge variant="ghost" className="bg-amber-50 border-amber-100/50 text-amber-600/80 font-black tracking-[0.1em] text-[9px] gap-1.5 px-3 uppercase">
+                                <UserX size={10} />
+                                Sin Asignar
+                              </Badge>
+                            )}
+                          </TD>
+                        );
+                        if (col.id === 'soldBy') return (
+                          <TD key={col.id}>
+                            {card.status === "Vendido" ? (
+                              <UserCell
+                                variant="secondary"
+                                name={card.sale?.seller?.fullName || "—"}
+                              />
+                            ) : (
+                              <span className="text-slate-200 pl-6">—</span>
+                            )}
+                          </TD>
+                        );
+                        if (col.id === 'associate') return (
+                          <TD key={col.id}>
+                            {card.status === "Vendido" ? (
+                              <UserCell
+                                name={card.sale?.client?.fullName || "REVISAR VENTA"}
+                                sub={card.sale?.client?.city || "Sin localidad"}
+                                variant="primary"
+                              />
+                            ) : (
+                              <span className="text-slate-200 pl-6">—</span>
+                            )}
+                          </TD>
+                        );
+                        if (col.id === 'date') return (
+                          <TD key={col.id} className="text-xs font-black text-slate-500">
+                            {card.sale?.saleDate ? dayjs(card.sale.saleDate).format('DD/MM/YYYY') : "—"}
+                          </TD>
+                        );
+                        if (col.id === 'actions') return (
+                          <TD key={col.id} className="text-right px-10 bg-slate-50/10">
+                            <div className="flex justify-end transition-all">
+                              {card.status === "Vendido" ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => navigate(`/sale/view/${card.sale?._id}`)}
+                                  icon={ExternalLink}
+                                >
+                                  Detalle
+                                </Button>
+                              ) : (
+                                <span className="text-[9px] font-black text-slate-200 uppercase tracking-widest leading-none pr-3">
+                                  No Disponible
+                                </span>
+                              )}
                             </div>
-                            <div>
-                              <div className="font-black text-primary text-[13px] tracking-tight leading-none mb-1">
-                                No. {card.number}
-                              </div>
-                              <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-                                {card.edition?.name || "Global"}
-                              </div>
-                            </div>
-                          </div>
-                        </TD>
-                        <TD>
-                          <Badge variant={card.status === "Vendido" ? "success" : "secondary"} className="gap-1.5 px-3 h-6">
-                             {card.status === "Vendido" ? <CheckCircle2 size={10} /> : <Clock size={10} />}
-                             <span className="text-[10px] tracking-tight">{card.status}</span>
-                          </Badge>
-                        </TD>
-                        <TD>
-                           <div className="flex items-start gap-2 max-w-[180px]">
-                              <UserIcon size={12} className="text-slate-300 mt-1 shrink-0" />
-                              <span className="text-[12px] font-bold text-slate-600 leading-tight">
-                                {card.seller?.person ? `${card.seller.person.firstName} ${card.seller.person.lastName}` : <span className="text-slate-300 font-normal">No asignado</span>}
-                              </span>
-                           </div>
-                        </TD>
-                        <TD>
-                           <div className="flex items-start gap-2 max-w-[180px]">
-                              <Tag size={12} className={`shrink-0 mt-1 ${card.status === "Vendido" ? "text-indigo-300" : "text-slate-200"}`} />
-                              <span className={`text-[12px] font-bold leading-tight ${card.status === "Vendido" ? "text-slate-700" : "text-slate-300 font-normal"}`}>
-                                {card.sale?.client ? `${card.sale.client.firstName} ${card.sale.client.lastName}` : "—"}
-                              </span>
-                           </div>
-                        </TD>
-                        <TD>
-                          <div className={`text-[12px] font-bold ${card.status === "Vendido" ? "text-slate-600" : "text-slate-300 font-normal"}`}>
-                             {card.sale?.saleDate ? dayjs.utc(card.sale.saleDate).format('DD/MM/YYYY') : "—"}
-                          </div>
-                        </TD>
-                        <TD className="text-right px-8">
-                          {card.status === "Vendido" ? (
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="text-primary hover:bg-primary/10 rounded-xl px-4 h-8" 
-                              onClick={() => navigate(`/sale/view/${card.sale?._id}`)} 
-                              icon={ExternalLink}
-                            >
-                              Ver Operación
-                            </Button>
-                          ) : (
-                            <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.1em] pr-2">
-                               Disponible
-                            </span>
-                          )}
-                        </TD>
-                      </tr>
-                    ))
-                  )}
+                          </TD>
+                        );
+                        return <TD key={col.id}>—</TD>;
+                      })}
+                    </TR>
+                  ))}
                 </TBody>
               </Table>
-              <Pagination totalItems={filteredCards.length} className="bg-white/50 backdrop-blur" />
-            </>
-          )}
+            )}
+          </div>
+
+          <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/30 rounded-b-[32px]">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-6">
+              Elite Cross-Audit Center v19.5
+            </span>
+          </div>
         </Card>
       </div>
     </div>

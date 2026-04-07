@@ -37,6 +37,7 @@ export const LayoutProvider = ({ children }) => {
       isSidebarCollapsed, 
       toggleSidebar, 
       isFilterExpanded, 
+      setIsFilterExpanded, // Setter directo para Auto-Collapse 🏹⚖️
       toggleFilters,
       isSidebarHovered,
       setSidebarHovered

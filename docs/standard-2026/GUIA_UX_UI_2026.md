@@ -1,94 +1,44 @@
-# Guía de Estándares UX/UI - Modernización 2026 (v1.0)
+# 🛡️ Guía Maestra UX/UI: Elite 2026 (v2.0) ✨🚀
 
-Este documento establece las reglas semánticas y visuales para el desarrollo de nuevos módulos, asegurando la consistencia del ecosistema **Premium 2026**.
-
----
-
-## 1. Ley de Integridad Funcional (Scope de Modernización)
-
-**IMPORTANTE**: El objetivo de este proceso es la evolución de la Interfaz (UI) y la Experiencia de Usuario (UX). Bajo ningún concepto se debe alterar la arquitectura lógica del sistema legacy.
-
-- **Respeto al Input**: Si un formulario legacy presenta `X` cantidad de campos, la versión Premium DEBE mantener exactamente los mismos `X` campos, respetando su nombre de variable y propósito.
-- **Lógica Sacrosanta**: No se deben modificar controladores, validaciones de backend o flujos de persistencia (API/Contexto) a menos que sea estrictamente necesario para la compatibilidad con los nuevos componentes (ej. memorización de funciones).
-- **Consistencia de Datos**: La modernización es una "capa estética y estructural" superior que no debe impactar en el modelo de datos.
+Este es el manifiesto filosófico y operativo de **Gestión Tómbola**. Su misión es garantizar que el software se sienta como una herramienta financiera de alto nivel: robusta, limpia y semánticamente perfecta.
 
 ---
 
-## 2. El Patrón de Referencia: Módulo Usuarios (v4.5)
+## ⚖️ 1. Ley de Integridad Funcional (Scope)
 
-La forma en que nombramos las acciones define la profesionalidad del sistema.
-
-### 🏷️ Títulos de Pantalla (`PageHeader`)
-Se debe usar una nomenclatura jerárquica y clara:
-- **Listados**: Siempre usar el prefijo `Gestión de...`. (Ej: *Gestión de Usuarios*, *Gestión de Ventas*).
-- **Registro**: Siempre usar el prefijo `Registrar...`. (Ej: *Registrar Usuario*).
-- **Edición**: Siempre usar el prefijo `Editar...`. (Ej: *Editar Usuario*).
-
-### 🔘 Botones y Acciones
-Evitar términos genéricos. Ser específico con el objeto:
-- **Creación**: `Crear [Objeto]` (Ej: *Crear Usuario*).
-- **Confirmación final**: `Crear [Objeto]` o `Guardar Cambios`.
-- **Navegación**: `Volver` (no "Atrás").
+**Mecánica sobre Motor**: Nuestra misión es la evolución estética y estructural (UI/UX) sin alterar la arquitectura lógica del sistema legacy.
+- **Respeto al Input**: Mantener los mismos campos y nombres de variables del backend.
+- **Lógica Sacrosanta**: Prohibido modificar controladores o esquemas de base de datos sin autorización.
 
 ---
 
-## 2. Estándar de Listados (Grillas)
+## 🏷️ 2. El Poder de la Palabra (Wording) 🏹⚖️
 
-Todo listado en el sistema debe cumplir con la **Ley de Tres**: Filtro, Tabla y Paginación.
-
-### 🔍 Filtros (`FilterBar`)
-1. **Búsqueda por Texto**: Obligatoria. El placeholder debe ser descriptivo: `Buscar [Campo1], [Campo2] o [Campo3]...`.
-2. **Filtros de Categoría**: Todo listado debe tener al menos un selector de estado o rango (ej: *Filtrar por Rol*).
-3. **Ubicación**: Siempre alineado a la izquierda, debajo del header.
-
-### 📊 Tabla e Integridad (`Table`)
-- **Encabezados**: Siempre en Mayúsculas, `font-black`, y con tracking expandido (`tracking-[0.2em]`).
-- **Columna de Acciones**: Siempre debe llamarse `Acciones` (evitar "Operaciones" o "Opciones").
-- **Visibilidad**: Las acciones (Editar/Eliminar) deben estar **siempre visibles** (con opacidad reducida o estilo ghost) para evitar la "incertidumbre del click".
-- **Empty State**: Si no hay datos, mostrar un mensaje centrado: `No se encontraron [Objetos] bajo este filtro`.
+La consistencia semántica es la base de la autoridad institucional. No improvisamos nombres de acciones.
+- **Consultar SIEMPRE**: [Estándar 08: Glosario Maestro de Wording](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/08-GLOSARIO_WORDING.md).
+- **Regla de Oro**: Siempre usamos **"Guardar cambios"** y **"Crear [Entidad]"**.
 
 ---
 
-## 3. Arquitectura de Formularios (`Card`)
+## 🏗️ 3. Ecosistema de Estándares (El Canon)
 
-Los formularios se dividen en "Dimensiones de Información".
+Cualquier duda técnica o visual debe resolverse consultando la pieza específica del canon:
 
-### 📦 Agrupación por Secciones
-- Usar componentes `<Card />` con los atributos `title`, `icon` y `description`.
-- **Títulos de Sección**: Breves y directos (Ej: *Seguridad Acceso*, *Datos Personales*).
-- **Descripción**: Una sola frase que explique la intención de la sección.
-
----
-
-## 5. Densidad Técnica y Eficiencia de Espacio (v4.4 / v8.1)
-
-Para herramientas de gestión masiva, la visibilidad "Above the Fold" es prioritaria sobre el espacio en blanco estético. Todo panel de auditoría o cobranzas debe seguir el patrón de **Alta Densidad 05**.
-
-### 📐 Reglas de Oro de Altura
-- **PageHeader**: Padding vertical máximo de `py-5`. Título principal en `text-3xl` para optimizar el área de trabajo inicial. KPIs dinámicos integrados en subtítulo. ✨🚀
-- **Card Padding**: El estándar de aire interno es `p-10` (escritorio) y `p-8` (móvil). **EXCEPCIÓN**: Para vistas operativas, usar patrón **Zero-Air** (`padding="p-0"`) con control manual de píxeles. 🏹⚖️
-- **Header de Card**: Iconos de `24px` en contenedores de `w-12 h-12`. El margen inferior de la cabecera debe ser de `mb-10` con `pb-8`.
-- **Grid Gaps**: Usar `gap-y-6` para separar campos en formularios. Usar `gap-2` para agrupar bloques de dashboards técnicos.
-
-> [!TIP]
-> - [00-ATLAS_DOCUMENTAL.md](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/00-ATLAS_DOCUMENTAL.md) (Mapa de Navegación Maestro) 🗺️
-> - [01-SISTEMA_DISENO.md](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/01-SISTEMA_DISENO.md) (DNA Visual & Tokens Elite v5.0) ✨💎
-> - [05-VISTAS_ALTA_DENSIDAD.md](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/05-VISTAS_ALTA_DENSIDAD.md) (Zero-Air & Resiliencia HD) 🏹⚖️
-> - [06-MODALES_ELITE.md](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/06-MODALES_ELITE.md) (Estandarización de variantes y resúmenes) ✨💎
-> - [07-FLUIDEZ_OPERATIVA.md](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/07-FLUIDEZ_OPERATIVA.md) (Layout Elástico y Filtros Dinámicos) 🚀
+| ADN & Estética | Estructura & Densidad | Comportamiento & Flujo |
+| :--- | :--- | :--- |
+| [01-Sistema de Diseño](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/01-SISTEMA_DISENO.md) | [02-Arquitectura Layout](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/02-ARQUITECTURA_LAYOUT.md) | [06-Modales Elite](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/06-MODALES_ELITE.md) |
+| [03-Patrones Componentes](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/03-PATRONES_COMPONENTES.md) | [05-Vistas Alta Densidad](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/05-VISTAS_ALTA_DENSIDAD.md) | [07-Fluidez Operativa](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/07-FLUIDEZ_OPERATIVA.md) |
+| [04-Formularios Alta Gama](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/04-FORMULARIOS_ALTA_GAMA.md) | [09-Canon Tablas Atómicas](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/09-CANON_TABLAS_ATOMIC.md) | [08-Glosario Wording](file:///c:/proyectos_desarrollo/gestion_tombola/docs/standard-2026/08-GLOSARIO_WORDING.md) |
 
 ---
 
-## 4. Design Tokens (Visual Audit)
+## 🎯 4. Principios de Oro de la Interfaz
 
-- **Color Primario**: Navy Institucional `#1B3B5A` (usado para títulos, botones primarios y estados activos).
-- **Tipografía**:
-  - **Títulos**: `font-manrope` / `font-black`.
-  - **Etiquetas/Labels**: `uppercase` / `font-black` / `text-[11px]`.
-  - **Cuerpo**: `font-bold` para datos importantes, `font-medium` para secundarios.
-- **Espaciado Vertical**:
-  - `px-12` para contenedores de página.
-  - `gap-10` entre piezas de información mayores.
+1.  **Densidad Técnica (Zero-Air)**: Priorizamos la visibilidad de datos masivos sobre el espacio artístico. En vistas de auditoría, el aire es el enemigo. 🏹⚖️
+2.  **Blindaje de Acciones**: Las herramientas de gestión (Editar/Eliminar) están **siempre visibles** y forzadas al extremo derecho mediante `isFixed: true`.
+3.  **Live Feedback**: El sistema debe responder instantáneamente vía `useFeedback` (Toasts) y formateo de datos en tiempo real (DNI/Moneda).
 
 ---
-**Actualizado:** Abril 2026 | **Hito:** Optimización de Productividad Validada.
+
+> [!IMPORTANT]
+> **Calidad Institucional**: El código debe "leerse" como el estándar. Si un componente usa clases manuales de Tailwind para colores o radios que existen en el Standard 01, la implementación es incorrecta. 🛡️✨🚀

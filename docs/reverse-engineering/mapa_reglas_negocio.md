@@ -61,7 +61,7 @@ Ubicado en `edition.controllers.js`, es el "motor" del sistema para evitar que m
 
 | Entidad | Regla Crítica |
 | :--- | :--- |
-| **Sale** | `status` debe ser uno de: ['Pendiente de pago', 'Pagado', 'Cancelado']. |
+| **Sale** | `status` debe ser uno de: ['Pendiente de pago', 'Pagado', 'Anulada', 'Entregado sin cargo']. |
 | **Quota** | `amount` debe ser >= 0. `quotaNumber` debe ser un entero >= 1. |
 | **Edition** | `name` es obligatorio y debe ser único. |
 | **BingoCard** | `number` debe ser único dentro de la misma edición. |

@@ -8,19 +8,19 @@ import RSelect from "react-select";
 export const premiumSelectStyles = {
   control: (base, state) => ({
     ...base,
-    backgroundColor: '#f8fafc',
-    border: '2px solid transparent',
+    backgroundColor: '#ffffff',
+    border: '1px solid rgba(226, 232, 240, 0.8)',
     borderRadius: '1rem',
     padding: '0.45rem 0.8rem',
     fontSize: '0.875rem',
     fontWeight: '700',
     color: '#1e293b',
-    boxShadow: state.isFocused ? '0 0 0 8px rgba(79, 70, 229, 0.05)' : 'none',
-    borderColor: state.isFocused ? 'rgba(79, 70, 229, 0.1)' : 'transparent',
+    boxShadow: state.isFocused ? '0 0 0 8px rgba(79, 70, 229, 0.05)' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+    borderColor: state.isFocused ? 'rgba(79, 70, 229, 0.1)' : 'rgba(226, 232, 240, 0.8)',
     transition: 'all 0.3s ease',
     '&:hover': {
       backgroundColor: '#ffffff',
-      borderColor: 'rgba(79, 70, 229, 0.1)',
+      borderColor: 'rgba(79, 70, 229, 0.2)',
     },
   }),
   placeholder: (base) => ({

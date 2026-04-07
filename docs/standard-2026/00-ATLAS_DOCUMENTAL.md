@@ -16,6 +16,8 @@ Este documento es el mapa maestro del ecosistema de inteligencia de **Gestión T
 | **`05-VISTAS_ALTA_DENSIDAD`** | **Rendimiento HD**. Compactación y Multi-Columna. | Al optimizar para notebooks (1366px). | Mejora en la densidad visual. |
 | **`06-MODALES_ELITE`** | **Diálogos**. Estructura de Popups y Resúmenes. | Al implementar transiciones o cobros. | Cambio en el motor de diálogos. |
 | **`07-FLUIDEZ_OPERATIVA`** | **Reactividad**. Sidebar y Filtros colapsables. | Al ajustar el comportamiento elástico de la UI. | Nueva ley de colapso global. |
+| **`08-GLOSARIO_WORDING`** | **Semántica**. Diccionario de etiquetas y botones. | **SIEMPRE**. Al nombrar cualquier acción de UI. | Nueva entidad detectada. |
+| **`09-CANON_TABLAS_ATOMIC`** | **Estructura de Datos**. Reglas de renderizado de tablas. | Al crear o modificar listados de datos. | Cambio en la estructura de tablas. |
 
 ---
 

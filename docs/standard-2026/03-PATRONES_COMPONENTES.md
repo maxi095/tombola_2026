@@ -1,4 +1,4 @@
-# 🧩 Patrones de Componentes: Premium 2026 v4.4
+# 🧩 Patrones de Componentes: Premium 2026 v4.7
 
 Este manual instruye sobre cómo implementar los componentes atómicos dentro de los módulos. No se debe construir UI "a mano" si existe un componente que resuelva la estructura.
 
@@ -89,6 +89,37 @@ Utilizar el patrón de **Avatar Fallback** con la inicial del usuario.
 1. **Acciones Siempre Visibles**: Las operaciones como "Editar" o "Eliminar" deben mostrarse al pie de la fila, preferiblemente usando `Button variant="ghost"`.
 2. **Paginación Obligatoria**: Nunca dejar que una tabla crezca indefinidamente; usar el componente `<Pagination />`.
 3. **Empty States**: Siempre manejar el caso de `items.length === 0` con un mensaje institucional dentro de la tabla.
+
+## 📏 5. Estándar de Ultra-Densidad v13.0 (Ghost Ribbon) 🏹⚖️✨💎🚀
+
+Para maximizar el aprovechamiento de pantalla en dispositivos HD (1366px), se ha definido el patrón **Ultra-Densidad**. Este enfoque recupera hasta un 60% del espacio vertical en páginas de listados masivos.
+
+### Reglas de Ultra-Densidad:
+1.  **PageHeader Compacto**: Debe usarse la prop `compact={true}` para reducir el margen inferior de 32px a **8px**. Pegando la cabecera institucional al área de datos. 📐
+2.  **Ghost Ribbon**: La `FilterBar` debe operar en modo "Fantasma" (altura cero) por defecto. Se muestra mediante un disparador por clic ultra-fino integrado en el borde superior de la Card. 🛡️
+3. **Click-to-Show**: El acceso a filtros se activa mediante el icono de `SlidersHorizontal`. No se usa **hover** para garantizar estabilidad visual. 🖱️
+4.  **Contextual Badges (Ghost Tags)**: Cuando la barra está colapsada, deben mostrarse los filtros activos (incluyendo el Omni-Search) como Chips minimalistas (`Slate Glass`). 🏷️
+4. **Contextual Badges (Ghost Tags)**: Cuando la barra está colapsada, deben mostrarse los filtros activos (incluyendo el Omni-Search) como Chips minimalistas (`Slate Glass`). 🏷️
+    - Cada Tag debe incluir un botón `X` para remoción individual.
+    - Si existen 1 o más filtros activos, debe aparecer un botón global de "Limpiar" para resetear el panorama.
+5. **Smart Auto-Collapse (v15.0)**: La interfaz debe ser proactiva y despejar el área de trabajo automáticamente. 🧠
+    - **Click Outside**: Cualquier clic fuera de la `FilterBar` debe colapsar el panel instantáneamente. 🖱️
+    - **Mouse Timeout**: Al salir el mouse del área, debe aplicarse un retraso de gracia de **1500ms** antes del cierre. ⏱️
+    - **Visual Alert (Fading)**: A los 500ms del inicio del temporizador, la barra debe bajar su opacidad al **50%** para advertir al usuario del próximo cierre automático. ✨💎
+6. **Zero Vertical Deadspace**: No debe existir ni un solo píxel de espacio muerto entre la cabecera, los filtros (ocultos) y la primera fila de la grilla. ✨💎🚀
+
+### 🏷️ 5.8 Estándar de Nomenclatura en Ribbons (v19.0) 🏹⚖️✨💎🚀
+
+Para garantizar que el sistema sea predecible y profesional, se establecen etiquetas obligatorias para los controles de cabecera de todo listado:
+
+1.  **Activador de Filtros**: Debe llamarse siempre **`"Panel de filtros"`**. 
+    - *Jerarquía*: Es la puerta de entrada a la búsqueda específica. ✨💎🚀
+2.  **Activador de Columnas**: Debe llamarse siempre **`"Personalizar columnas"`**.
+    - *Jerarquía*: Es la herramienta de personalización estructural (Layout Manager). ⚔️🏹
+3.  **Estilo de Botón (Ghost Action)**: Ambos disparadores deben usar la variante `Ghost` (sin fondo pesado, sin bordes a menos que estén activos).
+    - Tipografía: `text-[10px] font-black uppercase tracking-[0.1em]`. 🏹⚖️
+
+---
 
 ## 🗣️ Feedback Interactivo (v4.5)
 
@@ -259,3 +290,44 @@ Para ahorrar espacio, nunca usar bloques de texto inferiores para la fecha de co
 
 > [!TIP]
 > Mantener siempre el **Vencimiento** con un icono de calendario de `size={10}` para dar contexto semántico rápido sin ocupar altura. ✨💎
+
+## 10. Consistencia Atómica de Acciones (v19.5) 🏹⚖️✨💎🚀
+
+Para garantizar que el sistema sea predecible, accesible y de alta productividad, se establecen normas estrictas para el uso de botones en listados:
+
+### 1. Prohibición de Overrides Locales
+- **Regla**: Está terminantemente prohibido usar clases de Tailwind para forzar colores o comportamientos (`bg-blue-500`, `hover:bg-primary-dark`) en los botones de acción de fila. 🛡️
+- **Implementación**: Se debe utilizar el componente base `<Button />` y sus variantes oficiales (`primary`, `ghost`, `outline`, `danger`). Esto asegura que cualquier mejora en el componente atómico (ej: contraste v4.0) se replique en todo el sistema instantáneamente. ✨💎🚀
+
+### 2. Visibilidad Universal (No-Hover Policy)
+- **Regla**: Las acciones en listados (Editar, Eliminar, Detalle) deben ser **always visible**. 
+- **Motivo**: Eliminar la fricción de "cazar" la fila para ver las herramientas impulsa la velocidad de operación en entornos de alta carga. 👁️✅
+
+### 3. Estándar de Contraste (v4.0)
+- **Ghost Variant**: Es la variante estándar para acciones de tabla. Ofrece un equilibrio perfecto entre minimalismo y presencia visual sobre fondos claros (`slate-50`). 🏹⚖️
+- **Iconografía**: Siempre utilizar iconos de Lucide con `size={size === 'sm' ? 12 : 18}` para mantener la densidad HD. ✨💎🚀
+
+---
+
+## 11. Layout de Columnas Blindadas (useTableColumns v17.1) 🏹⚖️
+
+Para garantizar que la experiencia de usuario sea predecible en listados de alta densidad, se debe utilizar el hook de infraestructura `useTableColumns`.
+
+### Características del Blindaje:
+1.  **Persistencia Inteligente**: Recuerda qué columnas ocultó el usuario mediante `localStorage`.
+2.  **enforceFixedOrder**: Garantiza que las columnas críticas se mantengan en su posición lógica a pesar de la persistencia histórica.
+3.  **isFixed (Acciones)**: Toda columna marcada con `isFixed: true` (generalmente `ACCIONES`) será forzada al final del listado.
+
+### Implementación Estándar:
+```jsx
+const initialColumns = [
+  { id: 'name', label: 'NOMBRE', isMandatory: true },
+  { id: 'actions', label: 'ACCIONES', isFixed: true, isMandatory: true }
+];
+
+const columnManager = useTableColumns("IdentificadorModulo", initialColumns);
+const { visibleColumns } = columnManager;
+```
+
+> [!IMPORTANT]
+> **Jerarquía de Control**: El objeto `initialColumns` es la única fuente de verdad para la visibilidad inicial. Nunca omitir el flag `isFixed` en la columna de acciones. 🏹⚖️✨🚀
