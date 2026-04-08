@@ -22,6 +22,7 @@ Este archivo reporta el progreso de la eliminación de entidades "sucias" detect
 ## 📅 Bitácora de Limpieza
 - `2026-04-02`: Creación del reporte de estatus y mapeo inicial.
 - `2026-04-03`: **Hito Alcanzado**: Módulo de **Usuarios** 100% modernizado a Estándar v4.3 (Atómico).
+- `2026-04-07`: **Hito Alcanzado**: Modernización integral de **Asociados** y **Vendedores** (Elite Audit & Slim 2026).
 
 ---
 
@@ -37,6 +38,8 @@ Este panel monitorea la transición hacia el sistema atómico **Standard 2026**.
 | **Ventas / Ediciones** | ✅ **Modernizado** | **100% Atómico (v19.5)** | **DESCONECTADO** |
 | **Cuotas / Morosidad** | ✅ **Modernizado** | **100% Atómico (v19.5)** | **DESCONECTADO** |
 | **Tarjeta Única** | ✅ **Modernizado** | **100% Atómico (v19.5)** | **DESCONECTADO** |
+| **Asociados** | ✅ **Modernizado** | **100% Atómico (v19.5)** | **DESCONECTADO** |
+| **Vendedores** | ✅ **Modernizado** | **100% Atómico (v19.5)** | **DESCONECTADO** |
 
 > [!IMPORTANT]
 > Los módulos marcados como **✅ Modernizado** NO deben importar archivos de `client/src/assets/css/`. Cualquier ajuste visual debe realizarse mediante componentes en `client/src/components/ui/` o `index.css`.

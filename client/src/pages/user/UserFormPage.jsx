@@ -19,12 +19,14 @@ import InputField from "../../components/ui/InputField";
 import PageHeader from "../../components/ui/PageHeader";
 // Se renombra a EliteSelect para evitar colisiones de identificadores con Babel/Vite
 import EliteSelect from "../../components/ui/Select";
+import LoadingOverlay from "../../components/ui/LoadingOverlay";
+import FormGrid from "../../components/ui/FormGrid";
 import { useFeedback } from "../../context/FeedbackContext";
 import { formatNumber, stripNonDigits } from "../../libs/formatters";
 
 /**
- * UserFormPage - Premium 2026 v4 (Componentized)
- * Una vista orquestada con componentes atómicos que eliminan la redundancia de estilos.
+ * UserFormPage - Slim & Atomic 2026 v5
+ * Optimización de espacios y estandarización de componentes.
  */
 export default function UserFormPage() {
   const { register, handleSubmit, setValue, control, formState: { errors } } = useForm();
@@ -89,20 +91,16 @@ export default function UserFormPage() {
   });
 
   if (loading) {
-    return (
-      <div className="h-screen flex flex-col items-center justify-center gap-6 px-12">
-        <Loader2 className="animate-spin text-primary" size={48} />
-        <p className="text-xs font-black text-muted tracking-widest uppercase animate-pulse">Sincronizando...</p>
-      </div>
-    );
+    return <LoadingOverlay message="Sincronizando Usuario..." fullScreen />;
   }
 
   return (
-    <div className="flex flex-col px-12 animate-in fade-in duration-700">
+    <div className="flex flex-col px-8 animate-in fade-in duration-700">
 
       <PageHeader
         title={params.id ? "Editar Usuario" : "Registrar Usuario"}
-        subtitle="Monitoreo de seguridad y actualización de información personal del equipo."
+        //subtitle="Monitoreo de seguridad y actualización de información personal del equipo."
+        compact={true}
         breadcrumbs={[
           { label: "Usuarios", href: "/users" },
           { label: params.id ? "Editar" : "Registrar", href: "#" }
@@ -122,14 +120,20 @@ export default function UserFormPage() {
         ]}
       />
 
-      <form onSubmit={onSubmit} className="flex flex-col gap-8 pb-24">
+      <form onSubmit={onSubmit} className="flex flex-col gap-6 pb-20">
 
         {/* SECCIÓN: SEGURIDAD ACCESO */}
-        <Card title="Seguridad Acceso" icon={Key} description="Gestión de credenciales">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+        <Card
+          size="slim"
+          title="Seguridad Acceso"
+          icon={Key}
+          description="Gestión de credenciales"
+        >
+          <FormGrid>
             <InputField
               label="Nombre de Usuario"
               placeholder="ej. usuario_nob"
+              className="lg:col-span-2"
               {...register("username", { required: "Usuario requerido" })}
               error={errors.username?.message}
             />
@@ -138,12 +142,13 @@ export default function UserFormPage() {
               label="Email"
               type="email"
               placeholder="personal@tombola.com"
+              className="lg:col-span-2"
               {...register("email", { required: "Email requerido" })}
               error={errors.email?.message}
             />
 
-            <div className="flex flex-col gap-2">
-              <label className="text-[11px] font-black text-muted uppercase tracking-[0.2em] ml-1">Rol</label>
+            <div className="flex flex-col gap-2 lg:col-span-2">
+              <label className="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-1">Rol de Acceso</label>
               <Controller
                 name="roles"
                 control={control}
@@ -156,8 +161,8 @@ export default function UserFormPage() {
                       { value: "Administrador", label: "Administrador" }
                     ]}
                     value={
-                      field.value 
-                        ? { value: field.value, label: field.value } 
+                      field.value
+                        ? { value: field.value, label: field.value }
                         : null
                     }
                     onChange={(selected) => field.onChange(selected.value)}
@@ -168,12 +173,12 @@ export default function UserFormPage() {
               {errors.roles && <p className="text-[10px] font-bold text-red-500 ml-1">{errors.roles.message}</p>}
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-[11px] font-black text-muted uppercase tracking-[0.2em] ml-1">Contraseña</label>
+            <div className="flex flex-col gap-2 lg:col-span-2">
+              <label className="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-1">Contraseña</label>
               {params.id && !isChangingPassword ? (
                 <Button
                   variant="ghost"
-                  className="w-full py-4 rounded-premium-input border-2 border-dashed border-slate-100 bg-slate-50/50"
+                  className="w-full py-3.5 rounded-premium-input border border-dashed border-slate-200 bg-slate-50/30 hover:bg-white text-[11px] font-bold"
                   onClick={() => setIsChangingPassword(true)}
                   icon={Key}
                 >
@@ -190,12 +195,17 @@ export default function UserFormPage() {
                 />
               )}
             </div>
-          </div>
+          </FormGrid>
         </Card>
 
         {/* SECCIÓN: IDENTIDAD PERSONAL */}
-        <Card title="Datos personales" icon={User} description="Información personal del usuario">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+        <Card
+          size="slim"
+          title="Datos Personales"
+          icon={User}
+          description="Información vinculada al perfil"
+        >
+          <FormGrid>
             <InputField
               label="Nombres"
               {...register("firstName", { required: "Campo obligatorio" })}
@@ -212,7 +222,7 @@ export default function UserFormPage() {
               render={({ field }) => (
                 <InputField
                   label="Nro Documento"
-                  placeholder="Sin puntos"
+                  placeholder=""
                   {...field}
                   value={formatNumber(field.value)}
                   onChange={(e) => {
@@ -223,17 +233,20 @@ export default function UserFormPage() {
               )}
             />
             <InputField label="Contacto Telefónico" {...register("phone")} />
-            <div className="md:col-span-2">
-              <InputField label="Domicilio Particular" {...register("address")} placeholder="Calle, Nro, Localidad" />
-            </div>
-          </div>
+            <InputField
+              label="Domicilio Particular"
+              className="lg:col-span-4"
+              {...register("address")}
+              placeholder="Calle, Nro, Localidad"
+            />
+          </FormGrid>
 
-          <div className="mt-14 p-8 bg-muted/40 rounded-3xl border border-slate-100 flex gap-6 items-start">
-            <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-primary">
-              <Info size={20} />
+          <div className="mt-8 p-4 bg-slate-50/80 rounded-2xl border border-slate-100 flex gap-4 items-start">
+            <div className="w-8 h-8 shrink-0 bg-white rounded-lg shadow-sm flex items-center justify-center text-primary border border-slate-100">
+              <Info size={16} />
             </div>
-            <p className="text-[12px] font-medium text-slate-500 leading-relaxed max-w-4xl tracking-tight">
-              Los datos personales son protegidos bajo la normativa vigente de seguridad informática. Cualquier modificación en los rangos de acceso será notificada a la gerencia central a través de los sistemas de auditoría interna.
+            <p className="text-[10px] font-bold text-slate-500 leading-relaxed tracking-tight">
+              Los datos personales son protegidos bajo la normativa vigente de seguridad informática. Cualquier modificación en los rangos de acceso será notificada a la gerencia central a través de los sistemas de auditoría interna conformes al estándar 2026.
             </p>
           </div>
         </Card>

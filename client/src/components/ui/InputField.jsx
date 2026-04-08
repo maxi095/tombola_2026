@@ -11,9 +11,12 @@ const InputField = forwardRef(({
   className = '',
   icon: Icon,
   prefix,
+  bsize = 'md', // md o compact 🏹
   ...props 
 }, ref) => {
-  const baseInput = "w-full bg-white border border-slate-200/60 shadow-sm rounded-premium-input px-6 py-4 text-sm font-semibold text-primary focus:ring-8 focus:ring-primary/5 focus:border-primary/20 placeholder:text-slate-300 transition-all outline-none duration-300";
+  const baseInput = `w-full bg-white border border-slate-200/60 shadow-sm rounded-premium-input font-semibold text-primary focus:ring-8 focus:ring-primary/5 focus:border-primary/20 placeholder:text-slate-300 transition-all outline-none duration-300 ${
+    bsize === 'compact' ? 'px-4 py-2 text-xs' : 'px-6 py-4 text-sm'
+  }`;
   
   return (
     <div className={`space-y-2.5 ${className}`}>
@@ -39,7 +42,7 @@ const InputField = forwardRef(({
           <div
             className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-slate-400"
           >
-            <Icon size={20} />
+            <Icon size={bsize === 'compact' ? 16 : 20} />
           </div>
         )}
       </div>

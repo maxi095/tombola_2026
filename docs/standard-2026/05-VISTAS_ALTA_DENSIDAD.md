@@ -1,4 +1,4 @@
-# 🏹 Vistas de Alta Densidad: Elite 2026 v8.1
+# 🏹 Vistas de Alta Densidad: Elite 2026 v8.2
 
 Este estándar define la arquitectura para paneles de gestión masiva donde la visibilidad "Above the Fold" (sin scroll) es la prioridad operacional absoluta.
 
@@ -61,3 +61,39 @@ El componente de gestión de pagos es el referente de alta densidad del sistema.
 ---
 > [!IMPORTANT]
 > **Jerarquía de Espacio**: En una resolución de 1366px, el usuario DEBE poder ver al menos 2 filas completas de cuotas sin realizar scroll, gracias a la compresión del Nivel 1 y 2.
+
+---
+
+## 🛡️ Caso de Éxito: Auditoría de Asociados (Elite 2026)
+
+La pantalla `ClientPage.jsx` implementa la infraestructura **Elite Audit** para gestión masiva.
+
+### Características de Alta Fidelidad:
+- **Elite Audit Bar**: Integra `FilterBar (slim)` y `ColumnPicker` en una sola línea horizontal.
+- **OmniSearch**: El buscador único reemplaza a los filtros múltiples, permitiendo búsquedas transversales por Nombre, DNI o Localidad.
+- **Personalización Directa**: El usuario puede ocultar columnas técnicas (ej. Contacto o Localidad) para priorizar la visualización de registros críticos en monitores pequeños.
+
+```jsx
+<div className="flex items-center justify-between border-b border-slate-100/60 elite-audit-bar px-6">
+  <FilterBar variant="slim" ...>
+    <InputField placeholder="Buscar..." icon={Search} ... />
+  </FilterBar>
+  <ColumnPicker ... />
+</div>
+```
+
+---
+
+## 🛡️ Caso de Éxito: Auditoría de Vendedores (Elite 2026)
+
+La pantalla `SellerPage.jsx` hereda la infraestructura de auditoría masiva, aplicando el estándar **Elite 2026** para el control de la fuerza de ventas.
+
+### Características de Alta Fidelidad:
+- **Badge Operativo**: La columna de "Comisión" utiliza el componente `Badge` con variantes dinámicas para resaltar el rendimiento comercial.
+- **Exportación Robusta**: Integración nativa con `excelExport.js`, permitiendo descargar el listado completo con un solo clic desde la barra institucional.
+- **Layout Manager**: Uso de `useTableColumns` para permitir que el operador administrativo organice la tabla según la prioridad del día (ej. Localidad vs Comisión).
+
+---
+
+> [!TIP]
+> Este patrón de "Buscador + Picker" es el estándar de oro para todas las pantallas de listado institucional de la Tombola 2026. 🏹⚖️✨💎🚀

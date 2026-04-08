@@ -14,7 +14,7 @@ Identifica el número de registro de la transacción. Debe resaltar sobre el res
 ```javascript
 <OperationCell key={col.id} number={sale.saleNumber} />
 ```
-- **Estética**: Bold, tipografía `font-black`, tamaño compacto, alineación a la izquierda. ✨
+- **Evolución 2026**: Se ha simplificado el diseño eliminando el label superior ("OPERACIÓN") para ganar 12px de espacio vertical por fila, permitiendo una mayor densidad de registros en pantalla. ✨
 
 ---
 

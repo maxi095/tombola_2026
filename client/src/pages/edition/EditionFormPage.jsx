@@ -19,12 +19,15 @@ import Card from "../../components/ui/Card";
 import InputField from "../../components/ui/InputField";
 import PageHeader from "../../components/ui/PageHeader";
 import Badge from "../../components/ui/Badge";
+import LoadingOverlay from "../../components/ui/LoadingOverlay";
+import FormGrid from "../../components/ui/FormGrid";
+import EmptyState from "../../components/ui/EmptyState";
 import { useFeedback } from "../../context/FeedbackContext";
 import { formatCurrency, formatNumber, stripNonDigits, cleanCurrencyInput, formatCurrencyInput } from "../../libs/formatters";
 
 /**
- * EditionFormPage V4.7 - Premium Atómica & Smart
- * Ahora con generación automática de cuotas y validación institucional.
+ * EditionFormPage V5.0 - Slim & Atomic 2026
+ * Estandarización de componentes y optimización de espacios.
  */
 export default function EditionFormPage() {
   const { register, handleSubmit, control, setValue, formState: { errors } } = useForm({
@@ -135,7 +138,7 @@ export default function EditionFormPage() {
     }
   });
 
-  // Observamos los valores para el resumen financiero dinÃ¡mico
+  // Observamos los valores para el resumen financiero dinámico
   const watchedInstallments = useWatch({ control, name: "installments" }) || [];
   const watchedCost = useWatch({ control, name: "cost" }) || 0;
 
@@ -143,20 +146,16 @@ export default function EditionFormPage() {
   const isConsistent = Math.abs(currentTotal - (parseFloat(watchedCost) || 0)) < 0.01;
 
   if (loading) {
-    return (
-      <div className="h-screen flex flex-col items-center justify-center gap-6 px-12 text-center">
-        <Loader2 className="animate-spin text-primary opacity-20" size={64} />
-        <p className="text-[11px] font-black text-muted tracking-widest uppercase animate-pulse">Sincronizando Ciclo...</p>
-      </div>
-    );
+    return <LoadingOverlay message="Sincronizando Ciclo..." fullScreen />;
   }
 
   return (
-    <div className="flex flex-col px-12 animate-in fade-in duration-700">
+    <div className="flex flex-col px-8 animate-in fade-in duration-700">
 
       <PageHeader
         title={params.id ? "Editar Edición" : "Registrar Edición"}
-        subtitle="Configure los parámetros de tiempo, stock y valores oficiales para el nuevo sorteo."
+        //subtitle="Configure los parámetros de tiempo, stock y valores oficiales para el nuevo sorteo."
+        compact={true}
         breadcrumbs={[
           { label: "Ediciones", href: "/editions" },
           { label: params.id ? "Editar" : "Registrar", href: "#" }
@@ -176,11 +175,16 @@ export default function EditionFormPage() {
         ]}
       />
 
-      <form onSubmit={onSubmit} className="flex flex-col gap-10 pb-24">
+      <form onSubmit={onSubmit} className="flex flex-col gap-6 pb-20">
 
         {/* SECCIÓN 1: IDENTIDAD Y COSTOS */}
-        <Card title="Configuración del Ciclo" icon={Calendar} description="Definición de valores principales">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <Card
+          size="slim"
+          title="Configuración del Ciclo"
+          icon={Calendar}
+          description="Definición de valores principales"
+        >
+          <FormGrid>
             <InputField
               label="Nombre de Edición"
               placeholder="ej. Tómbola 2026"
@@ -224,33 +228,34 @@ export default function EditionFormPage() {
               })}
               error={errors.maxQuotas?.message}
             />
-          </div>
+          </FormGrid>
         </Card>
 
         {/* SECCIÓN 2: PLAN DE PAGOS DETALLADO */}
         <Card
+          size="slim"
           title="Plan de Pagos"
           icon={CreditCard}
           description="Estructura automática de cuotas y vencimientos"
         >
-          <div className="space-y-4">
+          <div className="space-y-3">
             {fields.length === 0 ? (
-              <div className="py-12 border-2 border-dashed border-slate-100 rounded-3xl flex flex-col items-center justify-center text-slate-400 bg-slate-50/30">
-                <Info size={32} className="mb-4 opacity-20" />
-                <p className="text-sm font-bold uppercase tracking-widest opacity-60">Define un plan de cuotas arriba</p>
-              </div>
+              <EmptyState
+                title="Define un plan de cuotas arriba"
+                message="Indica la cantidad de cuotas en el campo 'Plan de Cuotas' para generar el cronograma automáticamente."
+              />
             ) : (
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-3">
                 {fields.map((item, index) => (
-                  <div key={item.id} className="flex flex-wrap md:flex-nowrap items-center gap-6 p-6 bg-slate-50/50 border border-slate-100 rounded-2xl animate-in slide-in-from-left-4 duration-300">
-                    <div className="flex items-center gap-4 min-w-[120px]">
+                  <div key={item.id} className="flex flex-wrap md:flex-nowrap items-center gap-4 p-4 bg-slate-50/50 border border-slate-100 rounded-2xl animate-in slide-in-from-left-4 duration-300">
+                    <div className="flex items-center gap-3 min-w-[100px]">
                       <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-[10px] font-black text-primary border border-slate-100">
                         #{index + 1}
                       </div>
                       <span className="text-xs font-black text-primary uppercase tracking-wider">Cuota</span>
                     </div>
 
-                    <div className="flex-1 min-w-[200px]">
+                    <div className="flex-1 min-w-[180px]">
                       <InputField
                         label="Vencimiento"
                         type="date"
@@ -259,7 +264,7 @@ export default function EditionFormPage() {
                       />
                     </div>
 
-                    <div className="flex-1 min-w-[200px]">
+                    <div className="flex-1 min-w-[180px]">
                       <Controller
                         name={`installments.${index}.amount`}
                         control={control}
@@ -286,20 +291,19 @@ export default function EditionFormPage() {
             )}
           </div>
 
-          <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10 flex gap-4 items-center">
-              <Info size={18} className="text-primary" />
-              <p className="text-[11px] font-medium text-slate-600 leading-none">
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 flex gap-4 items-center">
+              <Info size={16} className="text-primary shrink-0" />
+              <p className="text-[10px] font-medium text-slate-600 leading-tight">
                 <span className="font-black text-primary mr-2 uppercase tracking-tighter">Auto-Sincronización:</span>
-                Al cambiar el plan de cuotas arriba, el sistema ajustará automáticamente las filas.
+                Al cambiar el plan de cuotas arriba, el sistema ajustará automáticamente las fechas y montos.
               </p>
             </div>
 
-            <div className={`p-6 rounded-2xl border flex flex-col gap-3 transition-all duration-500 ${
-              isConsistent
-                ? "bg-emerald-50/50 border-emerald-100"
-                : "bg-red-50/50 border-red-100"
-            }`}>
+            <div className={`p-4 rounded-2xl border flex flex-col gap-2 transition-all duration-500 ${isConsistent
+              ? "bg-emerald-50/50 border-emerald-100"
+              : "bg-red-50/50 border-red-100"
+              }`}>
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Resumen Financiero</span>
                 <Badge variant={isConsistent ? "success" : "danger"}>
@@ -307,10 +311,10 @@ export default function EditionFormPage() {
                 </Badge>
               </div>
               <div className="flex justify-between items-baseline">
-                <span className="text-[20px] font-black text-primary font-manrope">
+                <span className="text-[18px] font-black text-primary font-manrope">
                   {formatCurrency(currentTotal)}
                 </span>
-                <span className="text-xs font-bold text-slate-400 italic font-manrope">
+                <span className="text-[11px] font-bold text-slate-400 italic font-manrope">
                   de {formatCurrency(watchedCost)}
                 </span>
               </div>

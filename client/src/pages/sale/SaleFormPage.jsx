@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { 
-  Ticket, 
-  User as UserIcon, 
-  Calendar, 
-  Plus, 
-  Save, 
+import {
+  Ticket,
+  User as UserIcon,
+  Calendar,
+  Plus,
+  Save,
   ArrowLeft,
   Search,
   CheckCircle2,
@@ -29,9 +29,15 @@ import Button from "../../components/ui/Button";
 import InputField from "../../components/ui/InputField";
 import Badge from "../../components/ui/Badge";
 import EliteSelect from "../../components/ui/Select";
+import LoadingOverlay from "../../components/ui/LoadingOverlay";
+import FormGrid from "../../components/ui/FormGrid";
 import { useFeedback } from "../../context/FeedbackContext";
 import dayjs from "dayjs";
 
+/**
+ * SaleFormPage V5.0 - Slim & Atomic 2026
+ * Implementación de grillas de alta densidad y componentes centralizados.
+ */
 function SaleFormPage() {
   const {
     register,
@@ -54,14 +60,15 @@ function SaleFormPage() {
   const { sellers = [], getSellers } = useSellers();
   const { availableBingoCards = [], getAvailableBingoCards } = useBingoCards();
   const { editions = [], getEditions } = useEditions();
-  
+
+  const [initLoading, setInitLoading] = useState(false);
   const [selectedEditionId, setSelectedEditionId] = useState(null);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const preselectedTab = searchParams.get("tab"); 
+  const preselectedTab = searchParams.get("tab");
   const preselectedSellerId = searchParams.get("sellerId");
 
   const normalizeText = (text) =>
@@ -76,15 +83,32 @@ function SaleFormPage() {
 
   useEffect(() => {
     const initializeSaleForm = async () => {
-      await Promise.all([
-        getEditions(),
-        getClients(),
-        getSellers(),
-        getAvailableBingoCards()
-      ]);
+      setInitLoading(true);
+      try {
+        await Promise.all([
+          getEditions(),
+          getClients(),
+          getSellers(),
+          getAvailableBingoCards()
+        ]);
+
+        if (params.id) {
+          const sale = await getSale(params.id);
+          if (sale) {
+            setValue("edition", { value: sale.edition._id, label: sale.edition.name });
+            setValue("seller", { value: sale.seller._id, label: `${sale.seller.person.lastName}, ${sale.seller.person.firstName}` });
+            setValue("client", { value: sale.client._id, label: `${sale.client.person.lastName} ${sale.client.person.firstName} (${sale.client.person.document})` });
+            setValue("bingoCard", { value: sale.bingoCard._id, label: `Cartón #${sale.bingoCard.number}` });
+            setValue("saleDate", dayjs(sale.saleDate).format("YYYY-MM-DD"));
+            setSelectedEditionId(sale.edition._id);
+          }
+        }
+      } finally {
+        setInitLoading(false);
+      }
     };
     initializeSaleForm();
-  }, []);
+  }, [params.id, getSale, setValue]);
 
   useEffect(() => {
     const loadFields = async () => {
@@ -159,11 +183,16 @@ function SaleFormPage() {
     }
   };
 
+  if (initLoading) {
+    return <LoadingOverlay message="Sincronizando Operativa..." fullScreen />;
+  }
+
   return (
-    <div className="flex flex-col px-12 animate-in fade-in duration-700">
+    <div className="flex flex-col px-8 animate-in fade-in duration-700">
       <PageHeader
         title={params.id ? "Editar Venta" : "Registrar Venta"}
-        subtitle="Sincronice los datos de la transacción para mantener la trazabilidad financiera del sorteo."
+        //subtitle="Sincronice los datos de la transacción para mantener la trazabilidad financiera del sorteo."
+        compact={true}
         breadcrumbs={[
           { label: "Ventas", href: "/sales" },
           { label: params.id ? "Editar" : "Registrar", href: "#" }
@@ -183,12 +212,17 @@ function SaleFormPage() {
         ]}
       />
 
-      <form onSubmit={onSubmit} className="flex flex-col gap-8 pb-24">
+      <form onSubmit={onSubmit} className="flex flex-col gap-6 pb-20">
         {/* SECCIÓN 1: CONFIGURACIÓN DE OPERACIÓN */}
-        <Card title="Configuración de Venta" icon={Calendar} description="Detalles administrativos y temporales">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-6">
-            <div className="flex flex-col gap-2">
-              <label className="text-[11px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Edición Activa</label>
+        <Card
+          size="slim"
+          title="Configuración de Venta"
+          icon={Calendar}
+          description="Detalles administrativos"
+        >
+          <FormGrid>
+            <div className="flex flex-col gap-2 lg:col-span-2">
+              <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Edición Activa</label>
               <Controller
                 name="edition"
                 control={control}
@@ -209,8 +243,8 @@ function SaleFormPage() {
               {errors.edition && <p className="text-[10px] font-bold text-red-500 ml-1">{errors.edition.message}</p>}
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-[11px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Vendedor Responsable</label>
+            <div className="flex flex-col gap-2 lg:col-span-1">
+              <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Responsable</label>
               <Controller
                 name="seller"
                 control={control}
@@ -223,7 +257,7 @@ function SaleFormPage() {
                       value: s._id,
                       label: `${s.person.lastName}, ${s.person.firstName}`,
                     }))}
-                    placeholder="Buscar vendedor..."
+                    placeholder="Vendedor..."
                     filterOption={customFilterOption}
                   />
                 )}
@@ -232,29 +266,35 @@ function SaleFormPage() {
             </div>
 
             <InputField
-              label="Fecha de Operación"
+              label="Fecha"
               type="date"
               icon={Calendar}
+              className="lg:col-span-1"
               {...register("saleDate", { required: "Campo obligatorio" })}
               error={errors.saleDate?.message}
             />
-          </div>
+          </FormGrid>
         </Card>
 
         {/* SECCIÓN 2: ASIGNACIÓN DE ASOCIADO Y CARTÓN */}
-        <Card title="Asociado y Cartón" icon={Ticket} description="Identificación del comprador y número de juego">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between mb-2 px-1">
-                <label className="text-[11px] font-black uppercase text-slate-400 tracking-[0.2em]">Seleccionar Asociado</label>
+        <Card
+          size="slim"
+          title="Asociado y Cartón"
+          icon={Ticket}
+          description="Identificación y número de juego"
+        >
+          <FormGrid>
+            <div className="flex flex-col gap-2 lg:col-span-2">
+              <div className="flex items-center justify-between mb-1 px-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Cargar Asociado</label>
                 <Button
                   type="button"
                   variant="ghost"
-                  className="h-7 px-3 text-[10px] bg-slate-50 border-slate-100 hover:bg-primary hover:text-white rounded-lg transition-all"
+                  className="h-6 px-2 text-[9px] bg-slate-50 border-slate-200 hover:bg-primary hover:text-white rounded-lg transition-all"
                   onClick={() => setIsClientModalOpen(true)}
                   icon={Plus}
                 >
-                  Registrar Nuevo
+                  Registrar
                 </Button>
               </div>
               <Controller
@@ -268,17 +308,17 @@ function SaleFormPage() {
                       value: c._id,
                       label: `${c.person.lastName} ${c.person.firstName} (${c.person.document})`,
                     }))}
-                    placeholder="Buscar por DNI o Apellido..."
+                    placeholder="Buscar asociado..."
                     filterOption={customFilterOption}
-                    noOptionsMessage={() => "No se encontró el asociado"}
+                    noOptionsMessage={() => "No encontrado"}
                   />
                 )}
               />
               {errors.client && <p className="text-[10px] font-bold text-red-500 ml-1">{errors.client.message}</p>}
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-[11px] font-black uppercase text-slate-400 tracking-[0.2em] mb-2 ml-1">Cartón de Bingo (#)</label>
+            <div className="flex flex-col gap-2 lg:col-span-2">
+              <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1 ml-1">Cartón (#)</label>
               <Controller
                 name="bingoCard"
                 control={control}
@@ -297,7 +337,7 @@ function SaleFormPage() {
                         number: b.number,
                       }))
                     }
-                    placeholder={selectedEditionId ? "Buscar número..." : "Seleccioná edición primero"}
+                    placeholder={selectedEditionId ? "Buscar número..." : "Elegir edición"}
                     isDisabled={!selectedEditionId}
                     filterOption={(option, inputValue) => {
                       return option.data.number?.toString().includes(inputValue);
@@ -307,17 +347,17 @@ function SaleFormPage() {
               />
               {errors.bingoCard && <p className="text-[10px] font-bold text-red-500 ml-1">{errors.bingoCard.message}</p>}
             </div>
-          </div>
+          </FormGrid>
 
-          <div className="mt-10 p-6 bg-indigo-50/30 rounded-3xl border border-indigo-100/50 flex gap-4 items-start">
-            <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-indigo-500">
-              <Info size={20} />
+          <div className="mt-8 p-4 bg-slate-50/80 rounded-2xl border border-slate-100 flex gap-4 items-start">
+            <div className="w-8 h-8 shrink-0 bg-white rounded-lg shadow-sm flex items-center justify-center text-primary border border-slate-100">
+              <Info size={16} />
             </div>
-            <div className="flex flex-col gap-1">
-               <p className="text-[11px] font-black uppercase text-indigo-400 tracking-widest">Información de Seguridad</p>
-               <p className="text-[12px] font-bold text-slate-500 leading-relaxed tracking-tight">
-                 La tómbola solo permite la asignación de cartones que no tengan una venta activa en la edición cursante. Ante cualquier duda, verifique el stock en el módulo de Cartones.
-               </p>
+            <div className="flex flex-col gap-0.5">
+              <p className="text-[9px] font-black uppercase text-primary tracking-widest">Seguridad de Asignación</p>
+              <p className="text-[10px] font-bold text-slate-500 leading-relaxed tracking-tight">
+                La tómbola solo permite la asignación de cartones que no tengan una venta activa en la edición cursante conformes al estándar 2026.
+              </p>
             </div>
           </div>
         </Card>

@@ -51,6 +51,7 @@ export default function PageHeader({
                   primary: 'text-primary bg-primary/5',
                   success: 'text-green-600 bg-green-500/5',
                   danger: 'text-red-600 bg-red-500/5',
+                  warning: 'text-amber-600 bg-amber-500/5',
                   slate: 'text-slate-400 bg-slate-100'
                 };
                 return (

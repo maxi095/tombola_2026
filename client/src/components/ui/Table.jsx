@@ -1,5 +1,5 @@
-import React from "react";
 import { Ticket, User as UserIcon, MapPin } from "lucide-react";
+import { formatCurrency } from "../../libs/formatters";
 
 /**
  * Table Components - Premium 2026 v3.5 (Atomic Framework)
@@ -51,10 +51,9 @@ export const TD = ({ children, className = "", align = "left" }) => (
  */
 
 // 📋 Celda de Operación (Nro de Venta, etc.)
-export const OperationCell = ({ label = "Operación", number }) => (
+export const OperationCell = ({ number }) => (
   <TD>
     <div className="flex flex-col">
-      <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-1">{label}</span>
       <span className="text-sm font-black text-primary font-manrope">#{number}</span>
     </div>
   </TD>
@@ -68,7 +67,7 @@ export const StockCell = ({ main, sub }) => (
         <Ticket size={14} />
       </div>
       <div className="flex flex-col">
-        <span className="text-sm font-black text-slate-700 leading-none mb-1">{main}</span>
+        <span className="text-sm font-black text-slate-700 leading-none mb-0.5">{main}</span>
         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{sub}</span>
       </div>
     </div>
@@ -78,9 +77,9 @@ export const StockCell = ({ main, sub }) => (
 // 👤 Celda de Usuario (Vendedor / Asociado)
 export const UserCell = ({ name, sub, variant = "primary" }) => (
   <TD>
-    <div className="flex flex-col gap-1.5 max-w-[200px]">
+    <div className="flex flex-col gap-0.5 max-w-[200px]">
       <div className="flex items-start gap-2">
-        <UserIcon size={12} className={`${variant === 'primary' ? 'text-primary' : 'text-slate-300'} mt-1 shrink-0 opacity-40`} />
+        <UserIcon size={12} className={`${variant === 'primary' ? 'text-primary' : 'text-slate-300'} mt-0.5 shrink-0 opacity-40`} />
         <span className={`text-xs font-black leading-tight uppercase ${variant === 'primary' ? 'text-primary' : 'text-slate-600'}`}>
           {name}
         </span>
@@ -96,16 +95,8 @@ export const UserCell = ({ name, sub, variant = "primary" }) => (
 );
 
 // 💸 Celda de Dinero
-export const AmountCell = ({ value }) => {
-  const formatted = new Intl.NumberFormat('es-AR', {
-    style: 'currency',
-    currency: 'ARS',
-    minimumFractionDigits: 0
-  }).format(value || 0);
-
-  return (
-    <TD className="text-right font-black text-emerald-600 bg-emerald-50/10">
-      {formatted}
-    </TD>
-  );
-};
+export const AmountCell = ({ value }) => (
+  <TD className="text-right font-black text-xs text-emerald-600 bg-emerald-50/10">
+    {formatCurrency(value)}
+  </TD>
+);
