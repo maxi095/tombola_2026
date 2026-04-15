@@ -10,18 +10,14 @@ const fmt = (n) =>
 // ─── Contenido de una copia del documento ────────────────────────────────────
 function DocumentContent({ balance, label }) {
   const isIngreso = balance.type === "Ingreso";
-  const docTitle  = isIngreso ? "RECIBO" : "ORDEN DE PAGO";
-  const txLabel   = `${isIngreso ? "I" : "E"}-${String(balance.transactionNumber).padStart(3, "0")}`;
-  const date      = dayjs.utc(balance.date).format("DD/MM/YYYY");
+  const docTitle = isIngreso ? "RECIBO" : "ORDEN DE PAGO";
+  const txLabel = `${isIngreso ? "I" : "E"}-${String(balance.transactionNumber).padStart(3, "0")}`;
+  const date = dayjs.utc(balance.date).format("DD/MM/YYYY");
 
-  const cashAmount     = balance.cashAmount     || 0;
+  const cashAmount = balance.cashAmount || 0;
   const transferAmount = balance.transferAmount || 0;
-  const checkAmount    = balance.checkAmount    || 0;
-  const totalAmount    = balance.totalAmount    || cashAmount + transferAmount + checkAmount;
-
-  const createdByName = balance.createdBy?.person
-    ? `${balance.createdBy.person.firstName} ${balance.createdBy.person.lastName}`
-    : balance.createdBy?.username || "-";
+  const checkAmount = balance.checkAmount || 0;
+  const totalAmount = balance.totalAmount || cashAmount + transferAmount + checkAmount;
 
   return (
     <div className="border border-gray-300 rounded-md shadow-sm p-4 mb-6 text-sm print:mb-2 print:shadow-none print:border print:p-2">
@@ -40,66 +36,46 @@ function DocumentContent({ balance, label }) {
         </div>
       </div>
 
-      {/* ── Título del documento ────────────────────────────────────────── */}
-      <header className="text-center mb-4 print:mb-2">
-        <div className="flex flex-col items-center justify-center gap-1 sm:flex-row sm:gap-3 print:flex-row print:gap-3">
+      {/* ── Título y etiqueta ────────────────────────────────────────── */}
+      <header className="flex flex-col sm:flex-row items-center justify-between mb-4 print:mb-2 border-b border-gray-100 pb-2 text-black">
+        <div className="flex flex-col items-center sm:items-baseline sm:flex-row gap-1 sm:gap-3">
           <h1 className="text-base font-bold uppercase tracking-widest print:text-sm">
             {docTitle} N° {txLabel}
           </h1>
-          <span
-            className={`text-xs font-semibold px-2 py-0.5 rounded-full border print:text-[10px]
-              ${isIngreso
-                ? "bg-emerald-50 text-emerald-700 border-emerald-300"
-                : "bg-rose-50 text-rose-700 border-rose-300"
-              }`}
-          >
+          <span className="text-sm italic text-gray-500 font-medium print:text-xs">
             {label}
           </span>
         </div>
+        <div className="flex items-center gap-1 mt-1 sm:mt-0 text-sm print:text-xs">
+          <span className="font-medium text-gray-600">Fecha:</span>
+          <span className="font-bold">{date}</span>
+        </div>
         {balance.status === "Anulado" && (
-          <p className="text-red-600 font-bold text-xs mt-1 uppercase tracking-wider">
-            ⚠ ANULADO
+          <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-red-600/20 font-black text-4xl uppercase tracking-[1em] pointer-events-none select-none -rotate-12 whitespace-nowrap">
+            ANULADO
           </p>
         )}
       </header>
 
       {/* ── Datos del movimiento ────────────────────────────────────────── */}
-      <section className="space-y-2 mb-4 print:space-y-1 print:mb-3">
+      <section className="space-y-3 mb-6 print:space-y-2 print:mb-4">
 
-        {/* Fila 1: N° / Fecha */}
-        <div className="grid grid-cols-2 gap-x-4">
-          <div className="flex items-center gap-1">
-            <span className="font-medium text-gray-600">Categoría:</span>
-            <span>{balance.category || "-"}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="font-medium text-gray-600">Fecha:</span>
-            <span>{date}</span>
-          </div>
+        {/* Fila 1: Contraparte */}
+        <div className="flex items-start gap-2 border-b border-gray-100 pb-2">
+            <span className="font-medium text-gray-600 shrink-0">
+              {isIngreso ? "Recibimos de:" : "A la orden de:"}
+            </span>
+            <span className="font-bold">{balance.counterpart || "-"}</span>
         </div>
 
-        {/* Fila 2: Contraparte */}
-        <div className="flex items-start gap-1">
-          <span className="font-medium text-gray-600 shrink-0">
-            {isIngreso ? "Recibimos de:" : "A la orden de:"}
-          </span>
-          <span className="font-semibold">{balance.counterpart || "-"}</span>
-        </div>
-
-        {/* Fila 3: Concepto */}
-        <div className="flex items-start gap-1">
+        {/* Fila 2: Concepto */}
+        <div className="flex items-start gap-2">
           <span className="font-medium text-gray-600 shrink-0">En concepto de:</span>
-          <span>{balance.concept || "-"}</span>
-        </div>
-
-        {/* Fila 4: Edición */}
-        <div className="flex items-start gap-1">
-          <span className="font-medium text-gray-600 shrink-0">Edición:</span>
-          <span>{balance.edition?.name || "-"}</span>
+          <span className="text-gray-800">{balance.concept || "-"}</span>
         </div>
 
         {/* ── Montos ─────────────────────────────────────────────────── */}
-        <div className="border-t border-gray-300 pt-2 space-y-1 w-full max-w-sm ml-auto text-sm print:text-xs mt-2">
+        <div className="border-t border-gray-300 pt-3 space-y-1 w-full max-w-sm ml-auto text-sm print:text-xs mt-4">
           {cashAmount > 0 && (
             <div className="flex justify-between">
               <span className="font-medium text-gray-600">Monto en Efectivo:</span>
@@ -130,8 +106,8 @@ function DocumentContent({ balance, label }) {
 
         {/* ── Detalle de Cheques ─────────────────────────────────────── */}
         {balance.checks && balance.checks.length > 0 && (
-          <div className="mt-3 print:mt-2">
-            <h3 className="text-sm font-semibold mb-1 text-gray-700">Detalle de Cheques</h3>
+          <div className="mt-4 print:mt-3">
+            <h3 className="text-sm font-semibold mb-1 text-gray-700 tracking-tighter">Detalle de Cheques</h3>
             <table className="w-full text-sm border border-gray-300 print:text-xs">
               <thead className="bg-gray-100 border-b border-gray-300">
                 <tr>
@@ -145,11 +121,11 @@ function DocumentContent({ balance, label }) {
               <tbody>
                 {balance.checks.map((c, i) => (
                   <tr key={i} className="border-b border-gray-200">
-                    <td className="px-2 py-1.5">{c.checkNumber}</td>
+                    <td className="px-2 py-1.5 font-mono">{c.checkNumber}</td>
                     <td className="px-2 py-1.5">{c.bank}</td>
                     <td className="px-2 py-1.5">{c.branch}</td>
                     <td className="px-2 py-1.5">{dayjs.utc(c.date).format("DD/MM/YYYY")}</td>
-                    <td className="px-2 py-1.5 text-right">{fmt(c.amount)}</td>
+                    <td className="px-2 py-1.5 text-right font-medium">{fmt(c.amount)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -157,39 +133,26 @@ function DocumentContent({ balance, label }) {
           </div>
         )}
 
-        {/* ── Observaciones (si hay) ─────────────────────────────────── */}
-        {balance.observations && (
-          <div className="flex items-start gap-1 mt-2 text-xs text-gray-500 print:text-[10px]">
-            <span className="font-medium shrink-0">Obs.:</span>
-            <span className="italic">{balance.observations}</span>
-          </div>
-        )}
-
         {/* ── Referencia SellerPayment (si aplica) ───────────────────── */}
         {balance.sellerPaymentRef && (
-          <div className="flex items-start gap-1 text-xs text-gray-500 print:text-[10px]">
+          <div className="flex items-start gap-1 text-xs text-gray-500 print:text-[10px] italic">
             <span className="font-medium shrink-0">Rendición vinculada:</span>
             <span>Pago N° {balance.sellerPaymentRef.sellerPaymentNumber}</span>
           </div>
         )}
       </section>
 
-      {/* ── Pie: emisor + firmas ────────────────────────────────────────────── */}
-      <div className="text-xs text-gray-400 mb-6 print:mb-4 print:text-[10px]">
-        Emitido por: {createdByName} · {dayjs(balance.createdAt).format("DD/MM/YYYY HH:mm")}
-      </div>
-
-      <footer className="flex justify-between print:mt-6">
+      <footer className="flex justify-between mt-12 print:mt-12">
         <div className="text-center">
-          <div className="border-t border-black w-36 mx-auto" />
-          <p className="text-sm text-black print:text-xs mt-1">
-            {isIngreso ? "Firma del Pagador" : "Firma Autorizada"}
+          <div className="border-t border-black w-40 mx-auto" />
+          <p className="text-sm font-bold text-black print:text-xs mt-1">
+            {isIngreso ? "Firma del Pagador" : "Firma del Beneficiario"}
           </p>
         </div>
         <div className="text-center">
-          <div className="border-t border-black w-36 mx-auto" />
-          <p className="text-sm text-black print:text-xs mt-1">
-            {isIngreso ? "Firma de la Organización" : "Sello / Firma del Beneficiario"}
+          <div className="border-t border-black w-40 mx-auto" />
+          <p className="text-sm font-bold text-black print:text-xs mt-1">
+            Firma de la Organización
           </p>
         </div>
       </footer>
@@ -202,8 +165,8 @@ export default function BalanceReceipt({ balance }) {
   if (!balance) return null;
 
   const isIngreso = balance.type === "Ingreso";
-  const copyLabel1 = isIngreso ? "Copia para el pagador"       : "Copia para el beneficiario";
-  const copyLabel2 = isIngreso ? "Copia para administración"   : "Copia para administración";
+  const copyLabel1 = isIngreso ? "Copia para el pagador" : "Copia para el beneficiario";
+  const copyLabel2 = isIngreso ? "Copia para administración" : "Copia para administración";
 
   return (
     <div className="text-black font-sans print:text-[13px] print:leading-tight">

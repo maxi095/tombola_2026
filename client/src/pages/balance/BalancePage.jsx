@@ -28,6 +28,7 @@ import {
 
 import { useBalance } from "../../context/BalanceContext";
 import { useEditionFilter } from "../../context/EditionFilterContext";
+import { useEditions } from "../../context/EditionContext";
 import BalanceReceipt from "../../components/BalanceReceipt";
 
 // Infraestructura Elite 2026 🛡️
@@ -79,6 +80,7 @@ const EXPENSE_CATEGORIES = [
 export default function BalancePage() {
   const { balances, getBalances, getBalanceSummary, cancelBalance } = useBalance();
   const { selectedEdition } = useEditionFilter();
+  const { editions } = useEditions();
   const { showToast } = useFeedback();
   const navigate = useNavigate();
 
@@ -183,6 +185,12 @@ export default function BalancePage() {
     .reduce((s, b) => s + (b.totalAmount || 0), 0);
   const filteredNet = filteredIngresos - filteredEgresos;
 
+  const currentEditionName = useMemo(() => {
+    if (!selectedEdition) return "Todo";
+    const ed = editions?.find(e => e._id === selectedEdition);
+    return ed ? ed.name : "Cargando...";
+  }, [selectedEdition, editions]);
+
   // ─── Anular ──────────────────────────────────────────────────────────────
   const handleCancel = async (id) => {
     if (!window.confirm("¿Confirmar anulación de este movimiento?")) return;
@@ -267,7 +275,7 @@ export default function BalancePage() {
   return (
     <div className="flex flex-col px-12 animate-in fade-in duration-700 bg-slate-50/50 min-h-screen">
       <PageHeader
-        title="Balance Institucional"
+        title={`Balance ${currentEditionName}`}
         compact={true}
         actions={[
           {
