@@ -36,6 +36,16 @@ const editionSchema = new mongoose.Schema( {
         type: Date,
         default: Date.now,
     },
+    // Parámetros técnicos Bingo V10
+    totalBalls: { type: Number, default: 70 },
+    clusterSize: { type: Number, default: 5 },
+    clustersPerCard: { type: Number, default: 4 },
+    cardSets: { type: Number, default: 5 },
+    auditStats: {
+        singleWinnerProb: { type: Number },
+        avgFollowers: { type: Number }
+    },
+
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

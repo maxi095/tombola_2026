@@ -2,26 +2,54 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import BingoCard from "../src/models/bingoCard.model.js";
+import Edition from "../src/models/edition.model.js";
 
 dotenv.config();
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/tomboladb";
-const currentEditionId = "683686de7b16dc6729151d2c";
 
-async function simularSorteosConAnalisis({ cantidadDeSimulaciones = 1000 }) {
+async function simularSorteosConAnalisis({ editionId, setNumber = 1, cantidadDeSimulaciones = 1000 }) {
   await mongoose.connect(MONGODB_URI);
-  console.log("🔄 Simulación de sorteos y análisis de cartones iniciada...");
 
-  const cartones = await BingoCard.find({ edition: currentEditionId }, "_id numbers number");
+  // 1. Cargar metadatos de la edición
+  const edition = await Edition.findById(editionId);
+  if (!edition) {
+    console.error("❌ Edición no encontrada");
+    await mongoose.disconnect();
+    return;
+  }
+
+  const TOTAL_NUMEROS = edition.totalBalls || 70;
+  console.log(`🔄 Iniciando simulación para Edición: ${edition.name}`);
+  console.log(`🎯 Configuración: ${TOTAL_NUMEROS} bolillas, Juego (Set) #${setNumber}`);
+
+  // 2. Cargar cartones y extraer los números del Set específico
+  const rawCards = await BingoCard.find({ edition: editionId }, "_id cardSets number");
+
+  const cartones = rawCards.map(c => {
+    const selectedSet = c.cardSets.find(s => s.setNumber === setNumber);
+    return {
+      _id: c._id,
+      number: c.number,
+      numbers: selectedSet ? selectedSet.numbers : []
+    };
+  }).filter(c => c.numbers.length > 0);
+
+  if (cartones.length === 0) {
+    console.error("❌ No se encontraron números para el Set seleccionado.");
+    await mongoose.disconnect();
+    return;
+  }
+
   console.log(`🎫 Total de cartones cargados: ${cartones.length}`);
-
-  const TOTAL_NUMEROS = 90;
 
   // --- Análisis de coincidencias entre cartones ---
   const coincidenciasEntreCartones = new Map();
-  for (let i = 0; i < cartones.length; i++) {
-    for (let j = i + 1; j < cartones.length; j++) {
-      const setA = new Set(cartones[i].numbers);
+  // Limitamos análisis de pares si hay demasiados cartones para evitar lag
+  const analysisLimit = Math.min(cartones.length, 1001);
+
+  for (let i = 0; i < analysisLimit; i++) {
+    for (let j = i + 1; j < analysisLimit; j++) {
       const setB = new Set(cartones[j].numbers);
       const interseccion = cartones[i].numbers.filter(num => setB.has(num));
       const key = `${cartones[i].number}-${cartones[j].number}`;
@@ -33,16 +61,17 @@ async function simularSorteosConAnalisis({ cantidadDeSimulaciones = 1000 }) {
   const frecuenciaNumeros = Array(TOTAL_NUMEROS + 1).fill(0);
   for (const carton of cartones) {
     for (const numero of carton.numbers) {
-      frecuenciaNumeros[numero]++;
+      if (numero <= TOTAL_NUMEROS) frecuenciaNumeros[numero]++;
     }
   }
 
-  // --- Rango por zonas (1-30, 31-60, 61-90) ---
+  // --- Rango por zonas (Dividido en 3 tercios dinámicos) ---
+  const tercio = Math.floor(TOTAL_NUMEROS / 3);
   const zonaCount = { zona1: 0, zona2: 0, zona3: 0 };
   for (const carton of cartones) {
     for (const num of carton.numbers) {
-      if (num <= 30) zonaCount.zona1++;
-      else if (num <= 60) zonaCount.zona2++;
+      if (num <= tercio) zonaCount.zona1++;
+      else if (num <= tercio * 2) zonaCount.zona2++;
       else zonaCount.zona3++;
     }
   }
@@ -75,6 +104,8 @@ async function simularSorteosConAnalisis({ cantidadDeSimulaciones = 1000 }) {
     for (let numero of bolillero) {
       numerosSorteados.add(numero);
       cantidadBolillasExtraidas++;
+
+      // Optimizamos búsqueda de ganadores
       ganadores = cartones.filter(carton =>
         carton.numbers.every(num => numerosSorteados.has(num))
       );
@@ -108,51 +139,49 @@ async function simularSorteosConAnalisis({ cantidadDeSimulaciones = 1000 }) {
     .slice(0, 50);
 
   // --- Mostrar análisis ---
-  console.log("\n📊 ANÁLISIS DE LOS CARTONES");
-  console.log("\n📌 Frecuencia de aparición de cada número (ordenado):");
+  console.log("\n📊 ANÁLISIS DE ESTRUCTURA (JUEGO #" + setNumber + ")");
+  console.log(`📌 Frecuencia por bolilla (debería ser balanceada):`);
   frecuenciaNumeros
     .map((count, num) => ({ num, count }))
     .slice(1)
     .sort((a, b) => b.count - a.count)
+    .slice(0, 10) // Top 10 para no saturar consola
     .forEach(({ num, count }) => {
       console.log(`🎲 Nº ${num.toString().padStart(2, "0")}: aparece en ${count} cartones`);
     });
 
-  console.log("\n🔍 Coincidencias entre pares de cartones (TOP 20):");
+  console.log("\n🔍 Coincidencias entre pares (TOP 10):");
   [...coincidenciasEntreCartones.entries()]
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 20)
+    .slice(0, 10)
     .forEach(([pair, count]) => {
-      console.log(`🔗 ${pair} → ${count} coincidencias`);
+      console.log(`🔗 Cartones ${pair} → ${count} números compartidos`);
     });
 
-  console.log("\n📌 Distribución por zonas:");
-  console.log(`   1-30: ${zonaCount.zona1} números`);
-  console.log(`   31-60: ${zonaCount.zona2} números`);
-  console.log(`   61-90: ${zonaCount.zona3} números`);
+  console.log("\n📊 RESULTADOS DE LA SIMULACIÓN");
+  console.log(`🎯 Promedio de bolillas para ganar: ${promedioBolillas}`);
+  console.log(`📉 Mínimo: ${minBolillas} | 📈 Máximo: ${maxBolillas}`);
 
-  console.log("\n📊 RESULTADOS DE LAS SIMULACIONES");
-  console.log(`🔁 Total de simulaciones: ${cantidadDeSimulaciones}`);
-  console.log(`✅ Con al menos un ganador: ${conGanador}`);
-  console.log(`❌ Sin ganador: ${sinGanador}`);
-  console.log(`🎯 Promedio de bolillas necesarias: ${promedioBolillas}`);
-  console.log(`📉 Mínimo de bolillas: ${minBolillas}`);
-  console.log(`📈 Máximo de bolillas: ${maxBolillas}`);
-
-  console.log("\n📈 Distribución de ganadores por simulación:");
+  console.log("\n📈 Empates en el 1er Puesto:");
   [...ganadoresPorCantidad.entries()]
     .sort((a, b) => a[0] - b[0])
     .forEach(([cantidad, veces]) => {
-      console.log(`🧩 ${cantidad} ganador(es): ${veces} simulación(es)`);
+      console.log(`🧩 ${cantidad} ganador(es) simultáneos: ${veces} sorteos`);
     });
-
-  console.log("\n🏆 TOP 50 CARTONES MÁS GANADORES:");
-  topCartones.forEach(([numeroCarton, wins], index) => {
-    console.log(` ${index + 1}. Cartón Nº ${numeroCarton} - 🏅 ${wins} victorias`);
-  });
 
   await mongoose.disconnect();
 }
 
-// Ejecutar simulación
-simularSorteosConAnalisis({ cantidadDeSimulaciones: 1000 });
+// Configuración de la prueba: ID de Edición y número de Juego (1-5)
+const CONFIG = {
+  editionId: "69dd418c67e9e381323c3802", // Reemplazar por tu ID de edición real
+  setNumber: 1,
+  sims: 1000
+};
+
+simularSorteosConAnalisis({
+  editionId: CONFIG.editionId,
+  setNumber: CONFIG.setNumber,
+  cantidadDeSimulaciones: CONFIG.sims
+});
+
