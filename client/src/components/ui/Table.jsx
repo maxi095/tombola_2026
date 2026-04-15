@@ -50,11 +50,25 @@ export const TD = ({ children, className = "", align = "left" }) => (
  * ÁTOMOS DE CELDA ESPECIALIZADOS ✨💎
  */
 
-// 📋 Celda de Operación (Nro de Venta, etc.)
-export const OperationCell = ({ number }) => (
+// 📋 Celda de Operación (Nro de Venta, Balance, etc.) ✨
+export const OperationCell = ({ number, main, sub, icon: Icon }) => (
   <TD>
-    <div className="flex flex-col">
-      <span className="text-sm font-black text-primary font-manrope">#{number}</span>
+    <div className="flex items-center gap-3">
+      {Icon && (
+        <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 shrink-0">
+          <Icon size={14} />
+        </div>
+      )}
+      <div className="flex flex-col">
+        <span className="text-sm font-black text-slate-700 leading-none mb-0.5">
+          {main || (number ? `#${number}` : "S/N")}
+        </span>
+        {sub && (
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+            {sub}
+          </span>
+        )}
+      </div>
     </div>
   </TD>
 );
@@ -94,9 +108,22 @@ export const UserCell = ({ name, sub, variant = "primary" }) => (
   </TD>
 );
 
-// 💸 Celda de Dinero
-export const AmountCell = ({ value }) => (
-  <TD className="text-right font-black text-xs text-emerald-600 bg-emerald-50/10">
-    {formatCurrency(value)}
-  </TD>
-);
+// 💸 Celda de Dinero v19.5 (Premium Audit) ✨🏹
+export const AmountCell = ({ amount, value, status = "success", bold = false }) => {
+  const amountValue = amount !== undefined ? amount : value;
+  
+  const variants = {
+    success: "text-emerald-600 bg-emerald-50/10",
+    danger: "text-rose-600 bg-rose-50/10",
+    warning: "text-amber-600 bg-amber-50/10",
+    info: "text-blue-600 bg-blue-50/10",
+    secondary: "text-slate-500 bg-slate-50/10",
+    primary: "text-primary bg-primary/10"
+  };
+
+  return (
+    <TD className={`text-right ${bold ? 'font-black' : 'font-bold'} text-xs ${variants[status] || variants.success}`}>
+      {formatCurrency(amountValue)}
+    </TD>
+  );
+};

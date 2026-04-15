@@ -18,6 +18,7 @@ import quotaRoutes from './routes/quota.routes.js';
 import sellerPaymentRoutes from './routes/sellerPayment.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
 import drawRoutes from './routes/draw.routes.js';
+import balanceRoutes from './routes/balance.routes.js';
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.use("/api", quotaRoutes);
 app.use("/api", sellerPaymentRoutes);
 app.use("/api", dashboardRoutes);
 app.use("/api", drawRoutes);
+app.use("/api", balanceRoutes);
 
 
 

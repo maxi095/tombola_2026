@@ -45,6 +45,11 @@ import SellerPaymentPage from "./pages/sellerPayment/SellerPaymentPage";
 import SellerPaymentFormPage from "./pages/sellerPayment/SellerPaymentFormPage";
 import SellerPaymentView from "./pages/sellerPayment/SellerPaymentView";
 
+import { BalanceProvider } from "./context/BalanceContext";
+import BalancePage from "./pages/balance/BalancePage";
+import BalanceFormPage from "./pages/balance/BalanceFormPage";
+import BalanceViewPage from "./pages/balance/BalanceViewPage";
+
 import { DashboardProvider } from "./context/DashboardContext";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 
@@ -77,19 +82,21 @@ function App() {
                   <PersonProvider>
                     <SellerProvider>
                       <SellerPaymentProvider>
-                        <ClientProvider>
-                          <SalesProvider>
-                            <DashboardProvider>
-                              <DrawProvider>
-                                <UserProvider>
-                                  <BrowserRouter>
-                                    <Layout />
-                                  </BrowserRouter>
-                                </UserProvider>
-                              </DrawProvider>
-                            </DashboardProvider>
-                          </SalesProvider>
-                        </ClientProvider>
+                        <BalanceProvider>
+                          <ClientProvider>
+                            <SalesProvider>
+                              <DashboardProvider>
+                                <DrawProvider>
+                                  <UserProvider>
+                                    <BrowserRouter>
+                                      <Layout />
+                                    </BrowserRouter>
+                                  </UserProvider>
+                                </DrawProvider>
+                              </DashboardProvider>
+                            </SalesProvider>
+                          </ClientProvider>
+                        </BalanceProvider>
                       </SellerPaymentProvider>
                     </SellerProvider>
                   </PersonProvider>
@@ -176,6 +183,10 @@ function Layout() {
             <Route path="/sellerPayments" element={<ProtectedRoute allowedRoles={['Administrador']}><SellerPaymentPage /></ProtectedRoute>} />
             <Route path="/sellerPayment/new" element={<ProtectedRoute allowedRoles={['Administrador']}><SellerPaymentFormPage /></ProtectedRoute>} />
             <Route path="/sellerPayment/view/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><SellerPaymentView /></ProtectedRoute>} />
+
+            <Route path="/balance" element={<ProtectedRoute allowedRoles={['Administrador']}><BalancePage /></ProtectedRoute>} />
+            <Route path="/balance/new" element={<ProtectedRoute allowedRoles={['Administrador']}><BalanceFormPage /></ProtectedRoute>} />
+            <Route path="/balance/view/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><BalanceViewPage /></ProtectedRoute>} />
 
             <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['Administrador']}><DashboardPage /></ProtectedRoute>} />
 

@@ -15,7 +15,8 @@ import {
   FileText,
   CheckCircle,
   Briefcase,
-  Wallet
+  Wallet,
+  TrendingUp
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -96,6 +97,7 @@ const Sidebar = () => {
         <SidebarLink to="/clients" icon={CheckCircle}>Asociados</SidebarLink>
         <SidebarLink to="/sellers" icon={Briefcase}>Vendedores</SidebarLink>
         <SidebarLink to="/sellerPayments" icon={Wallet}>Pagos</SidebarLink>
+        <SidebarLink to="/balance" icon={TrendingUp}>Balance</SidebarLink>
         <SidebarLink to="/bingoCardStatus" icon={Wallet}>Estado Bingo</SidebarLink>
         <SidebarLink to="/draws" icon={Calendar}>Sorteos</SidebarLink>
 

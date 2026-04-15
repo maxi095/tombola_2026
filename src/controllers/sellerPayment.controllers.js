@@ -1,6 +1,7 @@
 import SellerPayment from '../models/sellerPayment.model.js';
 import Seller from '../models/seller.model.js';
 import Edition from '../models/edition.model.js';
+import { createBalanceFromSellerPayment } from './balance.controllers.js';
 
 
 // Crear nuevo pago de vendedor
@@ -83,6 +84,35 @@ export const createSellerPayment = async (req, res) => {
     });
 
     const savedPayment = await newPayment.save();
+
+    // ─── Generar movimientos automáticos en Balance ────────────────────────────
+    try {
+      // Resolver nombre del vendedor para el campo counterpart
+      const sellerDoc = await Seller.findById(seller).populate('person', 'firstName lastName');
+      const sellerName = sellerDoc?.person
+        ? `${sellerDoc.person.firstName} ${sellerDoc.person.lastName}`
+        : 'Vendedor';
+
+      await createBalanceFromSellerPayment({
+        edition,
+        sellerPaymentRef: savedPayment._id,
+        sellerName,
+        cashAmount:       Number(cashAmount),
+        // tarjetaUnicaAmount no existe en Balance → se suma a transferAmount
+        // ya que es un medio de pago electrónico equivalente
+        transferAmount:   Number(transferAmount) + Number(tarjetaUnicaAmount || 0),
+        checks,
+        commissionAmount: Number(commissionAmount || 0),
+        commissionType,
+        date,
+        createdBy,
+      });
+      console.log('✅ Movimientos de Balance generados automáticamente');
+    } catch (balanceError) {
+      // No bloqueamos el alta del pago si falla el balance, solo logueamos
+      console.error('⚠️ Error al generar movimientos de Balance:', balanceError.message);
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     const populatedPayment = await savedPayment.populate([
       { path: 'seller' },
