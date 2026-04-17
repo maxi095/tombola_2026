@@ -41,7 +41,8 @@ function KPICard({ icon: Icon, label, value, variant = 'primary', className = ""
   return (
     <Card
       variant="glass"
-      className={`border-l-4 ${style.border} py-4 hover:shadow-lg transition-all duration-300 ${className}`}
+      size="slim"
+      className={`border-l-4 ${style.border} py-2 hover:shadow-lg transition-all duration-300 ${className}`}
     >
       <div className="flex items-center gap-4">
         <div className={`w-10 h-10 rounded-xl ${style.bg} flex items-center justify-center ${style.text} shadow-inner shrink-0`}>

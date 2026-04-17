@@ -47,6 +47,7 @@ import Card from "../../components/ui/Card";
 import Badge from "../../components/ui/Badge";
 import InputField from "../../components/ui/InputField";
 import Button from "../../components/ui/Button";
+import Tabs from "../../components/ui/Tabs";
 import AssignBingoCardsModal from "../../components/AssignBingoCardsModal";
 import { useEditionFilter } from "../../context/EditionFilterContext";
 import { useFeedback } from "../../context/FeedbackContext";
@@ -288,25 +289,12 @@ function SellerViewPage() {
       />
 
       {/* Selector de Pestañas Elite ✨ */}
-      <div className="flex items-center gap-1 bg-white/50 backdrop-blur-md p-1 rounded-2xl border border-slate-200/60 mb-5 self-start shadow-sm">
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
-          const TabIcon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => handleTabChange(tab.id)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all duration-300 font-bold text-xs uppercase tracking-wider
-                ${isActive
-                  ? "bg-primary text-white shadow-lg shadow-primary/20 scale-105"
-                  : "text-slate-500 hover:bg-slate-100/80 hover:text-slate-700"}`}
-            >
-              <TabIcon size={16} />
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
+      <Tabs
+        tabs={tabs}
+        activeTab={activeTab}
+        onChange={handleTabChange}
+        className="mb-5 self-start"
+      />
 
       <div className="flex flex-col gap-8">
 

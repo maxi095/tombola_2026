@@ -231,6 +231,33 @@ Se refiere al uso directo de la librería `react-select`. Solo debe usarse en fo
 > **Prohibición de Nomenclatura**: Está terminantemente prohibido importar cualquier componente con el nombre genérico `Select`. Esta restricción elimina de raíz los errores de `ReferenceError` y `Already declared` que bloquean la compilación de Vite.
 
 ---
+234: 
+235: ## 📑 5. Navegación por Pestañas (Componente Tabs v1.0) ✨💎🚀
+236: 
+237: Para segmentar información compleja sin cambiar de contexto o URL (cuando se requiere instantaneidad), se debe utilizar el componente `<Tabs />`.
+238: 
+239: ### Características Técnicas:
+240: - **Pill Design**: Utiliza un contenedor con fondo `slate-100/60` y botones tipo cápsula que resaltan la selección mediante un fondo blanco sólido y sombra suave.
+241: - **Modo Mixto**: Soporta visualización de solo texto (Dashboard) o iconos + texto (Sellers).
+242: - **Reactividad**: Implementa transiciones de escala y opacidad suaves (`duration-300`) para una sensación de alta gama.
+243: 
+244: ### Ejemplo de Implementación:
+245: ```jsx
+246: <Tabs 
+247:   tabs={[
+248:     { id: 'ventas', label: 'Ventas', icon: ShoppingBag },
+249:     { id: 'balance', label: 'Balance', icon: Scale }
+250:   ]}
+251:   activeTab={activeTab}
+252:   onChange={setActiveTab}
+253:   showIcons={false} // Para minimalismo total
+254: />
+255: ```
+256: 
+257: > [!IMPORTANT]
+258: > **Consistencia de Identidad**: Nunca renderizar pestañas manualmente. El uso de `<Tabs />` garantiza que la interacción táctil y visual sea idéntica en todo el ecosistema móvil y desktop. 🏹⚖️
+259: 
+260: ---
 
 ## 🗺️ Trazabilidad Institucional (PageHeader & Breadcrumbs) (v5.6)
 
