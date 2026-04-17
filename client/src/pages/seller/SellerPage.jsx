@@ -176,12 +176,9 @@ function SellerPage() {
 
               <div className="absolute right-0 top-11 z-[100]">
                 <ColumnPicker
-                  columns={columns}
+                  {...{ columns, toggleVisibility, moveColumn, resetColumns }}
                   isOpen={isPickerOpen}
                   onClose={() => setIsPickerOpen(false)}
-                  toggleVisibility={toggleVisibility}
-                  moveColumn={moveColumn}
-                  resetColumns={resetColumns}
                 />
               </div>
             </div>

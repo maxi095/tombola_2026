@@ -1,4 +1,4 @@
-# 🧩 Patrones de Componentes: Premium 2026 v4.7
+# 🧩 Patrones de Componentes: Premium 2026 v4.8
 
 Este manual instruye sobre cómo implementar los componentes atómicos dentro de los módulos. No se debe construir UI "a mano" si existe un componente que resuelva la estructura.
 
@@ -330,4 +330,31 @@ const { visibleColumns } = columnManager;
 ```
 
 > [!IMPORTANT]
-> **Jerarquía de Control**: El objeto `initialColumns` es la única fuente de verdad para la visibilidad inicial. Nunca omitir el flag `isFixed` en la columna de acciones. 🏹⚖️✨🚀
+> **Jerarquía de Control**: El objeto `initialColumns` es la única fuente de verdad para la visibilidad inicial. Nunca omitir el flag `isFixed` en la columna de acciones. 🏹⚖️✨💎🚀
+
+## 12. Etiquetas Flotantes (Tooltips v1.0) ✨💎🚀
+
+Para mantener la **Alta Densidad HD** sin sacrificar la claridad funcional, toda acción representada únicamente por un icono debe estar envuelta en un componente `<Tooltip />`.
+
+### Reglas de Implementación:
+1.  **Contexto Obligatorio**: Todo botón tipo `ghost` que solo contenga un icono `Lucide` debe llevar un Tooltip descriptivo.
+2.  **Posicionamiento Inteligente**: 
+    - Por defecto usar `position="top"`.
+    - En la última columna de la derecha (Acciones), usar `position="left"` para evitar que el tooltip se corte por el borde de la pantalla.
+3.  **Wording**: Usar verbos de acción claros (Ej: "Descargar Recibo", "Anular Movimiento").
+
+### Ejemplo de Uso:
+```jsx
+<Tooltip text="Anular Movimiento" position="left">
+  <Button 
+    variant="ghost" 
+    size="sm" 
+    icon={Ban} 
+    className="text-red-400"
+    onClick={handleAction} 
+  />
+</Tooltip>
+```
+
+---
+*Actualizado el 17 de abril de 2026 - Modernización Gestión Tómbola*

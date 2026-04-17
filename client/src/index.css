@@ -54,7 +54,7 @@ h1, h2, h3, h4 {
 /* Elite 2026 - Central Audit Theme 🔱 */
 .elite-audit-bar {
   position: relative;
-  z-index: 50;
+  z-index: 30;
   background: linear-gradient(to right, rgba(241, 245, 249, 0.98), rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.98));
   backdrop-filter: blur(16px);
   border-bottom: 2px solid rgba(27, 59, 90, 0.08);

@@ -29,6 +29,8 @@ Este documento es el mapa maestro del ecosistema de inteligencia de **Gestión T
 
 ---
 
+---
+
 ## 🏗️ Carpeta de Ingeniería Inversa (docs/reverse-engineering/)
 
 | Archivo | Propósito | Estado |
@@ -37,5 +39,17 @@ Este documento es el mapa maestro del ecosistema de inteligencia de **Gestión T
 | **`mapa_reglas_negocio`** | Lógica de Cuotas, Simulated Annealing y Sorteos. | Solo lectura (Referencia). |
 | **`glosario_entidades`** | Definición de campos y tipos de datos. | Solo lectura (Referencia). |
 
+---
+
+## 🏆 Implementaciones de Referencia ("Gold Standards") 🥇
+
+Para ver los estándares en acción, consultar los siguientes módulos terminados:
+
+*   **Vendedores (`SellerPage`/`SellerFormPage`)**: Máxima expresión de formularios complejos y vinculación de identidades.
+*   **Balance (`BalancePage`)**: El referente de **Auditoría Financiera 2026**. Incluye uso de KPIs en cabecera, FilterBar "Slim", Tooltips en acciones y gestión de anulaciones mediante `ConfirmModal`. ✨💎🚀
+
 > [!IMPORTANT]
 > **Misión V9.1**: Mantener la integridad entre la estética Premium y la lógica legacy documentada en Ingeniería Inversa. 🏹⚖️✨🚀
+
+---
+*Actualizado el 17 de abril de 2026 - Modernización Gestión Tómbola*

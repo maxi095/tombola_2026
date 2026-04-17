@@ -36,6 +36,8 @@ import Card from "../../components/ui/Card";
 import PageHeader from "../../components/ui/PageHeader";
 import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
+import Tooltip from "../../components/ui/Tooltip";
+import ConfirmModal from "../../components/ui/ConfirmModal";
 import InputField from "../../components/ui/InputField";
 import FilterBar from "../../components/ui/FilterBar";
 import {
@@ -95,6 +97,11 @@ export default function BalancePage() {
     dateFrom: "",
     dateTo: "",
   });
+
+  // ESTADOS PARA MODAL DE ANULACIÓN
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [itemToCancel, setItemToCancel] = useState(null);
+  const [isVoiding, setIsVoiding] = useState(false);
 
   // CONFIGURACIÓN DE COLUMNAS v19.5 🛡️
   const initialColumns = [
@@ -192,13 +199,25 @@ export default function BalancePage() {
   }, [selectedEdition, editions]);
 
   // ─── Anular ──────────────────────────────────────────────────────────────
-  const handleCancel = async (id) => {
-    if (!window.confirm("¿Confirmar anulación de este movimiento?")) return;
+  const handleCancelClick = (item) => {
+    setItemToCancel(item);
+    setIsCancelModalOpen(true);
+  };
+
+  const confirmCancelBalance = async () => {
+    if (!itemToCancel) return;
+    setIsVoiding(true);
     try {
-      await cancelBalance(id);
-      await getBalanceSummary(selectedEdition || undefined);
+      await cancelBalance(itemToCancel._id);
+      await loadData();
+      showToast("Movimiento anulado correctamente", "success");
+      setIsCancelModalOpen(false);
     } catch (err) {
       console.error("Error al anular:", err);
+      showToast("Error al anular movimiento", "error");
+    } finally {
+      setIsVoiding(false);
+      setItemToCancel(null);
     }
   };
 
@@ -444,7 +463,7 @@ export default function BalancePage() {
                       <TR key={b._id} className={`${b.status === "Anulado" ? "opacity-50 grayscale-[0.5]" : ""}`}>
                         {visibleColumns.map(col => {
                           if (col.id === 'txNumber') return (
-                            <OperationCell key={col.id} main={txLabel} sub={b.type} icon={b.type === "Ingreso" ? TrendingUp : TrendingDown} />
+                            <OperationCell key={col.id} main={txLabel} icon={b.type === "Ingreso" ? TrendingUp : TrendingDown} />
                           );
                           if (col.id === 'type') return (
                             <TD key={col.id}>
@@ -496,27 +515,32 @@ export default function BalancePage() {
                           if (col.id === 'actions') return (
                             <TD key={col.id} className="text-right px-6">
                               <div className="flex items-center justify-end gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  icon={FileDown}
-                                  onClick={() => handleDownloadPdf(b)}
-                                  title={b.type === "Ingreso" ? "Recibo" : "O. Pago"}
-                                />
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  icon={Eye}
-                                  onClick={() => navigate(`/balance/view/${b._id}`)}
-                                />
-                                {b.status === "Activo" && (
+                                <Tooltip text={b.type === "Ingreso" ? "Descargar Recibo" : "Descargar O. Pago"}>
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    icon={Ban}
-                                    className="text-red-400"
-                                    onClick={() => handleCancel(b._id)}
+                                    icon={FileDown}
+                                    onClick={() => handleDownloadPdf(b)}
                                   />
+                                </Tooltip>
+                                <Tooltip text="Ver Detalle">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    icon={Eye}
+                                    onClick={() => navigate(`/balance/view/${b._id}`)}
+                                  />
+                                </Tooltip>
+                                {b.status === "Activo" && (
+                                  <Tooltip text="Anular Movimiento" position="left">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      icon={Ban}
+                                      className="text-red-400"
+                                      onClick={() => handleCancelClick(b)}
+                                    />
+                                  </Tooltip>
                                 )}
                               </div>
                             </TD>
@@ -544,6 +568,23 @@ export default function BalancePage() {
           </div>
         </Card>
       </div>
+      <ConfirmModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        onConfirm={confirmCancelBalance}
+        title="Anular Movimiento de Balance"
+        message={
+          <>
+            ¿Está seguro de anular la <strong>Operación #{itemToCancel?.transactionNumber}</strong>?
+            <br /><br />
+            Esta acción revertirá el impacto financiero y marcará el registro como "Anulado". Esta acción no se puede deshacer.
+          </>
+        }
+        confirmText="Confirmar Anulación"
+        cancelText="Desistir"
+        variant="danger"
+        loading={isVoiding}
+      />
     </div>
   );
 }

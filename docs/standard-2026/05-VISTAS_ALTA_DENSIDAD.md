@@ -1,4 +1,4 @@
-# 🏹 Vistas de Alta Densidad: Elite 2026 v8.2
+# 🏹 Vistas de Alta Densidad: Elite 2026 v8.3
 
 Este estándar define la arquitectura para paneles de gestión masiva donde la visibilidad "Above the Fold" (sin scroll) es la prioridad operacional absoluta.
 

@@ -113,7 +113,7 @@ function SellerFormPage() {
         icon={User}
         compact={true}
         breadcrumbs={[
-          { label: "Vendedores", path: "/sellers" },
+          { label: "Vendedores", href: "/sellers" },
           { label: params.id ? "Editar" : "Registrar" }
         ]}
         actions={[

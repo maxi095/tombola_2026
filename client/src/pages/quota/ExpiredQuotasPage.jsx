@@ -35,6 +35,7 @@ import InputField from "../../components/ui/InputField";
 import Button from "../../components/ui/Button";
 import ColumnPicker from "../../components/ui/ColumnPicker";
 import { exportToExcel } from "../../libs/excelExport";
+import { formatCurrency } from "../../libs/formatters";
 import { useEditionFilter } from "../../context/EditionFilterContext";
 
 // HOOK DE LAYOUT DINÁMICO v17.5 ✨💎🚀
@@ -182,7 +183,7 @@ function ExpiredQuotasPage() {
           },
           {
             label: "Deuda Estimada",
-            value: `$${totalMoroso.toLocaleString('es-AR')}`,
+            value: formatCurrency(totalMoroso),
             icon: TrendingDown,
             variant: "primary"
           }

@@ -196,14 +196,15 @@ function ClientFormPage() {
               {...register("city")}
             />
 
-            <div className="lg:col-span-4 flex flex-col gap-2">
-              <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Observaciones / Notas</label>
-              <textarea
-                {...register("notes")}
-                className="w-full bg-white border border-slate-200 rounded-premium-input p-4 text-[11px] font-medium placeholder:text-slate-400 focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all outline-none resize-none h-24"
-                placeholder="Información adicional relevante del asociado..."
-              />
-            </div>
+            {/* TODO: Componentizar como <TextareaField> si aparece en más páginas */}
+              <div className="lg:col-span-4 flex flex-col gap-1.5">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Observaciones / Notas</label>
+                <textarea
+                  {...register("notes")}
+                  className="w-full bg-white border border-slate-200 rounded-2xl p-4 text-[11px] font-medium placeholder:text-slate-400 focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all outline-none resize-none h-24"
+                  placeholder="Información adicional relevante del asociado..."
+                />
+              </div>
           </FormGrid>
         </Card>
       </form>

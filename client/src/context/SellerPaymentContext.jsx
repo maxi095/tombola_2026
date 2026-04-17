@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
   getSellerPaymentsRequest,
   getSellerPaymentsBySellerRequest,
@@ -20,10 +20,10 @@ export const useSellerPayments = () => {
 export const SellerPaymentProvider = ({ children }) => {
   const [sellerPayments, setSellerPayments] = useState([]);
 
-  const getSellerPayments = async () => {
+  const getSellerPayments = useCallback(async () => {
     const res = await getSellerPaymentsRequest();
     setSellerPayments(res.data);
-  };
+  }, []);
 
   const getSellerPaymentsBySeller = async (sellerId) => {
     const res = await getSellerPaymentsBySellerRequest(sellerId);

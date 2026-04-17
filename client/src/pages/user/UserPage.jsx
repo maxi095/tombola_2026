@@ -125,7 +125,7 @@ export default function UserPage() {
     <div className="flex flex-col px-12 animate-in fade-in duration-700 bg-slate-50/50 min-h-screen">
       <PageHeader
         title="Gestión de Usuarios"
-        subtitle="Monitoreo de accesos y administración inteligente del equipo."
+        //subtitle="Monitoreo de accesos y administración inteligente del equipo."
         breadcrumbs={[{ label: "Usuarios", href: "/users" }]}
         compact={true}
         actions={[
