@@ -475,7 +475,7 @@ export default function BalancePage() {
                             </TD>
                           );
                           if (col.id === 'cash') return (
-                            <AmountCell key={col.id} amount={b.cashAmount} />
+                            <AmountCell key={col.id} amount={b.cashAmount} status="secondary" />
                           );
                           if (col.id === 'transfer') return (
                             <AmountCell key={col.id} amount={b.transferAmount} status="secondary" />
