@@ -276,6 +276,14 @@ export default function BalanceViewPage() {
                 <span className="text-sm font-bold text-slate-700">{formatCurrency(balance.transferAmount)}</span>
               </div>
             )}
+            {balance.tarjetaUnicaAmount > 0 && (
+              <div className="flex items-center justify-between py-2.5 border-b border-slate-50">
+                <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
+                  💳 Tarjeta Única
+                </div>
+                <span className="text-sm font-bold text-slate-700">{formatCurrency(balance.tarjetaUnicaAmount)}</span>
+              </div>
+            )}
             {balance.checkAmount > 0 && (
               <div className="flex items-center justify-between py-2.5 border-b border-slate-50">
                 <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">

@@ -35,8 +35,9 @@ export const createBalanceSchema = z
         message: 'Categoría inválida',
       }),
 
-    cashAmount:     z.number().min(0).default(0),
-    transferAmount: z.number().min(0).default(0),
+    cashAmount:         z.number().min(0).default(0),
+    transferAmount:     z.number().min(0).default(0),
+    tarjetaUnicaAmount: z.number().min(0).default(0),
 
     checks: z.array(checkSchema).default([]),
 
@@ -52,7 +53,11 @@ export const createBalanceSchema = z
         0
       );
       return (
-        (data.cashAmount || 0) + (data.transferAmount || 0) + checkTotal > 0
+        (data.cashAmount || 0) +
+        (data.transferAmount || 0) +
+        (data.tarjetaUnicaAmount || 0) +
+        checkTotal >
+        0
       );
     },
     {

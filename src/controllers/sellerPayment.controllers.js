@@ -98,9 +98,8 @@ export const createSellerPayment = async (req, res) => {
         sellerPaymentRef: savedPayment._id,
         sellerName,
         cashAmount:       Number(cashAmount),
-        // tarjetaUnicaAmount no existe en Balance → se suma a transferAmount
-        // ya que es un medio de pago electrónico equivalente
-        transferAmount:   Number(transferAmount) + Number(tarjetaUnicaAmount || 0),
+        transferAmount:   Number(transferAmount),
+        tarjetaUnicaAmount: Number(tarjetaUnicaAmount || 0),
         checks,
         commissionAmount: Number(commissionAmount || 0),
         commissionType,

@@ -16,8 +16,9 @@ function DocumentContent({ balance, label }) {
 
   const cashAmount = balance.cashAmount || 0;
   const transferAmount = balance.transferAmount || 0;
+  const tarjetaUnicaAmount = balance.tarjetaUnicaAmount || 0;
   const checkAmount = balance.checkAmount || 0;
-  const totalAmount = balance.totalAmount || cashAmount + transferAmount + checkAmount;
+  const totalAmount = balance.totalAmount || (cashAmount + transferAmount + tarjetaUnicaAmount + checkAmount);
 
   return (
     <div className="border border-gray-300 rounded-md shadow-sm p-4 mb-6 text-sm print:mb-2 print:shadow-none print:border print:p-2">
@@ -86,6 +87,12 @@ function DocumentContent({ balance, label }) {
             <div className="flex justify-between">
               <span className="font-medium text-gray-600">Monto en Transferencia:</span>
               <span>{fmt(transferAmount)}</span>
+            </div>
+          )}
+          {tarjetaUnicaAmount > 0 && (
+            <div className="flex justify-between">
+              <span className="font-medium text-gray-600">Monto en T. Única:</span>
+              <span className="font-bold">{fmt(tarjetaUnicaAmount)}</span>
             </div>
           )}
           {checkAmount > 0 && (

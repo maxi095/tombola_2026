@@ -66,6 +66,7 @@ export default function BalanceFormPage() {
     category: "",
     cashAmount: "",
     transferAmount: "",
+    tarjetaUnicaAmount: "",
     observations: "",
   });
   const [checks, setChecks] = useState([]);
@@ -91,8 +92,9 @@ export default function BalanceFormPage() {
   const grandTotal = useMemo(() =>
     Number(form.cashAmount || 0) +
     Number(form.transferAmount || 0) +
+    Number(form.tarjetaUnicaAmount || 0) +
     checkTotal,
-    [form.cashAmount, form.transferAmount, checkTotal]);
+    [form.cashAmount, form.transferAmount, form.tarjetaUnicaAmount, checkTotal]);
 
   // ─── Tema Dinámico ─────────────────────────────────────────────────────
   const isIngreso = type === "Ingreso";
@@ -105,7 +107,7 @@ export default function BalanceFormPage() {
     const { name, value } = e.target;
 
     // Si es un campo monetario, limpiamos la entrada antes de guardarla
-    if (['cashAmount', 'transferAmount'].includes(name)) {
+    if (['cashAmount', 'transferAmount', 'tarjetaUnicaAmount'].includes(name)) {
       const cleanValue = cleanCurrencyInput(value);
       setForm(prev => ({ ...prev, [name]: cleanValue }));
     } else {
@@ -170,6 +172,7 @@ export default function BalanceFormPage() {
         category: form.category,
         cashAmount: Number(form.cashAmount || 0),
         transferAmount: Number(form.transferAmount || 0),
+        tarjetaUnicaAmount: Number(form.tarjetaUnicaAmount || 0),
         checks: checks.map((c) => ({ ...c, amount: Number(c.amount) })),
         observations: form.observations.trim(),
       });
@@ -347,9 +350,21 @@ export default function BalanceFormPage() {
                   prefix="$"
                   name="transferAmount"
                   bsize="compact"
-                  className="lg:col-span-2"
+                  className="lg:col-span-1"
                   placeholder="0,00"
                   value={formatCurrencyInput(form.transferAmount)}
+                  onChange={handleChange}
+                  error={errors.amounts}
+                />
+                <InputField
+                  label="Tarjeta Única"
+                  type="text"
+                  prefix="$"
+                  name="tarjetaUnicaAmount"
+                  bsize="compact"
+                  className="lg:col-span-1"
+                  placeholder="0,00"
+                  value={formatCurrencyInput(form.tarjetaUnicaAmount)}
                   onChange={handleChange}
                   error={errors.amounts}
                 />

@@ -113,13 +113,14 @@ export default function BalancePage() {
     { id: 'category', label: 'CATEGORÍA' },
     { id: 'cash', label: 'EFECTIVO' },
     { id: 'transfer', label: 'TRANSF.' },
+    { id: 'tarjetaUnica', label: 'T. ÚNICA' },
     { id: 'check', label: 'CHEQUE' },
     { id: 'total', label: 'TOTAL', isMandatory: true },
     { id: 'status', label: 'ESTADO' },
     { id: 'actions', label: 'ACCIONES', isFixed: true, isMandatory: true }
   ];
 
-  const columnManager = useTableColumns("BalancePage_v1", initialColumns);
+  const columnManager = useTableColumns("BalancePage_v2", initialColumns);
   const { visibleColumns } = columnManager;
 
   // ─── Carga de datos ──────────────────────────────────────────────────────
@@ -254,6 +255,7 @@ export default function BalancePage() {
       "category": "Categoría",
       "cashAmount": "Efectivo",
       "transferAmount": "Transferencia",
+      "tarjetaUnicaAmount": "Tarjeta Única",
       "checkAmount": "Cheque",
       "totalAmount": "Total",
       "status": "Estado",
@@ -498,6 +500,9 @@ export default function BalancePage() {
                           );
                           if (col.id === 'transfer') return (
                             <AmountCell key={col.id} amount={b.transferAmount} status="secondary" />
+                          );
+                          if (col.id === 'tarjetaUnica') return (
+                            <AmountCell key={col.id} amount={b.tarjetaUnicaAmount} status="secondary" />
                           );
                           if (col.id === 'check') return (
                             <AmountCell key={col.id} amount={b.checkAmount} status="secondary" />

@@ -90,6 +90,12 @@ const balanceSchema = new mongoose.Schema(
       min: 0,
     },
 
+    tarjetaUnicaAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
     checks: {
       type: [checkSchema],
       default: [],
@@ -102,7 +108,7 @@ const balanceSchema = new mongoose.Schema(
       min: 0,
     },
 
-    // cashAmount + transferAmount + checkAmount (calculado en pre-save)
+    // cashAmount + transferAmount + tarjetaUnicaAmount + checkAmount (calculado en pre-save)
     totalAmount: {
       type: Number,
       default: 0,
@@ -159,6 +165,7 @@ balanceSchema.pre('save', async function (next) {
   doc.totalAmount =
     (doc.cashAmount || 0) +
     (doc.transferAmount || 0) +
+    (doc.tarjetaUnicaAmount || 0) +
     (doc.checkAmount || 0);
 
   // 3. Asignar transactionNumber autoincremental solo en nuevos documentos

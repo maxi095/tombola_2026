@@ -21,6 +21,7 @@ export const createBalance = async (req, res) => {
       category,
       cashAmount = 0,
       transferAmount = 0,
+      tarjetaUnicaAmount = 0,
       checks = [],
       observations = '',
       sellerPaymentRef = null,
@@ -36,11 +37,16 @@ export const createBalance = async (req, res) => {
 
     // Calcular totales (el pre-save los recalculará también)
     const checkTotal = checks.reduce((sum, c) => sum + Number(c.amount || 0), 0);
-    const totalAmount = Number(cashAmount) + Number(transferAmount) + checkTotal;
+    const totalAmount =
+      Number(cashAmount) +
+      Number(transferAmount) +
+      Number(tarjetaUnicaAmount) +
+      checkTotal;
 
     if (totalAmount <= 0) {
       return res.status(400).json({
-        message: 'Debe ingresar al menos un monto mayor a cero (efectivo, transferencia o cheque)',
+        message:
+          'Debe ingresar al menos un monto mayor a cero (efectivo, transferencia, tarjeta o cheque)',
       });
     }
 
@@ -53,6 +59,7 @@ export const createBalance = async (req, res) => {
       category,
       cashAmount,
       transferAmount,
+      tarjetaUnicaAmount,
       checks,
       observations,
       sellerPaymentRef: sellerPaymentRef || null,
@@ -172,6 +179,7 @@ export const createBalanceFromSellerPayment = async ({
   sellerName,
   cashAmount,
   transferAmount,
+  tarjetaUnicaAmount,
   checks,
   commissionAmount,
   commissionType,
@@ -190,6 +198,7 @@ export const createBalanceFromSellerPayment = async ({
     category: 'Rendición de Vendedor',
     cashAmount,
     transferAmount,
+    tarjetaUnicaAmount,
     checks: checks || [],
     observations: '',
     sellerPaymentRef,
