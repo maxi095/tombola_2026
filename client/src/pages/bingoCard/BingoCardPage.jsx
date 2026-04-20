@@ -148,17 +148,27 @@ export default function BingoCardPage() {
   }, [showToast]);
 
   const handleExport = () => {
+    const dataToExport = filteredCards.map(card => ({
+      ...card,
+      assignedTo_full: card.seller?.person 
+        ? `${card.seller.person.lastName}, ${card.seller.person.firstName}`
+        : "Sin Asignar",
+      associate_full: card.sale?.client 
+        ? `${card.sale.client.lastName}, ${card.sale.client.firstName}`
+        : "—"
+    }));
+
     const columnMap = {
       "edition.name": "Edición",
       "number": "N° Cartón",
       "status": "Estado",
-      "seller.person.lastName": "Asignado a",
+      "assignedTo_full": "Asignado a",
       "sale.seller.fullName": "Vendido por",
-      "sale.client.fullName": "Asociado",
+      "associate_full": "Asociado",
       "sale.client.city": "Localidad",
       "sale.saleDate": "Fecha"
     };
-    exportToExcel(filteredCards, "Auditoria_Inventario_Bingo", columnMap);
+    exportToExcel(dataToExport, "Auditoria_Inventario_Bingo", columnMap);
   };
 
   return (

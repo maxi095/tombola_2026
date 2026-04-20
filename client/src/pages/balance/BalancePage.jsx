@@ -70,10 +70,10 @@ const INCOME_CATEGORIES = [
 ];
 const EXPENSE_CATEGORIES = [
   "Sueldo / Honorario",
-  "Impuesto Lotería",
-  "Premio de Sorteo",
+  "Comisión de Vendedor",
+  "Lotería",
+  "Compra de premios",
   "Proveedor de Servicio",
-  "Impresión de Cartones",
   "Publicidad",
   "Otro Egreso",
 ];

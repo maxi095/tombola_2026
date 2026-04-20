@@ -13,10 +13,9 @@ export const INCOME_CATEGORIES = [
 export const EXPENSE_CATEGORIES = [
   'Sueldo / Honorario',
   'Comisión de Vendedor',
-  'Impuesto Lotería',
-  'Premio de Sorteo',
+  'Lotería',
+  'Compra de premios',
   'Proveedor de Servicio',
-  'Impresión de Cartones',
   'Publicidad',
   'Otro Egreso',
 ];
