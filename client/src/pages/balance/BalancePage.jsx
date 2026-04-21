@@ -73,6 +73,7 @@ const EXPENSE_CATEGORIES = [
   "Comisión de Vendedor",
   "Lotería",
   "Compra de premios",
+  "Premios contado",
   "Proveedor de Servicio",
   "Publicidad",
   "Otro Egreso",
