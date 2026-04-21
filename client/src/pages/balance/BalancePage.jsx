@@ -247,23 +247,45 @@ export default function BalancePage() {
 
   // ─── Exportar Excel ──────────────────────────────────────────────────────
   const handleExport = () => {
-    const columnMap = {
-      "transactionNumber": "N°",
-      "type": "Tipo",
-      "date": "Fecha",
-      "counterpart": "Contraparte",
-      "concept": "Concepto",
-      "category": "Categoría",
-      "cashAmount": "Efectivo",
-      "transferAmount": "Transferencia",
-      "tarjetaUnicaAmount": "Tarjeta Única",
-      "checkAmount": "Cheque",
-      "totalAmount": "Total",
-      "status": "Estado",
-      "edition.name": "Edición"
-    };
-    exportToExcel(filtered, "Auditoria_Balance_Bingo", columnMap);
-    showToast("Reporte generado con éxito", "success");
+    if (!filtered.length) return;
+
+    // 1. Ordenar cronológicamente para que el saldo acumulado sea coherente 📊
+    // De más antiguo a más nuevo
+    const sortedData = [...filtered].sort((a, b) => {
+      const dateA = dayjs(a.date);
+      const dateB = dayjs(b.date);
+      if (dateA.isBefore(dateB)) return -1;
+      if (dateA.isAfter(dateB)) return 1;
+      // Si son iguales de fecha, ordenamos por transactionNumber
+      return a.transactionNumber - b.transactionNumber;
+    });
+
+    let runningBalance = 0;
+
+    // 2. Transformar datos al formato contable solicitado 💎
+    const reportData = sortedData.map((b) => {
+      const isIngreso = b.type === "Ingreso";
+      const isAnulado = b.status === "Anulado";
+      const amount = b.totalAmount || 0;
+
+      // Solo acumulamos en el saldo si el movimiento está ACTIVO
+      if (!isAnulado) {
+        runningBalance += isIngreso ? amount : -amount;
+      }
+
+      return {
+        "Fecha": dayjs.utc(b.date).format("DD-MM-YYYY"),
+        "Contraparte": b.counterpart || "N/A",
+        "Concepto": b.concept || "N/A",
+        "Ingreso": isIngreso ? amount : 0,
+        "Egreso": !isIngreso ? amount : 0,
+        "Saldo": runningBalance
+      };
+    });
+
+    // 3. Exportar usando la utilidad institucional
+    exportToExcel(reportData, `Balance_Bingo_Audit_${dayjs().format("YYYY-MM-DD")}`);
+    showToast("Reporte contable generado con éxito", "success");
   };
 
   // ─── Categorías disponibles según filtro de tipo ─────────────────────────
