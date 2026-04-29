@@ -152,7 +152,7 @@ export default function SalePage() {
 
   const confirmCancelSale = async () => {
     if (!saleToCancel) return;
-    
+
     setIsVoiding(true);
     try {
       await cancelSale(saleToCancel._id);
@@ -174,17 +174,17 @@ export default function SalePage() {
         compact={true}
         stats={[
           {
-            label: "Ventas Filtradas",
+            label: "Total Ventas",
             value: filteredSales.length,
             icon: Ticket,
             variant: "primary"
           }
         ]}
         actions={[
-          { 
-            label: "Exportar", 
-            icon: FileSpreadsheet, 
-            variant: "ghost", 
+          {
+            label: "Exportar",
+            icon: FileSpreadsheet,
+            variant: "ghost",
             onClick: () => {
               const exportData = filteredSales.map(sale => ({
                 "Nro Venta": sale.saleNumber,
@@ -281,9 +281,9 @@ export default function SalePage() {
             ) : (
               <Table className="overflow-hidden">
                 <THead>
-                   {visibleColumns.map(col => (
-                     <TH key={col.id} className={col.id === 'actions' ? 'text-right px-10 font-black' : ''}>{col.label}</TH>
-                   ))}
+                  {visibleColumns.map(col => (
+                    <TH key={col.id} className={col.id === 'actions' ? 'text-right px-10 font-black' : ''}>{col.label}</TH>
+                  ))}
                 </THead>
                 <TBody>
                   {filteredSales.length === 0 ? (
@@ -360,7 +360,7 @@ export default function SalePage() {
         title="Anular Operación de Venta"
         message={
           <>
-            ¿Está seguro de anular la <strong>Venta #{saleToCancel?.saleNumber}</strong>? 
+            ¿Está seguro de anular la <strong>Venta #{saleToCancel?.saleNumber}</strong>?
             <br /><br />
             Esta acción liberará el <strong>Cartón #{saleToCancel?.bingoCard?.number}</strong> y marcará la venta definitivamente como anulada. Esta acción no se puede deshacer.
           </>
