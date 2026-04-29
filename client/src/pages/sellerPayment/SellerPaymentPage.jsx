@@ -192,7 +192,7 @@ export default function SellerPaymentPage() {
     const htmlString = ReactDOMServer.renderToString(<SellerPaymentReceipt payment={payment} />);
 
     const opt = {
-      margin: 0.5,
+      margin: 0.2,
       filename: `Recibo_Pago_${payment.sellerPaymentNumber || "sin-numero"}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2 },
@@ -389,18 +389,20 @@ export default function SellerPaymentPage() {
                         )}
                         {visibleIds.includes('commission') && (
                           <TD className="text-right">
-                            <div className="flex flex-col items-end">
+                            <div className="flex items-center justify-end gap-2">
+                              {p.commissionAmount > 0 && (
+                                <Tooltip text={p.commissionType === "Efectivo" ? "Comisión en Efectivo" : "Comisión por Transferencia"}>
+                                  <Badge
+                                    variant={p.commissionType === "Efectivo" ? "success" : "info"}
+                                    className="text-[9px] px-1.5 py-0 min-w-[18px] justify-center cursor-help"
+                                  >
+                                    {p.commissionType === "Efectivo" ? "E" : "T"}
+                                  </Badge>
+                                </Tooltip>
+                              )}
                               <span className="text-[13px] font-black text-amber-600">
                                 {formatCurrency(p.commissionAmount || 0)}
                               </span>
-                              <Tooltip text={p.commissionType === "Efectivo" ? "Comisión en Efectivo" : "Comisión por Transferencia"}>
-                                <Badge
-                                  variant={p.commissionType === "Efectivo" ? "success" : "info"}
-                                  className="text-[9px] px-1.5 py-0 min-w-[18px] justify-center cursor-help"
-                                >
-                                  {p.commissionType === "Efectivo" ? "E" : "T"}
-                                </Badge>
-                              </Tooltip>
                             </div>
                           </TD>
                         )}

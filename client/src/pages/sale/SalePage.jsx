@@ -16,7 +16,8 @@ import {
   Loader2,
   Settings2,
   ChevronDown,
-  Calendar
+  Calendar,
+  Ticket
 } from "lucide-react";
 
 // Infraestructura Premium 2026 ⚓ 🛡️
@@ -171,8 +172,33 @@ export default function SalePage() {
         title="Gestión de Ventas"
         breadcrumbs={[{ label: "Ventas", href: "/sales" }]}
         compact={true}
+        stats={[
+          {
+            label: "Ventas Filtradas",
+            value: filteredSales.length,
+            icon: Ticket,
+            variant: "primary"
+          }
+        ]}
         actions={[
-          { label: "Exportar", icon: FileSpreadsheet, variant: "ghost", onClick: () => exportToExcel(filteredSales, "Ventas_Filtradas", {}) },
+          { 
+            label: "Exportar", 
+            icon: FileSpreadsheet, 
+            variant: "ghost", 
+            onClick: () => {
+              const exportData = filteredSales.map(sale => ({
+                "Nro Venta": sale.saleNumber,
+                "Cartón": sale.bingoCard?.number || "No asignado",
+                "Edición": sale.edition?.name || "S/E",
+                "Vendedor": sale.seller?.person ? `${sale.seller.person.firstName} ${sale.seller.person.lastName}` : "No asignado",
+                "Asociado": sale.client?.person ? `${sale.client.person.firstName} ${sale.client.person.lastName}` : "S/A",
+                "Localidad": sale.client?.person?.city || "Sin localidad",
+                "Estado": sale.status || "Pendiente de pago",
+                "Fecha": dayjs(sale.saleDate).format('DD/MM/YYYY')
+              }));
+              exportToExcel(exportData, "Ventas_Filtradas");
+            }
+          },
           { label: "Crear Venta", icon: Plus, variant: "primary", onClick: () => navigate("/sale/new") }
         ]}
       />

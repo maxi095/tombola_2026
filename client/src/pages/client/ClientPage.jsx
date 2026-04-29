@@ -80,13 +80,20 @@ function ClientPage() {
     const list = Array.isArray(clients) ? clients : [];
     if (!omniSearch) return list;
 
-    const search = omniSearch.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const normalizeText = (text) => 
+      String(text || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    const searchTerms = normalizeText(omniSearch).split(/\s+/);
+
     return list.filter(client => {
-      const name = `${client.person?.firstName} ${client.person?.lastName}`.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      const doc = String(client.person?.document || "").toLowerCase();
-      const city = (client.person?.city || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      const num = String(client.clientNumber || "").toLowerCase();
-      return name.includes(search) || doc.includes(search) || city.includes(search) || num.includes(search);
+      const name = normalizeText(`${client.person?.firstName} ${client.person?.lastName}`);
+      const doc = normalizeText(client.person?.document);
+      const city = normalizeText(client.person?.city);
+      const num = normalizeText(client.clientNumber);
+      
+      const searchableString = `${name} ${doc} ${city} ${num}`;
+
+      return searchTerms.every(term => searchableString.includes(term));
     });
   }, [clients, omniSearch]);
 
