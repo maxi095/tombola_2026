@@ -152,7 +152,7 @@ function SellerViewPage() {
 
     for (const [saleId, qList] of Object.entries(quotas)) {
       const sale = fSales.find(s => s._id === saleId);
-      if (sale && sale.status !== "Anulada") {
+      if (sale && sale.status !== "Anulada" && sale.status !== "Entregado sin cargo") {
         salesTotal += qList.reduce((acc, q) => acc + (q.paymentDate ? q.amount : 0), 0);
       }
     }
