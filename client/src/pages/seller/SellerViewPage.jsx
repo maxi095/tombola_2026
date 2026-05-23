@@ -448,6 +448,8 @@ function SellerViewPage() {
               </THead>
               <TBody>
                 {filteredData.sales
+                  .slice()
+                  .sort((a, b) => new Date(b.createdAt || b.saleDate) - new Date(a.createdAt || a.saleDate))
                   .filter(s => filterBingoCard === "" || String(s.bingoCard?.number).includes(filterBingoCard))
                   .map((s) => (
                     <TR key={s._id}>
