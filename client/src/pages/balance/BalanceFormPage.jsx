@@ -68,6 +68,10 @@ export default function BalanceFormPage() {
     transferAmount: "",
     tarjetaUnicaAmount: "",
     observations: "",
+    taxPercentage: "6.5420",
+    totalRenderedAmount: "",
+    taxPaymentDate: dayjs().format("YYYY-MM-DD"),
+    declarationDate: dayjs().format("YYYY-MM-DD"),
   });
   const [checks, setChecks] = useState([]);
   const [showChecks, setShowChecks] = useState(false);
@@ -83,7 +87,18 @@ export default function BalanceFormPage() {
 
   // Reset categoría al cambiar tipo
   useEffect(() => {
-    setForm((prev) => ({ ...prev, category: "" }));
+    setForm((prev) => ({
+      ...prev,
+      category: "",
+      taxPercentage: "6.5420",
+      totalRenderedAmount: "",
+      taxPaymentDate: prev.date,
+      declarationDate: prev.date,
+      cashAmount: "",
+      transferAmount: "",
+      tarjetaUnicaAmount: "",
+    }));
+    setChecks([]);
     setErrors({});
   }, [type]);
 
@@ -102,13 +117,37 @@ export default function BalanceFormPage() {
   const accentHover = isIngreso ? "hover:bg-emerald-700" : "hover:bg-rose-700";
   const accentShadow = isIngreso ? "shadow-emerald-200" : "shadow-rose-200";
 
+  const isLoteria = !isIngreso && form.category === "Lotería";
+
+  // Lógica de cálculo automático de impuesto a pagar para Lotería
+  useEffect(() => {
+    if (isLoteria) {
+      const totalRendered = parseFloat(form.totalRenderedAmount) || 0;
+      const pct = parseFloat(form.taxPercentage) || 0;
+      const calculatedTax = (totalRendered * pct) / 100;
+      
+      if (calculatedTax > 0) {
+        setForm(prev => {
+          const calcStr = calculatedTax.toFixed(2);
+          if (prev.cashAmount !== calcStr && prev.transferAmount === "" && prev.tarjetaUnicaAmount === "" && checks.length === 0) {
+            return { ...prev, cashAmount: calcStr };
+          }
+          return prev;
+        });
+      }
+    }
+  }, [form.totalRenderedAmount, form.taxPercentage, isLoteria, checks.length]);
+
   // ─── Handlers ────────────────────────────────────────────────────────────
   const handleChange = (e) => {
     const { name, value } = e.target;
 
     // Si es un campo monetario, limpiamos la entrada antes de guardarla
-    if (['cashAmount', 'transferAmount', 'tarjetaUnicaAmount'].includes(name)) {
+    if (['cashAmount', 'transferAmount', 'tarjetaUnicaAmount', 'totalRenderedAmount'].includes(name)) {
       const cleanValue = cleanCurrencyInput(value);
+      setForm(prev => ({ ...prev, [name]: cleanValue }));
+    } else if (name === 'taxPercentage') {
+      const cleanValue = value.replace(',', '.').replace(/[^0-9.]/g, '');
       setForm(prev => ({ ...prev, [name]: cleanValue }));
     } else {
       setForm(prev => ({ ...prev, [name]: value }));
@@ -141,12 +180,37 @@ export default function BalanceFormPage() {
     const newErrors = {};
 
     if (!form.edition) newErrors.edition = "Requerido";
-    if (!form.counterpart.trim()) newErrors.counterpart = "Campo obligatorio";
-    if (!form.concept.trim()) newErrors.concept = "Concepto requerido";
+    if (!isLoteria && !form.counterpart.trim()) newErrors.counterpart = "Campo obligatorio";
+    if (!isLoteria && !form.concept.trim()) newErrors.concept = "Concepto requerido";
     if (!form.category) newErrors.category = "Categoría requerida";
 
-    if (grandTotal <= 0) {
-      newErrors.amounts = "Ingrese un monto";
+    if (isLoteria) {
+      const totalRendered = parseFloat(form.totalRenderedAmount) || 0;
+      const pct = parseFloat(form.taxPercentage) || 0;
+      const calculatedTax = (totalRendered * pct) / 100;
+
+      if (totalRendered <= 0) {
+        newErrors.totalRenderedAmount = "Total rendido requerido";
+      }
+      if (pct <= 0) {
+        newErrors.taxPercentage = "Porcentaje requerido";
+      }
+      if (!form.taxPaymentDate) {
+        newErrors.taxPaymentDate = "Fecha de pago requerida";
+      }
+      if (!form.declarationDate) {
+        newErrors.declarationDate = "Fecha de declaración requerida";
+      }
+
+      // Validar que la suma coincida con el impuesto calculado
+      const diff = Math.abs(grandTotal - calculatedTax);
+      if (diff > 0.02) {
+        newErrors.amounts = `Los medios de pago (${formatCurrency(grandTotal)}) deben sumar el impuesto calculado (${formatCurrency(calculatedTax)})`;
+      }
+    } else {
+      if (grandTotal <= 0) {
+        newErrors.amounts = "Ingrese un monto";
+      }
     }
 
     // Validar cheques incompletos
@@ -163,18 +227,38 @@ export default function BalanceFormPage() {
 
     try {
       setSaving(true);
+
+      let finalCounterpart = form.counterpart.trim();
+      let finalConcept = form.concept.trim();
+
+      if (isLoteria) {
+        finalCounterpart = "Lotería de la Provincia de Córdoba S.E.";
+        const monthNames = [
+          "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+          "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        ];
+        const decMonthObj = dayjs.utc(form.declarationDate);
+        finalConcept = `Rendición mensual impuesto Lotería - ${monthNames[decMonthObj.month()]}/${decMonthObj.year()}`;
+      }
+
       await createBalance({
         edition: form.edition,
         type,
         date: form.date,
-        counterpart: form.counterpart.trim(),
-        concept: form.concept.trim(),
+        counterpart: finalCounterpart,
+        concept: finalConcept,
         category: form.category,
         cashAmount: Number(form.cashAmount || 0),
         transferAmount: Number(form.transferAmount || 0),
         tarjetaUnicaAmount: Number(form.tarjetaUnicaAmount || 0),
         checks: checks.map((c) => ({ ...c, amount: Number(c.amount) })),
         observations: form.observations.trim(),
+        ...(isLoteria ? {
+          taxPercentage: Number(form.taxPercentage),
+          totalRenderedAmount: Number(form.totalRenderedAmount),
+          taxPaymentDate: form.taxPaymentDate,
+          declarationDate: form.declarationDate,
+        } : {})
       });
       navigate("/balance");
     } catch (err) {
@@ -290,32 +374,102 @@ export default function BalanceFormPage() {
                   className="lg:col-span-2"
                   options={categoryOptions}
                   value={categoryOptions.find(o => o.value === form.category)}
-                  onChange={(opt) => setForm(prev => ({ ...prev, category: opt.value }))}
+                  onChange={(opt) => {
+                    setForm(prev => {
+                      const nextForm = { ...prev, category: opt.value };
+                      if (opt.value === 'Lotería' && !isIngreso) {
+                        if (!nextForm.taxPercentage) nextForm.taxPercentage = "6.5420";
+                        if (!nextForm.taxPaymentDate) nextForm.taxPaymentDate = nextForm.date;
+                        if (!nextForm.declarationDate) nextForm.declarationDate = nextForm.date;
+                      }
+                      return nextForm;
+                    });
+                    if (errors.category) {
+                      setErrors(prev => {
+                        const newErrs = { ...prev };
+                        delete newErrs.category;
+                        return newErrs;
+                      });
+                    }
+                  }}
                   error={errors.category}
                 />
 
+                {isLoteria && (
+                  <>
+                    <InputField
+                      label="Total Rendido"
+                      type="text"
+                      prefix="$"
+                      name="totalRenderedAmount"
+                      bsize="compact"
+                      className="lg:col-span-1"
+                      placeholder="0,00"
+                      value={formatCurrencyInput(form.totalRenderedAmount)}
+                      onChange={handleChange}
+                      error={errors.totalRenderedAmount}
+                    />
+                    <InputField
+                      label="Porcentaje de Impuesto"
+                      type="text"
+                      suffix="%"
+                      name="taxPercentage"
+                      bsize="compact"
+                      className="lg:col-span-1"
+                      placeholder="6,5420"
+                      value={form.taxPercentage}
+                      onChange={handleChange}
+                      error={errors.taxPercentage}
+                    />
+                    <InputField
+                      label="Fecha Pago Impuesto"
+                      type="date"
+                      name="taxPaymentDate"
+                      bsize="compact"
+                      className="lg:col-span-1"
+                      value={form.taxPaymentDate}
+                      onChange={handleChange}
+                      error={errors.taxPaymentDate}
+                    />
+                    <InputField
+                      label="Fecha de Declaración"
+                      type="date"
+                      name="declarationDate"
+                      bsize="compact"
+                      className="lg:col-span-1"
+                      value={form.declarationDate}
+                      onChange={handleChange}
+                      error={errors.declarationDate}
+                    />
+                  </>
+                )}
+
                 {/* FILA 2: Detalles de Operación */}
-                <InputField
-                  label={isIngreso ? "Recibimos de" : "A la orden de"}
-                  name="counterpart"
-                  className="lg:col-span-2"
-                  bsize="compact"
-                  placeholder={isIngreso ? "Nombre del pagador..." : "Nombre del beneficiario..."}
-                  value={form.counterpart}
-                  onChange={handleChange}
-                  autoComplete="off"
-                  error={errors.counterpart}
-                />
-                <InputField
-                  label="En concepto de"
-                  name="concept"
-                  className="lg:col-span-2"
-                  bsize="compact"
-                  placeholder="Descripción breve..."
-                  value={form.concept}
-                  onChange={handleChange}
-                  error={errors.concept}
-                />
+                {!isLoteria && (
+                  <>
+                    <InputField
+                      label={isIngreso ? "Recibimos de" : "A la orden de"}
+                      name="counterpart"
+                      className="lg:col-span-2"
+                      bsize="compact"
+                      placeholder={isIngreso ? "Nombre del pagador..." : "Nombre del beneficiario..."}
+                      value={form.counterpart}
+                      onChange={handleChange}
+                      autoComplete="off"
+                      error={errors.counterpart}
+                    />
+                    <InputField
+                      label="En concepto de"
+                      name="concept"
+                      className="lg:col-span-2"
+                      bsize="compact"
+                      placeholder="Descripción breve..."
+                      value={form.concept}
+                      onChange={handleChange}
+                      error={errors.concept}
+                    />
+                  </>
+                )}
 
                 {/* FILA 3: Notas */}
                 <div className="lg:col-span-4 space-y-1">

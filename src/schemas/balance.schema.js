@@ -43,6 +43,12 @@ export const createBalanceSchema = z
 
     observations: z.string().optional().default(''),
 
+    // Campos opcionales para rendiciones de Lotería
+    taxPercentage: z.number().optional().nullable(),
+    totalRenderedAmount: z.number().optional().nullable(),
+    taxPaymentDate: z.string().optional().nullable(),
+    declarationDate: z.string().optional().nullable(),
+
     // Campos opcionales rellenados automáticamente por el sistema
     sellerPaymentRef: z.string().optional().nullable(),
   })

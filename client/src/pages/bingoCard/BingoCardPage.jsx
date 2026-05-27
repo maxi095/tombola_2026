@@ -151,7 +151,7 @@ export default function BingoCardPage() {
     const dataToExport = filteredCards.map(card => ({
       ...card,
       assignedTo_full: card.seller?.person 
-        ? `${card.seller.person.lastName}, ${card.seller.person.firstName}`
+        ? `${card.seller.person.firstName} ${card.seller.person.lastName}`
         : "Sin Asignar",
       associate_full: card.sale?.client 
         ? `${card.sale.client.lastName}, ${card.sale.client.firstName}`

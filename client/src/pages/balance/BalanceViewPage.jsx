@@ -28,6 +28,7 @@ import {
 
 import { useBalance } from "../../context/BalanceContext";
 import BalanceReceipt from "../../components/BalanceReceipt";
+import LotteryBalanceReceipt from "../../components/LotteryBalanceReceipt";
 import PageHeader from "../../components/ui/PageHeader";
 import Card from "../../components/ui/Card";
 import InfoItem from "../../components/ui/InfoItem";
@@ -82,10 +83,16 @@ export default function BalanceViewPage() {
     const html2pdf = (await import("html2pdf.js")).default;
     const isIngreso = balance.type === "Ingreso";
     const txLabel = `${isIngreso ? "I" : "E"}-${String(balance.transactionNumber).padStart(3, "0")}`;
-    const docName = isIngreso ? "Recibo" : "OrdenDePago";
+    
+    const isLoteria = balance.category === "Lotería";
+    const docName = isLoteria ? "RendicionLoteria" : (isIngreso ? "Recibo" : "OrdenDePago");
 
     const htmlString = ReactDOMServer.renderToString(
-      <BalanceReceipt balance={balance} />
+      isLoteria ? (
+        <LotteryBalanceReceipt balance={balance} />
+      ) : (
+        <BalanceReceipt balance={balance} />
+      )
     );
 
     const opt = {
@@ -94,6 +101,7 @@ export default function BalanceViewPage() {
       image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2 },
       jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
     html2pdf().from(htmlString).set(opt).save();
@@ -240,6 +248,23 @@ export default function BalanceViewPage() {
               <InfoItem icon={Link2} label="Rendición de vendedor vinculada">
                 {`Pago N° ${balance.sellerPaymentRef.sellerPaymentNumber}`}
               </InfoItem>
+            )}
+
+            {balance.category === "Lotería" && balance.totalRenderedAmount !== undefined && balance.totalRenderedAmount !== null && (
+              <>
+                <InfoItem icon={Banknote} label="Total Rendido">
+                  {formatCurrency(balance.totalRenderedAmount)}
+                </InfoItem>
+                <InfoItem icon={TrendingUp} label="Porcentaje de Impuesto">
+                  {balance.taxPercentage ? `${balance.taxPercentage.toFixed(4).replace('.', ',')}%` : "—"}
+                </InfoItem>
+                <InfoItem icon={Calendar} label="Fecha Pago Impuesto">
+                  {balance.taxPaymentDate ? dayjs.utc(balance.taxPaymentDate).format("DD/MM/YYYY") : "—"}
+                </InfoItem>
+                <InfoItem icon={Calendar} label="Fecha de Declaración">
+                  {balance.declarationDate ? dayjs.utc(balance.declarationDate).format("DD/MM/YYYY") : "—"}
+                </InfoItem>
+              </>
             )}
 
             {balance.observations && (

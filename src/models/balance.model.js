@@ -125,6 +125,27 @@ const balanceSchema = new mongoose.Schema(
       default: 'Activo',
     },
 
+    // Campos opcionales para rendiciones de Lotería
+    taxPercentage: {
+      type: Number,
+      default: null,
+    },
+
+    totalRenderedAmount: {
+      type: Number,
+      default: null,
+    },
+
+    taxPaymentDate: {
+      type: Date,
+      default: null,
+    },
+
+    declarationDate: {
+      type: Date,
+      default: null,
+    },
+
     // Referencia opcional a un SellerPayment (para rendiciones automáticas)
     sellerPaymentRef: {
       type: mongoose.Schema.Types.ObjectId,

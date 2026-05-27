@@ -25,6 +25,10 @@ export const createBalance = async (req, res) => {
       checks = [],
       observations = '',
       sellerPaymentRef = null,
+      taxPercentage = null,
+      totalRenderedAmount = null,
+      taxPaymentDate = null,
+      declarationDate = null,
     } = req.body;
 
     // Validar edición
@@ -63,6 +67,10 @@ export const createBalance = async (req, res) => {
       checks,
       observations,
       sellerPaymentRef: sellerPaymentRef || null,
+      taxPercentage,
+      totalRenderedAmount,
+      taxPaymentDate: taxPaymentDate || null,
+      declarationDate: declarationDate || null,
       createdBy,
     });
 

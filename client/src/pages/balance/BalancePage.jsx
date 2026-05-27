@@ -30,6 +30,7 @@ import { useBalance } from "../../context/BalanceContext";
 import { useEditionFilter } from "../../context/EditionFilterContext";
 import { useEditions } from "../../context/EditionContext";
 import BalanceReceipt from "../../components/BalanceReceipt";
+import LotteryBalanceReceipt from "../../components/LotteryBalanceReceipt";
 
 // Infraestructura Elite 2026 🛡️
 import Card from "../../components/ui/Card";
@@ -228,10 +229,16 @@ export default function BalancePage() {
     const html2pdf = (await import("html2pdf.js")).default;
     const isIngreso = balance.type === "Ingreso";
     const txLabel = `${isIngreso ? "I" : "E"}-${String(balance.transactionNumber).padStart(3, "0")}`;
-    const docName = isIngreso ? "Recibo" : "OrdenDePago";
+    
+    const isLoteria = balance.category === "Lotería";
+    const docName = isLoteria ? "RendicionLoteria" : (isIngreso ? "Recibo" : "OrdenDePago");
 
     const htmlString = ReactDOMServer.renderToString(
-      <BalanceReceipt balance={balance} />
+      isLoteria ? (
+        <LotteryBalanceReceipt balance={balance} />
+      ) : (
+        <BalanceReceipt balance={balance} />
+      )
     );
 
     const opt = {
@@ -240,6 +247,7 @@ export default function BalancePage() {
       image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2 },
       jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
     html2pdf().from(htmlString).set(opt).save();
