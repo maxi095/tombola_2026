@@ -23,7 +23,31 @@ export const getSales = async (req, res) => {
                 { path: 'user' }
             ]);
 
-        res.json(sales);
+        const salesIds = sales.map(s => s._id);
+        const quotas = await Quota.find({ sale: { $in: salesIds } });
+        
+        const quotasBySale = {};
+        quotas.forEach(q => {
+            const saleIdStr = q.sale.toString();
+            if (!quotasBySale[saleIdStr]) {
+                quotasBySale[saleIdStr] = [];
+            }
+            quotasBySale[saleIdStr].push(q);
+        });
+
+        const salesWithQuotasInfo = sales.map(sale => {
+            const saleQuotas = quotasBySale[sale._id.toString()] || [];
+            const totalQuotas = saleQuotas.length;
+            const paidQuotas = saleQuotas.filter(q => q.paymentDate !== null).length;
+            
+            return {
+                ...sale.toObject(),
+                totalQuotas,
+                paidQuotas
+            };
+        });
+
+        res.json(salesWithQuotasInfo);
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
@@ -49,7 +73,16 @@ export const getSale = async (req, res) => {
       .sort({ createdAt: -1 }); // más recientes primero;
   
       if (!sale) return res.status(404).json({ message: 'Sale not found' });
-      res.json(sale);
+
+      const quotas = await Quota.find({ sale: sale._id });
+      const totalQuotas = quotas.length;
+      const paidQuotas = quotas.filter(q => q.paymentDate !== null).length;
+
+      res.json({
+        ...sale.toObject(),
+        totalQuotas,
+        paidQuotas
+      });
     } catch (error) {
       return res.status(500).json({ message: error.message });
     }
@@ -125,7 +158,16 @@ export const updateSale = async (req, res) => {
     try {
         const sale = await Sale.findByIdAndUpdate(req.params.id, req.body, { new: true }).populate(['edition', 'seller', 'bingoCard', 'client', 'user']);
         if (!sale) return res.status(404).json({ message: 'Sale not found' });
-        res.json(sale);
+        
+        const quotas = await Quota.find({ sale: sale._id });
+        const totalQuotas = quotas.length;
+        const paidQuotas = quotas.filter(q => q.paymentDate !== null).length;
+
+        res.json({
+            ...sale.toObject(),
+            totalQuotas,
+            paidQuotas
+        });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
@@ -166,7 +208,15 @@ export const cancelSale = async (req, res) => {
         // Obtener la venta actualizada con los datos poblados
         const updatedSale = await Sale.findById(req.params.id).populate(['edition', 'seller', 'bingoCard', 'client', 'user']);
 
-        res.json(updatedSale);
+        const quotas = await Quota.find({ sale: updatedSale._id });
+        const totalQuotas = quotas.length;
+        const paidQuotas = quotas.filter(q => q.paymentDate !== null).length;
+
+        res.json({
+            ...updatedSale.toObject(),
+            totalQuotas,
+            paidQuotas
+        });
     } catch (error) {
         console.error("❌ Error en cancelSale:", error.message);
         return res.status(500).json({ message: error.message });
@@ -205,7 +255,31 @@ export const getSalesBySeller = async (req, res) => {
             { path: 'user' }
         ]);
 
-        res.json(sales);
+        const salesIds = sales.map(s => s._id);
+        const quotas = await Quota.find({ sale: { $in: salesIds } });
+        
+        const quotasBySale = {};
+        quotas.forEach(q => {
+            const saleIdStr = q.sale.toString();
+            if (!quotasBySale[saleIdStr]) {
+                quotasBySale[saleIdStr] = [];
+            }
+            quotasBySale[saleIdStr].push(q);
+        });
+
+        const salesWithQuotasInfo = sales.map(sale => {
+            const saleQuotas = quotasBySale[sale._id.toString()] || [];
+            const totalQuotas = saleQuotas.length;
+            const paidQuotas = saleQuotas.filter(q => q.paymentDate !== null).length;
+            
+            return {
+                ...sale.toObject(),
+                totalQuotas,
+                paidQuotas
+            };
+        });
+
+        res.json(salesWithQuotasInfo);
     } catch (error) {
         console.error("❌ Error en getSalesBySeller:", error.message);
         res.status(500).json({ message: error.message });

@@ -79,6 +79,7 @@ export default function SalePage() {
     { id: 'seller', label: 'Vendedor' },
     { id: 'associate', label: 'Asociado / Localidad' },
     { id: 'status', label: 'Estado' },
+    { id: 'quotasPaid', label: 'Cuotas Pagas' },
     { id: 'date', label: 'Fecha' },
     { id: 'actions', label: 'ACCIONES', isFixed: true, isMandatory: true }
   ];
@@ -194,6 +195,7 @@ export default function SalePage() {
                 "Asociado": sale.client?.person ? `${sale.client.person.firstName} ${sale.client.person.lastName}` : "S/A",
                 "Localidad": sale.client?.person?.city || "Sin localidad",
                 "Estado": sale.status || "Pendiente de pago",
+                "Cuotas Pagas": `${sale.paidQuotas || 0} / ${sale.totalQuotas || 0}`,
                 "Fecha": dayjs(sale.saleDate).format('DD/MM/YYYY')
               }));
               exportToExcel(exportData, "Ventas_Filtradas");
@@ -309,6 +311,30 @@ export default function SalePage() {
                                 <Badge variant={statusVariants[sale.status] || "warning"} className="px-3 h-6">
                                   <span className="text-[10px] tracking-tight font-black uppercase tracking-widest leading-none">
                                     {sale.status || "Pendiente de pago"}
+                                  </span>
+                                </Badge>
+                              </TD>
+                            );
+                          }
+
+                          if (col.id === 'quotasPaid') {
+                            const total = sale.totalQuotas || 0;
+                            const paid = sale.paidQuotas || 0;
+                            let badgeVariant = "secondary";
+                            if (total > 0) {
+                              if (paid === total) {
+                                badgeVariant = "success";
+                              } else if (paid > 0) {
+                                badgeVariant = "warning";
+                              } else {
+                                badgeVariant = "danger";
+                              }
+                            }
+                            return (
+                              <TD key={col.id}>
+                                <Badge variant={badgeVariant} className="px-3.5 h-6">
+                                  <span className="text-[10px] tracking-tight font-black uppercase tracking-widest leading-none">
+                                    {paid} / {total}
                                   </span>
                                 </Badge>
                               </TD>
