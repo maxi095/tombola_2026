@@ -52,7 +52,7 @@ export default function LotteryBalanceReceipt({ balance }) {
 
   // Estilo común para hojas membretadas (margen superior de 160px similar a DrawActa)
   const pageStyle = {
-    padding: "160px 60px 60px 60px",
+    padding: "200px 60px 60px 60px",
     boxSizing: "border-box",
     color: "#000",
     fontFamily: "Arial, sans-serif",
@@ -74,12 +74,12 @@ export default function LotteryBalanceReceipt({ balance }) {
 
         {/* Cuadro de Datos */}
         <div className="w-full overflow-hidden border border-black text-sm leading-normal">
-          <div className="grid grid-cols-4 border-b border-black">
-            <div className="col-span-1 border-r border-black p-2 bg-slate-50/30"></div>
-            <div className="col-span-1 border-r border-black p-2 font-bold text-center flex items-center justify-center uppercase tracking-wider text-xs">
+          <div className="grid grid-cols-4">
+            <div className="col-span-1 border-r border-b border-black p-2 bg-slate-50/30"></div>
+            <div className="col-span-1 border-r border-b border-black p-2 font-bold text-center flex items-center justify-center uppercase tracking-wider text-xs">
               Del Mes De:
             </div>
-            <div className="col-span-1 border-r border-black p-2 font-bold text-center text-base uppercase">
+            <div className="col-span-1 border-r border-b border-black p-2 font-bold text-center text-base uppercase">
               {mesDeStr}
             </div>
             <div className="col-span-1 p-2 text-center text-[10px] font-semibold flex flex-col justify-center leading-tight">
@@ -99,14 +99,16 @@ export default function LotteryBalanceReceipt({ balance }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-4 border-b border-black">
-            <div className="col-span-1 border-r border-black p-2 font-bold uppercase tracking-wider text-xs flex items-center">
+          <div className="grid grid-cols-4">
+            <div className="col-span-1 border-r border-b border-black p-2 font-bold uppercase tracking-wider text-xs flex items-center">
               Porcentaje de Impuesto
             </div>
-            <div className="col-span-2 border-r border-black p-2 text-center text-base font-bold font-mono">
+            <div className="col-span-2 border-r border-b border-black p-2 text-center text-base font-bold font-mono">
               {formatCurrencyLotería(taxPercentage, 4)}%
             </div>
-            <div className="col-span-1 p-2 bg-slate-100/10"></div>
+            <div className="col-span-1 p-2 text-center text-[10px] font-semibold flex flex-col justify-center leading-tight">
+              <span>Fecha del cierre del mes a rendir</span>
+            </div>
           </div>
 
           <div className="grid grid-cols-4">
@@ -125,14 +127,14 @@ export default function LotteryBalanceReceipt({ balance }) {
         {/* Importes en letras */}
         <div className="space-y-4 pt-4 pl-2 text-sm">
           <div>
-            <p className="font-bold text-slate-800">Total Rendido:</p>
-            <p className="italic pl-4 text-slate-700 font-medium">
+            <p className="font-bold text-black">Total Rendido:</p>
+            <p className="italic pl-4 text-black font-medium">
               {formatLoteríaLetras(totalRendered, false)}
             </p>
           </div>
           <div>
-            <p className="font-bold text-slate-800">Total Impuesto:</p>
-            <p className="italic pl-4 text-slate-700 font-medium">
+            <p className="font-bold text-black">Total Impuesto:</p>
+            <p className="italic pl-4 text-black font-medium">
               {formatLoteríaLetras(impuestoAPagar, true)}
             </p>
           </div>
@@ -174,7 +176,7 @@ export default function LotteryBalanceReceipt({ balance }) {
             en solicitudes de adhesión tanto en pago de contado como en cuotas la suma de:{" "}
             <strong>${formatCurrencyLotería(totalRendered, 2)}</strong>
             <br />
-            <span className="italic text-slate-700 pl-4 block">
+            <span className="italic text-black pl-4 block">
               {formatLoteríaLetras(totalRendered, false)}
             </span>
           </p>
@@ -185,7 +187,7 @@ export default function LotteryBalanceReceipt({ balance }) {
             por reglamentación que esta institución debe abonar asciende a la suma de:{" "}
             <strong>${formatCurrencyLotería(impuestoAPagar, 2)}</strong>
             <br />
-            <span className="italic text-slate-700 pl-4 block">
+            <span className="italic text-black pl-4 block">
               {formatLoteríaLetras(impuestoAPagar, true)}
             </span>
           </p>
