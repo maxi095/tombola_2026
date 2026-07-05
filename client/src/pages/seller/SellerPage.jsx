@@ -209,11 +209,27 @@ function SellerPage() {
                         if (col.id === 'sellerNumber') return <OperationCell key={col.id} number={seller.sellerNumber} />;
 
                         if (col.id === 'identity') return (
-                          <UserCell
-                            key={col.id}
-                            name={`${seller.person?.lastName}, ${seller.person?.firstName}`}
-                            variant="primary"
-                          />
+                          <TD key={col.id}>
+                            <div className="flex flex-col gap-0.5 max-w-[200px]">
+                              <div className="flex items-center gap-2">
+                                <User size={12} className="text-primary opacity-40 shrink-0 mt-0.5" />
+                                <span className="text-xs font-black leading-tight uppercase text-primary">
+                                  {`${seller.person?.lastName}, ${seller.person?.firstName}`}
+                                </span>
+                              </div>
+                              <div className="pl-4 mt-0.5">
+                                {seller.isParticular ? (
+                                  <Badge variant="warning" className="text-[8px] font-black tracking-widest px-2 py-0.5 uppercase shrink-0">
+                                    Particular
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="primary" className="text-[8px] font-black tracking-widest px-2 py-0.5 uppercase shrink-0">
+                                    Comisión Club
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </TD>
                         );
 
                         if (col.id === 'document') return (

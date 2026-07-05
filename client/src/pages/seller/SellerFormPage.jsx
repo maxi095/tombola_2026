@@ -33,6 +33,7 @@ function SellerFormPage() {
     control,
     formState: { errors, isSubmitting },
     setValue,
+    watch,
   } = useForm({
     defaultValues: {
       firstName: "",
@@ -42,7 +43,8 @@ function SellerFormPage() {
       phone: "",
       address: "",
       city: "",
-      commissionRate: ""
+      commissionRate: "",
+      isParticular: false
     }
   });
 
@@ -51,6 +53,8 @@ function SellerFormPage() {
   const params = useParams();
   const { showToast } = useFeedback();
   const [loading, setLoading] = useState(false);
+
+  const watchParticular = watch("isParticular");
 
   useEffect(() => {
     if (params.id) {
@@ -66,6 +70,7 @@ function SellerFormPage() {
             setValue("city", seller.person?.city || "");
             setValue("phone", seller.person?.phone || "");
             setValue("commissionRate", seller.commissionRate ?? "");
+            setValue("isParticular", seller.isParticular || false);
           }
         })
         .catch((err) => {
@@ -80,6 +85,7 @@ function SellerFormPage() {
     const sellerData = {
       status: "Activo",
       commissionRate: data.commissionRate,
+      isParticular: data.isParticular,
       person: {
         firstName: data.firstName,
         lastName: data.lastName,
@@ -229,6 +235,24 @@ function SellerFormPage() {
               })}
               error={errors.commissionRate?.message}
             />
+
+            {/* Vendedor Particular Toggle Switch */}
+            <div className="flex flex-col gap-2 lg:col-span-1 justify-center pl-4">
+              <label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Vendedor Particular</label>
+              <div className="flex items-center gap-3 mt-1 ml-1 h-[42px]">
+                <label className="relative inline-flex items-center cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer" 
+                    {...register("isParticular")}
+                  />
+                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                  <span className="ml-3 text-xs font-bold text-slate-500 uppercase tracking-wide">
+                    {watchParticular ? "Particular" : "Club"}
+                  </span>
+                </label>
+              </div>
+            </div>
           </FormGrid>
 
           {/* Panel de Errores de API 🚨 */}

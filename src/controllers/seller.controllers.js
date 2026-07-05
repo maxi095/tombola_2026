@@ -38,7 +38,8 @@ export const createSeller = async (req, res) => {
           email,
         },
         status,
-        commissionRate
+        commissionRate,
+        isParticular
         
       } = req.body;
   
@@ -64,7 +65,8 @@ export const createSeller = async (req, res) => {
       const newSeller = new Seller({
         person: savedPerson._id,
         status: status || 'Activo',
-        commissionRate: commissionRate
+        commissionRate: commissionRate,
+        isParticular: isParticular !== undefined ? isParticular : false
       });
   
       const savedSeller = await newSeller.save();
@@ -95,6 +97,10 @@ export const updateSeller = async (req, res) => {
         // Ejemplo si también actualizás status u otras props directas del seller
         if (req.body.status !== undefined) {
             seller.status = req.body.status;
+        }
+
+        if (req.body.isParticular !== undefined) {
+            seller.isParticular = req.body.isParticular;
         }
 
         if (req.body.notes !== undefined) {

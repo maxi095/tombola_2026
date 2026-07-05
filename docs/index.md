@@ -29,6 +29,8 @@ graph TD
     *   Carga en vivo de las bolillas extraídas.
     *   Cálculo en tiempo real de los cartones que están a punto de ganar (Top 10).
     *   Registro de ganadores de premios y entrega de premios con generación de actas.
+6.  **Reporte General y Estadísticas**:
+    *   Módulo de analíticas consolidadas en tiempo real para control de balance neto, canales de venta, rendimientos de vendedores, distribución geográfica de ventas y captación de nuevos asociados. Ver manual detallado de reglas de negocio contables en [reporte_general_dashboard.md](file:///c:/proyectos_desarrollo/gestion_tombola/docs/reporte_general_dashboard.md).
 
 ---
 
