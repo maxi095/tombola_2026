@@ -1,101 +1,101 @@
 import { useForm } from "react-hook-form";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-{/*import { useEffect} from "react";*/}
-import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff, Lock, Mail, User, UserPlus } from "lucide-react";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
+import InputField from "../components/ui/InputField";
 
-import '../assets/css/Global.css';  
-import '../assets/css/Table.css';   
-import '../assets/css/Button.css'; 
-
+/**
+ * RegisterPage - Modernized to Standard 2026 Atomic UX.
+ * Integrates clean forms and eliminates legacy layout files.
+ */
 function RegisterPage() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+  const [showPassword, setShowPassword] = useState(false);
+  const { signup, isAuthenticated, errors: registerErrors } = useAuth();
+  const navigate = useNavigate();
 
-    const {
-        register, 
-        handleSubmit, 
-        formState: { errors }, 
-    } = useForm()
-    const {signup, isAuthenticated, errors: registerErrors } = useAuth();
-    const navigate = useNavigate();
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, navigate]);
 
-    useEffect(() => {
-        if (isAuthenticated) navigate ('/tasks');
-    }, [isAuthenticated]);
+  const onSubmit = onSubmitValues => {
+    signup(onSubmitValues);
+  };
 
-    {/*const [users, setUsers] = useState([]);
-
-    useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                const response = await fetch('http://localhost:4000/api/users'); // Ajusta la URL si es necesario
-                const data = await response.json();
-                setUsers(data);
-            } catch (error) {
-                console.error('Error fetching users:', error);
-            }
-        };
-
-        fetchUsers();
-    }, []);
-    */}
-
-    useEffect(() => {
-        if (isAuthenticated) navigate("/activities");
-    }, [isAuthenticated])
-
-    const onSubmit = handleSubmit(async (values) => {
-            signup(values);
-        });
-    
-
-    return (
-        <div className="flex-center-container">
-            <div className="inner-box">
-            <h2 className="form-sub-title">Registrarse</h2>
-                {Array.isArray(registerErrors) && registerErrors.map((error, i) => (
-                    <div className="form-error" key={i}>
-                        {error}
-                    </div>
-                ))}
-
-                <form onSubmit={onSubmit}>
-                    
-                    <input type = "text" {...register("username", {required: true})}
-                        className="form-input"
-                        placeholder="Usuario"/>
-                        {errors.username && <p className = "form-error">Usuario es requerido</p>}
-                    <input type = "email" {...register("email", {required: true})}
-                        className="form-input"
-                        placeholder="Email"/>
-                        {errors.email && <p className = "form-error">Email es requerido</p>}
-                    <input type = "password" {...register("password", {required: true})}
-                        className="form-input"
-                        placeholder="Contraseña"/>
-                        {errors.password && <p className = "form-error">Contraseña es requerida</p>}
-                    
-                    {/*<select {...register("student", { required: true })}
-                        className="w-full bg-zinc-700 text-white px-4 py-2 rounded-md my-2">
-                        <option value="">Seleccione un usuario</option>
-                        {users.map((user) => (
-                            <option key={user._id} value={user.username}>
-                                {user.username}
-                            </option>
-                        ))}
-                    </select>*/}
-                    
-                    <button type = "submit"
-                    className="button button--save">
-                        Register
-                    </button>
-                </form>
-
-                <p className="flex gap-x-2 justify-between">
-                ¿Tenes una cuenta? <Link to="/login" className="text-gray-100"> Iniciar sesión </Link>
-                </p>
-
-            </div>
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+      <Card className="w-full max-w-[480px]" hover={false}>
+        <div className="text-center mb-10 space-y-2">
+          <h1 className="text-4xl font-black text-primary tracking-tighter font-manrope">
+            Registrarse
+          </h1>
+          <p className="text-slate-400 font-bold text-[12px] uppercase tracking-[0.2em] px-4">
+            Crear Cuenta Portal Tómbola
+          </p>
         </div>
-    )
+
+        {Array.isArray(registerErrors) && registerErrors.map((error, i) => (
+          <div key={i} className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-bold animate-in fade-in slide-in-from-top-2 duration-300">
+            {error}
+          </div>
+        ))}
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <InputField
+            label="Usuario"
+            type="text"
+            placeholder="Introduce tu usuario"
+            {...register("username", { required: "Usuario es requerido" })}
+            error={errors.username?.message}
+            icon={User}
+          />
+
+          <InputField
+            label="Email"
+            type="email"
+            placeholder="ejemplo@mail.com"
+            {...register("email", { required: "Email es requerido" })}
+            error={errors.email?.message}
+            icon={Mail}
+          />
+
+          <InputField
+            label="Contraseña"
+            type={showPassword ? "text" : "password"}
+            placeholder="••••••••"
+            {...register("password", { required: "Contraseña es requerida" })}
+            error={errors.password?.message}
+            icon={showPassword ? EyeOff : Eye}
+            onClick={() => setShowPassword(!showPassword)}
+          />
+
+          <div className="pt-4">
+            <Button type="submit" size="lg" className="w-full shadow-2xl" icon={UserPlus}>
+              Crear Cuenta
+            </Button>
+          </div>
+        </form>
+
+        <div className="mt-8 text-center">
+          <p className="text-sm text-slate-500 font-medium">
+            ¿Ya tienes una cuenta?{" "}
+            <Link to="/login" className="text-primary font-bold hover:underline font-manrope">
+              Iniciar Sesión
+            </Link>
+          </p>
+        </div>
+      </Card>
+    </div>
+  );
 }
 
-export default RegisterPage
+export default RegisterPage;
