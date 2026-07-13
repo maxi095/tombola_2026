@@ -373,9 +373,9 @@ export const getDashboard = async (req, res) => {
     let clubSalesCount = 0;
     salesBySellerObj.forEach(item => {
       if (item._id === true) {
-        particularSalesCount = item.count;
+        particularSalesCount += item.count;
       } else {
-        clubSalesCount = item.count;
+        clubSalesCount += item.count;
       }
     });
 

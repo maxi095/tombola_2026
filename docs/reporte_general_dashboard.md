@@ -30,10 +30,10 @@ Dado que el campo de localidad en el registro de asociados se ingresa en texto l
 ## 🛠️ 2. Arquitectura Técnica y Código
 
 ### A. Modificaciones en Modelos (Backend)
-- **`Seller`** ([seller.model.js](file:///c:/proyectos_desarrollo/gestion_tombola/src/models/seller.model.js)): Se añadió el campo `isParticular` (`Boolean`, default: `false`) para diferenciar vendedores particulares frente a los comisionistas de las subcomisiones del club.
+- **`Seller`** ([seller.model.js](file:///c:/Proyectos/tombola_2026/src/models/seller.model.js)): Se añadió el campo `isParticular` (`Boolean`, default: `false`) para diferenciar vendedores particulares frente a los comisionistas de las subcomisiones del club.
 
 ### B. Módulo de Agregación (Backend)
-En [dashboard.controllers.js](file:///c:/proyectos_desarrollo/gestion_tombola/src/controllers/dashboard.controllers.js), el endpoint `/api/dashboard/:editionId` ejecuta en paralelo mediante `Promise.all` las siguientes consultas sobre la base de datos:
+En [dashboard.controllers.js](file:///c:/Proyectos/tombola_2026/src/controllers/dashboard.controllers.js), el endpoint `/api/dashboard/:editionId` ejecuta en paralelo mediante `Promise.all` las siguientes consultas sobre la base de datos:
 1. **`salesByCityRaw`**: Agregación cruzada `Sale` -> `Client` -> `Person` para contabilizar la cantidad de cartones vendidos por localidad.
 2. **`salesBySellerRaw`**: Agregación cruzada `Sale` -> `Seller` -> `Person` para obtener el ranking de vendedores con su nombre, tipo y cantidad de ventas.
 3. **`newClientsByCityRaw`**: Agregación que agrupa ventas por cliente ordenadas por fecha, filtra aquellas cuya primera compra histórica se realizó en la edición y agrupa los clientes resultantes por localidad.
@@ -42,7 +42,7 @@ En [dashboard.controllers.js](file:///c:/proyectos_desarrollo/gestion_tombola/sr
 
 ## 🎨 3. Interfaz de Usuario y Experiencia Visual
 
-El diseño se integró en la pestaña "General" de [DashboardPage.jsx](file:///c:/proyectos_desarrollo/gestion_tombola/client/src/pages/dashboard/DashboardPage.jsx) utilizando componentes atómicos del estándar de diseño del proyecto:
+El diseño se integró en la pestaña "General" de [DashboardPage.jsx](file:///c:/Proyectos/tombola_2026/client/src/pages/dashboard/DashboardPage.jsx) utilizando componentes atómicos del estándar de diseño del proyecto:
 - **KPI Card Grid**: Muestra los ingresos, egresos y el balance neto consolidado (pintando la tarjeta de color verde si es positivo o de color rojo si es negativo).
 - **Gráficos de Balance**: Gráficos de dona interactivos que representan la distribución de ingresos/egresos por categoría, tipo de vendedor y modalidad de pago.
 - **Cuadrícula de Listados de Alta Densidad (3 Columnas)**:
@@ -51,3 +51,27 @@ El diseño se integró en la pestaña "General" de [DashboardPage.jsx](file:///c
   - **Rendimiento de Vendedores**: Ranking de rendimiento de vendedores con badges informativos ("Particular" en naranja vs. "Comisión Club" en celeste) y posiciones en el Top.
   - *Scroll Simétrico*: Las tres tarjetas anteriores comparten el scrollbar oculto y un límite de altura de `280px` para mantener la proporción de la cuadrícula.
 - **Gráfico Mensual a Ancho Completo**: El gráfico de área de la evolución mensual de ventas se ubicó en el pie de página ocupando el 100% de la pantalla para permitir una lectura cronológica extendida muy superior.
+
+---
+
+## 📺 4. Reporte HTML Estático para Directiva (Presentación en Pantalla / TV)
+
+Se ha implementado una herramienta de generación de reportes offline para permitir la presentación interactiva del Dashboard General a los miembros de la directiva (por ejemplo, compartiendo pantalla en un TV) sin necesidad de mantener el frontend o desarrollo activo.
+
+### 📋 Archivos Clave
+- **Script Generador**: [generate-report.js](file:///c:/Proyectos/tombola_2026/scripts/generate-report.js) - Se conecta a MongoDB local, ejecuta las consultas de balance y ventas de todas las ediciones y las inyecta en el HTML.
+- **Reporte Resultante**: [ReporteTombola.html](file:///c:/Proyectos/tombola_2026/client/src/pages/dashboard/ReporteTombola.html) - Página interactiva autocontenida que puedes abrir directamente en cualquier navegador haciendo doble clic.
+
+### ⚙️ Comando de Ejecución
+Para actualizar el reporte con los datos más recientes de tu base de datos MongoDB local, ejecuta el siguiente comando en la terminal del backend (`/tombola_2026`):
+
+```bash
+npm run generate-report
+```
+
+### 💎 Características del Reporte
+- **Selector de Ediciones**: Un selector desplegable en la cabecera que permite cambiar instantáneamente los datos de la pantalla entre las distintas ediciones (2026, 2025, 2024, etc.).
+- **Modo Presentación**: Botón que activa la pantalla completa del navegador para una visualización limpia en televisores y proyectores.
+- **Gráficos Interactivos**: Los gráficos de donas y tendencias se dibujan usando **Chart.js** y muestran tooltips detallados al pasar el mouse por encima.
+- **Diseño sin Scroll Interno**: Las leyendas de ingresos y egresos están dispuestas en un grid de 2 columnas para asegurar que las 6 categorías sean visibles inmediatamente sin necesidad de barras de scroll.
+- **Integridad de Datos Automática**: El script de generación utiliza los balances netos saneados de MongoDB (sincronizados automáticamente en cascada al anular/eliminar pagos en [sellerPayment.controllers.js](file:///c:/Proyectos/tombola_2026/src/controllers/sellerPayment.controllers.js)).

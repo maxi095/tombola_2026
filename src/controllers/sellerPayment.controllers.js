@@ -2,6 +2,7 @@ import SellerPayment from '../models/sellerPayment.model.js';
 import Seller from '../models/seller.model.js';
 import Edition from '../models/edition.model.js';
 import { createBalanceFromSellerPayment } from './balance.controllers.js';
+import Balance from '../models/balance.model.js';
 
 
 // Crear nuevo pago de vendedor
@@ -189,6 +190,9 @@ export const deleteSellerPayment = async (req, res) => {
     const payment = await SellerPayment.findByIdAndDelete(req.params.id);
     if (!payment) return res.status(404).json({ message: 'Pago no encontrado' });
 
+    // También eliminamos los movimientos de balance asociados
+    await Balance.deleteMany({ sellerPaymentRef: req.params.id });
+
     res.status(204).send();
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -221,6 +225,16 @@ export const cancelSellerPayment = async (req, res) => {
     const savedPayment = await payment.save();
 
     console.log("🔄 Pago anulado:", savedPayment);
+
+    // También anulamos los movimientos de balance asociados
+    await Balance.updateMany(
+      { sellerPaymentRef: payment._id },
+      { 
+        status: "Anulado",
+        canceledBy: req.user?._id || req.user?.id,
+        canceledAt: new Date()
+      }
+    );
 
     const updatedPayment = await SellerPayment.findById(savedPayment._id)
       .populate({
