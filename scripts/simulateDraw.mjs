@@ -6,8 +6,8 @@ import BingoCard from "../src/models/bingoCard.model.js";
 dotenv.config();
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/tomboladb";
-const currentEditionId = "67f57274411a325cce729f1e";
-const TOTAL_NUMEROS = 90;
+const currentEditionId = "681f5787e335bd326e9f6793";
+const TOTAL_NUMEROS = 70;
 
 async function sorteoManual() {
   await mongoose.connect(MONGODB_URI);

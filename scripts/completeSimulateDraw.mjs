@@ -123,7 +123,7 @@ async function simularSorteosConAnalisis({ editionId, setNumber = 1, cantidadDeS
 }
 
 const CONFIG = {
-  editionId: "69dd418c67e9e381323c3802",
+  editionId: "681f5787e335bd326e9f6793",
   setNumber: 1,
   simulations: 1000
 };

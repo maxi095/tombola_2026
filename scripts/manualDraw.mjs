@@ -174,7 +174,7 @@ async function simularSorteosConAnalisis({ editionId, setNumber = 1, cantidadDeS
 
 // Configuración de la prueba: ID de Edición y número de Juego (1-5)
 const CONFIG = {
-  editionId: "69dd418c67e9e381323c3802", // Reemplazar por tu ID de edición real
+  editionId: "681f5787e335bd326e9f6793", // Reemplazar por tu ID de edición real
   setNumber: 1,
   sims: 1000
 };
