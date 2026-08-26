@@ -77,3 +77,30 @@ El módulo se compone de la colección `SellerPayment` de MongoDB:
 *   `commissionType`: `'Efectivo'` | `'Transferencia'`.
 *   `status`: `'Activo'` | `'Anulado'`.
 *   `createdBy` / `canceledBy` / `canceledAt`: Campos de auditoría.
+
+---
+
+### D. Rediseño al Estándar Visual Premium 2026
+*   **Formulario de Pago:**
+    *   Sustituir la maquetación obsoleta por `<PageHeader />` y estructurar el formulario en secciones envueltas en componentes `<Card />` de estilo slim.
+    *   Reemplazar todos los inputs crudos por componentes `<InputField />` para estandarizar bordes, etiquetas y estados de error.
+    *   Usar un layout de grilla consistente (`FormGrid`) para alinear campos y evitar solapamientos.
+*   **Detalle de Pago:**
+    *   Utilizar `<PageHeader />` en la cabecera con acciones estandarizadas.
+    *   Organizar la información en secciones limpias dentro de tarjetas `<Card />`:
+        *   *Tarjeta de Resumen General:* Edición, N° Pago, Vendedor, Fecha y Estado.
+        *   *Tarjeta de Liquidación y Totales:* Desglose de Efectivo, Transferencia, Tarjeta Única, Cheques, Subtotal y Neto (con tipografía e importes en verde/primario prominentes).
+        *   *Tarjeta de Cheques:* Renderizar la grilla de cheques usando el componente premium `<Table />`.
+        *   *Tarjeta de Comisiones:* Detalles de comisión y selector inline para editar el tipo de pago de comisión de forma integrada.
+        *   *Tarjeta de Observaciones:* Vista y edición de observaciones inline integrada estéticamente.
+
+---
+
+## 6. Criterios de Aceptación
+*   `[ ]` El formulario de alta de pago deshabilita el botón "Registrar Pago" durante la llamada a la API, previniendo el doble submit.
+*   `[ ]` El formulario muestra el texto "Registrando..." mientras el envío está en curso.
+*   `[ ]` Al ingresar al formulario de alta, el selector de vendedor recibe el foco automáticamente.
+*   `[ ]` El listado principal de pagos muestra un máximo de 25 registros por defecto e incluye controles de navegación (Página X de Y, selector de cantidad de registros, botones Anterior/Siguiente).
+*   `[ ]` El formulario de alta y la pantalla de detalle de pago lucen un diseño limpio, coherente y unificado usando `<PageHeader />`, `<Card />` e `<InputField />` sin textos superpuestos.
+*   `[ ]` En la pantalla de detalle de pago, la tabla de cheques utiliza el componente `<Table />` estandarizado del proyecto.
+

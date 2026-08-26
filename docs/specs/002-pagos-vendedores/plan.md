@@ -80,3 +80,23 @@
         ```
 *   **UI de Paginación:**
     *   Maquetar el footer de navegación al final de la tarjeta de pagos usando la misma estructura premium de `QuotasPage.jsx`.
+
+#### [MODIFY] [SellerPaymentFormPage.jsx](file:///d:/proyectos%20web%2030-07-2026/sobre%20la%20carpeta%20descargas/gestion_tombola/client/src/pages/sellerPayment/SellerPaymentFormPage.jsx) (Estetización)
+1.  **Cabecera Premium:**
+    *   Importar y usar `<PageHeader />` y configurar los botones del formulario ("Volver", "Registrar Pago") dentro de las acciones de la cabecera.
+2.  **Estructura en Tarjetas:**
+    *   Encerrar el formulario en componentes `<Card />` de tipo slim.
+3.  **Campos Estandarizados:**
+    *   Reemplazar todos los `<input className="form-input" ... />` por el componente `<InputField />`, vinculando adecuadamente el registro y los mensajes de error.
+    *   Utilizar `<FormGrid />` o grillas de CSS consistentes para organizar los campos.
+
+#### [MODIFY] [SellerPaymentView.jsx](file:///d:/proyectos%20web%2030-07-2026/sobre%20la%20carpeta%20descargas/gestion_tombola/client/src/pages/sellerPayment/SellerPaymentView.jsx) (Estetización)
+1.  **Cabecera y Volver:**
+    *   Importar y usar `<PageHeader />` con botón de "Volver" estandarizado.
+2.  **Organización en Cards:**
+    *   *Datos de Auditoría / Identificación:* Cabecera en Card con Edición, Vendedor, N° Pago, Fecha y Badge de estado (Activo en verde, Anulado en rojo).
+    *   *Resumen Financiero:* Mostrar Efectivo, Transferencia, Tarjeta Única y Cheques en tarjetas KPI compactas o en una sección visualmente limpia de Card.
+    *   *Cheques:* Renderizar la grilla de cheques usando el componente `<Table />`, `<THead />`, `<TBody />`, `<TR />`, `<TD />` del estándar UI del proyecto.
+    *   *Comisión:* Caja de comisión con Badge indicando el tipo de cobro (Efectivo/Transferencia).
+    *   *Observaciones:* Caja de notas estilizada.
+

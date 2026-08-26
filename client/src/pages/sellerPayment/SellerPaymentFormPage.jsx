@@ -1,16 +1,31 @@
 import { useForm, Controller, useWatch, useFieldArray } from "react-hook-form";
 import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-// Se renombra a ReactSelect para evitar colisiones con el componente corporativo EliteSelect
 import ReactSelect from "react-select";
 
 import { useSellerPayments } from "../../context/SellerPaymentContext";
 import { useSellers } from "../../context/SellerContext";
 import { useEditions } from "../../context/EditionContext";
+import { useFeedback } from "../../context/FeedbackContext";
 
 import { customSelectStyles } from "../../styles/reactSelectStyles";
 import dayjs from "dayjs";
-import CurrencyInput from "../../components/CurrencyInput";
+
+// Infraestructura Premium 2026 🔱
+import PageHeader from "../../components/ui/PageHeader";
+import Card from "../../components/ui/Card";
+import InputField from "../../components/ui/InputField";
+import FormGrid from "../../components/ui/FormGrid";
+import {
+  Wallet,
+  CreditCard,
+  X,
+  Save,
+  Calendar,
+  Clipboard,
+  Trash2,
+  Plus
+} from "lucide-react";
 
 function SellerPaymentFormPage() {
   const {
@@ -18,23 +33,27 @@ function SellerPaymentFormPage() {
     handleSubmit,
     control,
     setValue,
-    watch,
-    getValues,
     formState: { errors, isSubmitting },
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      cashAmount: "",
+      transferAmount: "",
+      tarjetaUnicaAmount: "",
+      checks: [],
+      observations: "",
+      commissionPaymentMethod: "Efectivo"
+    }
+  });
 
   const { fields: checkFields, append: appendCheck, remove: removeCheck } = useFieldArray({
-  control,
-  name: "checks" // ← clave
-});
+    control,
+    name: "checks"
+  });
 
   const watchedCash = useWatch({ control, name: "cashAmount" });
   const watchedTransfer = useWatch({ control, name: "transferAmount" });
   const watchedTarjetaUnica = useWatch({ control, name: "tarjetaUnicaAmount" });
-
-  //const watchedCheck = useWatch({ control, name: "checkAmount" });
   const watchedChecks = useWatch({ control, name: "checks" });
-
   const watchedSeller = useWatch({ control, name: "sellerId" });
 
   const checkTotal = watchedChecks?.reduce((sum, cheque) => {
@@ -50,6 +69,7 @@ function SellerPaymentFormPage() {
   const { createSellerPayment, getSellerPayments } = useSellerPayments();
   const { sellers, getSellers } = useSellers();
   const { editions = [], getEditions } = useEditions();
+  const { showToast } = useFeedback();
   const navigate = useNavigate();
 
   const selectedSeller = useMemo(() => {
@@ -62,39 +82,37 @@ function SellerPaymentFormPage() {
 
   useEffect(() => {
     const loadData = async () => {
-      await getSellers();    // Cargar vendedores
-      await getEditions();   // Cargar ediciones
-  
-      // Si hay ediciones, precargar la última
-      if (editions.length > 0) {
-        const lastEdition = editions[editions.length - 1]; // Última edición
-        setValue("editionId", { // Pre-cargar el valor
-          value: lastEdition._id,
-          label: lastEdition.name,
-        });
-      }
+      await getSellers();
+      await getEditions();
     };
-  
     loadData();
-  }, [setValue]);
+  }, [getSellers, getEditions]);
 
-  const onSubmit = async (data) => {
-    // Aseguramos que los montos vacíos o nulos se seteen como 0
+  // Pre-cargar la última edición al cargar las ediciones
+  useEffect(() => {
+    if (editions.length > 0) {
+      const lastEdition = editions[editions.length - 1];
+      setValue("editionId", {
+        value: lastEdition._id,
+        label: lastEdition.name,
+      });
+    }
+  }, [editions, setValue]);
+
+  const onSubmit = handleSubmit(async (data) => {
     const cashAmount = parseFloat(data.cashAmount) || 0;
     const transferAmount = parseFloat(data.transferAmount) || 0;
     const tarjetaUnicaAmount = parseFloat(data.tarjetaUnicaAmount) || 0;
     
-    //const checkAmount = parseFloat(data.checkAmount) || 0;
     const checkAmount = (data.checks || []).reduce((sum, cheque) => {
       return sum + (parseFloat(cheque.amount) || 0);
     }, 0);
 
-    // Calculamos el total y verificamos que sea mayor a 0
     const total = cashAmount + transferAmount + tarjetaUnicaAmount + checkAmount;
-    const commissionAmount = (subtotal * commissionPercent) / 100;
+    const currentCommission = (total * commissionPercent) / 100;
 
     if (total === 0) {
-      alert("Debe ingresar al menos un monto mayor a cero.");
+      showToast("Debe ingresar al menos un monto mayor a cero.", "warning");
       return;
     }
 
@@ -116,20 +134,20 @@ function SellerPaymentFormPage() {
           amount: parseFloat(cheque.amount) || 0,
         })) || [],
         commissionRate: commissionPercent,
-        commissionAmount: commissionAmount,
+        commissionAmount: currentCommission,
         commissionType: commissionType,
-        date: data.date,
+        date: data.saleDate || dayjs().format("YYYY-MM-DD"),
         observations: data.observations || "",
       };
 
-
       await createSellerPayment(paymentData);
+      showToast("Pago registrado exitosamente", "success");
       navigate("/sellerPayments");
     } catch (error) {
       console.error("Error al registrar el pago:", error);
-      alert(error.response?.data?.message || "Hubo un error al registrar el pago.");
+      showToast(error.response?.data?.message || "Hubo un error al registrar el pago.", "error");
     }
-  };
+  });
 
   const sellerOptions = sellers.map((s) => ({
     value: s._id,
@@ -137,217 +155,309 @@ function SellerPaymentFormPage() {
   }));
 
   return (
-    <div className="page-wide">
-      <div className="form-card">
-        <h2 className="title">Registrar Pago de Vendedor</h2>
+    <div className="flex flex-col px-12 animate-in fade-in duration-700 bg-slate-50/50 min-h-screen pb-12">
+      <PageHeader
+        title="Registrar Pago de Vendedor"
+        compact={true}
+        breadcrumbs={[
+          { label: "Pagos de Vendedores", href: "/sellerPayments" },
+          { label: "Registrar" }
+        ]}
+        actions={[
+          {
+            label: "Volver",
+            icon: X,
+            variant: "ghost",
+            onClick: () => navigate("/sellerPayments")
+          },
+          {
+            label: isSubmitting ? "Creando..." : "Crear Pago",
+            icon: Save,
+            onClick: onSubmit,
+            disabled: isSubmitting
+          }
+        ]}
+      />
 
-        <form onSubmit={handleSubmit(onSubmit)} className="form-grid">
-          {/* Edición */}
-  <div>
-    <label className="label">Edición</label>
-    <Controller
-      name="editionId"
-      control={control}
-      render={({ field }) => (
-        <ReactSelect
-          {...field}
-          styles={customSelectStyles}
-          options={editions.map((e) => ({
-            value: e._id,
-            label: e.name,
-          }))}
-        />
-      )}
-    />
-  </div>
-
-  {/* Vendedor */}
-  <div>
-    <label className="label">Vendedor</label>
-    <Controller
-      name="sellerId"
-      control={control}
-      rules={{ required: "Debe seleccionar un vendedor" }}
-      render={({ field }) => (
-        <ReactSelect
-          {...field}
-          options={sellerOptions}
-          styles={customSelectStyles}
-          placeholder="Seleccionar vendedor..."
-          isClearable
-          autoFocus
-        />
-      )}
-    />
-    {errors.sellerId && <p className="form-error">{errors.sellerId.message}</p>}
-  </div>
-
-  {/* Efectivo */}
-  <div>
-    <label className="label">Monto efectivo</label>
-    <input
-      type="number"
-      step="0.01"
-      className="form-input"
-      placeholder="Ej: 1000.00"
-      {...register("cashAmount")}
-    />
-    {errors.cashAmount && <p className="form-error">{errors.cashAmount.message}</p>}
-  </div>
-
-  {/* Transferencia */}
-  <div>
-    <label className="label">Monto transferencia</label>
-    <input
-      type="number"
-      step="0.01"
-      className="form-input"
-      placeholder="Ej: 500.00"
-      {...register("transferAmount")}
-    />
-    {errors.transferAmount && <p className="form-error">{errors.transferAmount.message}</p>}
-  </div>
-
-  {/* Tarjeta Única */}
-  <div>
-    <label className="label">Monto tarjeta única</label>
-    <input
-      type="number"
-      step="0.01"
-      className="form-input"
-      placeholder="Ej: 500.00"
-      {...register("tarjetaUnicaAmount")}
-    />
-    {errors.tarjetaUnicaAmount && <p className="form-error">{errors.tarjetaUnicaAmount.message}</p>}
-  </div>
-
-  {/* Fecha */}
-  <div>
-    <label className="label">Fecha</label>
-    <input
-      type="date"
-      {...register("saleDate", { required: true })}
-      className="form-input"
-      defaultValue={dayjs().format("YYYY-MM-DD")}
-    />
-  </div>
-
-  {/* Observaciones */}
-  <div className="md:col-span-2">
-    <label className="label">Notas</label>
-    <textarea
-      rows="3"
-      className="form-input"
-      placeholder="Notas (opcional)"
-      {...register("observations")}
-    ></textarea>
-  </div>
-
-  {/* Totales */}
-  <div>
-    <label className="label">Subtotal</label>
-    <input
-      type="text"
-      className="form-input bg-gray-100 text-gray-600"
-      value={subtotal.toFixed(2)}
-      readOnly
-    />
-  </div>
-
-  {selectedSeller && (
-    <>
-      <div>
-        <label className="label">Porcentaje Comisión</label>
-        <input
-          type="text"
-          className="form-input bg-gray-100 text-gray-600"
-          value={`${commissionPercent}%`}
-          readOnly
-        />
-      </div>
-
-      <div>
-        <label className="label">Monto Comisión</label>
-        <input
-          type="text"
-          className="form-input bg-gray-100 text-red-600"
-          value={`-${commissionAmount.toFixed(2)}`}
-          readOnly
-        />
-      </div>
-
-      <div>
-        <label className="label font-semibold">Total Final</label>
-        <input
-          type="text"
-          className="form-input bg-gray-100 text-green-600 font-semibold"
-          value={finalTotal.toFixed(2)}
-          readOnly
-        />
-      </div>
-
-      {/* 👇 Nuevo campo visible solo si hay comisión */}
-      {commissionPercent > 0 && (
-        <div>
-          <label className="label">Comisión pagada en</label>
-          <div className="flex gap-4">
-            <label className="inline-flex items-center font-bold">
-              <input
-                type="radio"
-                value="Efectivo"
-                {...register("commissionPaymentMethod")}
-                className="mr-2"
+      <form onSubmit={onSubmit} className="flex flex-col gap-6 pb-20">
+        
+        {/* CARD 1: INFORMACIÓN GENERAL */}
+        <Card
+          size="slim"
+          title="Información General"
+          icon={Clipboard}
+          description="Edición, vendedor y fecha de la rendición"
+          className="shadow-premium border-slate-200/60 overflow-visible bg-white"
+        >
+          <FormGrid>
+            {/* Edición */}
+            <div className="space-y-2.5">
+              <label className="text-[11px] font-bold text-slate-600 uppercase tracking-[0.15em] ml-2 font-inter">
+                Edición
+              </label>
+              <Controller
+                name="editionId"
+                control={control}
+                rules={{ required: "La edición es obligatoria" }}
+                render={({ field }) => (
+                  <ReactSelect
+                    {...field}
+                    styles={customSelectStyles}
+                    options={editions.map((e) => ({
+                      value: e._id,
+                      label: e.name,
+                    }))}
+                  />
+                )}
               />
-              Efectivo
-            </label>
-            <label className="inline-flex items-center font-bold">
-              <input
-                type="radio"
-                value="Transferencia"
-                {...register("commissionPaymentMethod")}
-                className="mr-2"
+              {errors.editionId && <p className="text-[10px] font-bold text-red-500 ml-2">{errors.editionId.message}</p>}
+            </div>
+
+            {/* Vendedor */}
+            <div className="space-y-2.5">
+              <label className="text-[11px] font-bold text-slate-600 uppercase tracking-[0.15em] ml-2 font-inter">
+                Vendedor
+              </label>
+              <Controller
+                name="sellerId"
+                control={control}
+                rules={{ required: "Debe seleccionar un vendedor" }}
+                render={({ field }) => (
+                  <ReactSelect
+                    {...field}
+                    options={sellerOptions}
+                    styles={customSelectStyles}
+                    placeholder="Seleccionar..."
+                    isClearable
+                    autoFocus
+                  />
+                )}
               />
-              Transferencia
+              {errors.sellerId && <p className="text-[10px] font-bold text-red-500 ml-2">{errors.sellerId.message}</p>}
+            </div>
+
+            {/* Fecha */}
+            <InputField
+              label="Fecha de Rendición"
+              type="date"
+              error={errors.saleDate?.message}
+              {...register("saleDate", { required: "La fecha es obligatoria" })}
+              defaultValue={dayjs().format("YYYY-MM-DD")}
+            />
+          </FormGrid>
+
+          {/* Observaciones */}
+          <div className="mt-6 space-y-2.5">
+            <label className="text-[11px] font-bold text-slate-600 uppercase tracking-[0.15em] ml-2 font-inter">
+              Notas / Observaciones
             </label>
+            <textarea
+              rows="2"
+              className="w-full bg-white border border-slate-200/60 shadow-sm rounded-premium-input px-6 py-4 text-sm font-semibold text-primary focus:ring-8 focus:ring-primary/5 focus:border-primary/20 placeholder:text-slate-300 transition-all outline-none duration-300"
+              placeholder="Notas aclaratorias sobre esta entrega de dinero (opcional)..."
+              {...register("observations")}
+            ></textarea>
           </div>
-        </div>
-      )}
-    </>
-  )}
+        </Card>
 
-  {/* Cheques (mantengo como estaba, puede que necesite rediseño aparte) */}
-  <div className="md:col-span-2">
-    <label className="label">Cheques</label>
-    {checkFields.map((item, index) => (
-      <div key={item.id} className="grid grid-cols-2 md:grid-cols-6 gap-2 items-end mb-2">
-        <input type="text" placeholder="N°" {...register(`checks.${index}.checkNumber`)} className="form-input" />
-        <input type="text" placeholder="Banco" {...register(`checks.${index}.bank`)} className="form-input" />
-        <input type="text" placeholder="Plaza" {...register(`checks.${index}.branch`)} className="form-input" />
-        <input type="date" {...register(`checks.${index}.date`)} className="form-input" />
-        <input type="number" step="0.01" placeholder="Monto" {...register(`checks.${index}.amount`)} className="form-input" />
-        <button type="button" onClick={() => removeCheck(index)} className="btn-anular mb-4">Eliminar</button>
-      </div>
-    ))}
-    <button
-      type="button"
-      onClick={() => appendCheck({ checkNumber: "", bank: "", branch: "", date: "", amount: "" })}
-      className="btn-secondary mt-2"
-    >
-      + Agregar cheque
-    </button>
-  </div>
+        {/* CARD 2: DESGLOSE DE FONDOS */}
+        <Card
+          size="slim"
+          title="Detalle de Fondos y Liquidación"
+          icon={Wallet}
+          description="Montos entregados y retención de comisiones"
+          className="shadow-premium border-slate-200/60 bg-white"
+        >
+          <FormGrid>
+            {/* Efectivo */}
+            <InputField
+              label="Monto Efectivo"
+              type="number"
+              step="0.01"
+              prefix="$"
+              placeholder="0.00"
+              error={errors.cashAmount?.message}
+              {...register("cashAmount")}
+            />
 
-  <div className="md:col-span-2 text-right">
-    <button 
-      type="submit" 
-      className="btn-primary mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
-      disabled={isSubmitting}
-    >
-      {isSubmitting ? "Registrando..." : "Registrar Pago"}
-    </button>
-  </div>
-</form>
-      </div>
+            {/* Transferencia */}
+            <InputField
+              label="Monto Transferencia"
+              type="number"
+              step="0.01"
+              prefix="$"
+              placeholder="0.00"
+              error={errors.transferAmount?.message}
+              {...register("transferAmount")}
+            />
+
+            {/* Tarjeta Única */}
+            <InputField
+              label="Monto Tarjeta Única"
+              type="number"
+              step="0.01"
+              prefix="$"
+              placeholder="0.00"
+              error={errors.tarjetaUnicaAmount?.message}
+              {...register("tarjetaUnicaAmount")}
+            />
+
+            {/* Subtotal Calculado */}
+            <InputField
+              label="Subtotal Rendido"
+              type="text"
+              prefix="$"
+              value={subtotal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              readOnly
+              className="opacity-95"
+            />
+          </FormGrid>
+
+          {selectedSeller && (
+            <div className="mt-8 pt-8 border-t border-slate-100 flex flex-col gap-6">
+              <FormGrid>
+                {/* Porcentaje de Comisión */}
+                <InputField
+                  label="Porcentaje Comisión"
+                  type="text"
+                  value={`${commissionPercent}%`}
+                  readOnly
+                  className="opacity-90"
+                />
+
+                {/* Monto Comisión */}
+                <InputField
+                  label="Descuento Comisión"
+                  type="text"
+                  prefix="-$"
+                  value={commissionAmount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  readOnly
+                  className="opacity-90 text-red-600"
+                />
+
+                {/* Total Neto */}
+                <InputField
+                  label="Total Neto a Caja"
+                  type="text"
+                  prefix="$"
+                  value={finalTotal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  readOnly
+                  className="text-green-600 font-bold"
+                />
+
+                {/* Forma de retiro de comisión */}
+                {commissionPercent > 0 && (
+                  <div className="space-y-2.5">
+                    <label className="text-[11px] font-bold text-slate-600 uppercase tracking-[0.15em] ml-2 font-inter">
+                      Comisión pagada en
+                    </label>
+                    <div className="flex gap-6 pt-3 pl-2">
+                      <label className="inline-flex items-center text-xs font-black text-slate-500 uppercase tracking-wider cursor-pointer">
+                        <input
+                          type="radio"
+                          value="Efectivo"
+                          {...register("commissionPaymentMethod")}
+                          className="mr-2.5 accent-primary h-4 w-4"
+                        />
+                        Efectivo
+                      </label>
+                      <label className="inline-flex items-center text-xs font-black text-slate-500 uppercase tracking-wider cursor-pointer">
+                        <input
+                          type="radio"
+                          value="Transferencia"
+                          {...register("commissionPaymentMethod")}
+                          className="mr-2.5 accent-primary h-4 w-4"
+                        />
+                        Transferencia
+                      </label>
+                    </div>
+                  </div>
+                )}
+              </FormGrid>
+            </div>
+          )}
+        </Card>
+
+        {/* CARD 3: CHEQUES */}
+        <Card
+          size="slim"
+          title="Cheques de Terceros"
+          icon={CreditCard}
+          description="Registro de cheques entregados (opcional)"
+          className="shadow-premium border-slate-200/60 bg-white"
+        >
+          {checkFields.length === 0 ? (
+            <div className="py-8 text-center text-slate-400 text-xs font-bold uppercase tracking-wider bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+              No hay cheques agregados en esta rendición.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {checkFields.map((item, index) => (
+                <div key={item.id} className="p-5 bg-slate-50/50 rounded-2xl border border-slate-100 flex flex-col md:flex-row gap-4 items-end relative">
+                  <InputField
+                    label="N° Cheque"
+                    placeholder="Número..."
+                    bsize="compact"
+                    className="flex-1 w-full"
+                    {...register(`checks.${index}.checkNumber`, { required: "Obligatorio" })}
+                  />
+                  <InputField
+                    label="Banco Emisor"
+                    placeholder="Banco..."
+                    bsize="compact"
+                    className="flex-1 w-full"
+                    {...register(`checks.${index}.bank`, { required: "Obligatorio" })}
+                  />
+                  <InputField
+                    label="Plaza / Sucursal"
+                    placeholder="Plaza..."
+                    bsize="compact"
+                    className="flex-1 w-full"
+                    {...register(`checks.${index}.branch`, { required: "Obligatorio" })}
+                  />
+                  <InputField
+                    label="Fecha Cobro"
+                    type="date"
+                    bsize="compact"
+                    className="flex-1 w-full"
+                    {...register(`checks.${index}.date`, { required: "Obligatorio" })}
+                  />
+                  <InputField
+                    label="Importe"
+                    type="number"
+                    step="0.01"
+                    prefix="$"
+                    placeholder="Monto"
+                    bsize="compact"
+                    className="flex-1 w-full"
+                    {...register(`checks.${index}.amount`, { required: "Obligatorio" })}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeCheck(index)}
+                    className="text-red-400 hover:text-red-600 p-3 hover:bg-red-50 rounded-xl transition-all mb-0.5 shrink-0 self-center md:self-end"
+                    title="Eliminar Cheque"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-4 text-left">
+            <button
+              type="button"
+              onClick={() => appendCheck({ checkNumber: "", bank: "", branch: "", date: "", amount: "" })}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200/80 text-primary text-xs font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 cursor-pointer"
+            >
+              <Plus size={14} />
+              Agregar cheque
+            </button>
+          </div>
+        </Card>
+
+      </form>
     </div>
   );
 }
