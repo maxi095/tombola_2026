@@ -31,6 +31,9 @@
         }
         ```
 
+*   **Sincronización de Balance en Modificación:**
+    *   En `updateSellerPayment`, si se recibe una actualización para `commissionType` y el pago tiene comisión (`commissionAmount > 0`), se debe buscar el movimiento del Balance correspondiente a la comisión de este pago (`sellerPaymentRef: id, type: 'Egreso', category: 'Comisión de Vendedor'`) y re-distribuir el importe entre efectivo y transferencia bancaria de forma sincrónica para que los saldos cuadren.
+
 ---
 
 ### 2. Frontend (client)

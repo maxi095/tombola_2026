@@ -318,6 +318,27 @@ export const updateSellerPayment = async (req, res) => {
       return res.status(404).json({ message: "Pago no encontrado" });
     }
 
+    // ─── Sincronizar Comisión con Movimientos de Balance ─────────────────────
+    if (updates.commissionType && updated.commissionAmount > 0) {
+      try {
+        const egresoCash = updates.commissionType === 'Efectivo' ? updated.commissionAmount : 0;
+        const egresoTransfer = updates.commissionType === 'Transferencia' ? updated.commissionAmount : 0;
+
+        await Balance.updateOne(
+          { sellerPaymentRef: id, type: 'Egreso', category: 'Comisión de Vendedor' },
+          {
+            cashAmount: egresoCash,
+            transferAmount: egresoTransfer,
+            observations: `Comisión ${updates.commissionType} generada automáticamente al registrar rendición`
+          }
+        );
+        console.log("✅ Movimiento de comisión en Balance sincronizado:", updates.commissionType);
+      } catch (balanceSyncError) {
+        console.error("⚠️ Error al sincronizar actualización en Balance:", balanceSyncError.message);
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     res.json(updated);
   } catch (error) {
     console.error("❌ Error en updateSellerPayment:", error.message);

@@ -46,6 +46,7 @@ graph TD
 ### Controles y Restricciones
 4.  **[RN-MINIMO-RENDIDO]** La suma de los montos cargados debe ser estrictamente mayor a $0 para poder registrar la rendición.
 5.  **[RN-INTEGRIDAD-ANULACION]** Una rendición en estado `"Anulado"` no participa en los KPIs financieros consolidados ni en el balance activo del club.
+6.  **[RN-SINCRONIZACION-BALANCE]** Al editar el tipo de pago de comisión en una rendición ya creada, el sistema debe actualizar de forma reactiva el movimiento de Egreso correspondiente en el Balance del club, mudando el importe entre efectivo y transferencia para evitar distorsiones en el arqueo de caja.
 
 ---
 
