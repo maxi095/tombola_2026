@@ -18,7 +18,9 @@ import {
   ChevronDown,
   Database,
   FileSpreadsheet,
-  Calendar
+  Calendar,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 
 import { useSellerPayments } from "../../context/SellerPaymentContext";
@@ -81,6 +83,10 @@ export default function SellerPaymentPage() {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [itemToCancel, setItemToCancel] = useState(null);
   const [isVoiding, setIsVoiding] = useState(false);
+
+  // ESTADOS PARA PAGINACIÓN
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
 
   // CONFIGURACIÓN DE COLUMNAS v19.5 🛡️
   const initialColumns = [
@@ -153,6 +159,18 @@ export default function SellerPaymentPage() {
     (payment.transferAmount || 0) +
     (payment.tarjetaUnicaAmount || 0) +
     (payment.checkAmount || 0);
+
+  // LÓGICA DE PAGINACIÓN EN MEMORIA
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+
+  const paginatedPayments = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filtered.slice(start, start + itemsPerPage);
+  }, [filtered, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, selectedEdition]);
 
   const metrics = useMemo(() => {
     const activeOnes = filtered.filter(p => p.status === "Activo");
@@ -362,7 +380,7 @@ export default function SellerPaymentPage() {
                   {visibleIds.includes('actions') && <TH className="text-right">ACCIONES</TH>}
                 </THead>
                 <TBody>
-                  {filtered.map((p) => {
+                  {paginatedPayments.map((p) => {
                     const subtotal = getAmount(p);
                     const netTotal = subtotal - (p.commissionAmount || 0);
 
@@ -468,6 +486,61 @@ export default function SellerPaymentPage() {
               </Table>
             )}
           </div>
+
+          {/* PAGINACIÓN PREMIUM 📐 */}
+          {filtered.length > 0 && (
+            <div className="p-6 border-t border-slate-100 flex items-center justify-between bg-slate-50/30 rounded-b-[32px]">
+              <div className="flex items-center gap-6 pl-6">
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Visualización</span>
+                  <span className="text-[11px] font-black text-primary uppercase tracking-tighter">
+                    Página {currentPage} de {totalPages || 1}
+                  </span>
+                </div>
+                <div className="h-8 w-px bg-slate-100" />
+                <div className="flex items-center gap-3">
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="bg-white border border-slate-200 rounded-xl text-[11px] font-black text-slate-600 px-3 py-1.5 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all cursor-pointer shadow-sm"
+                  >
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                    <option value={200}>200</option>
+                  </select>
+                  <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest italic">Registros</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 pr-6">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  icon={ChevronLeft}
+                  className="px-6 h-10 rounded-2xl"
+                >
+                  Anterior
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  icon={ChevronRight}
+                  iconPosition="right"
+                  className="px-6 h-10 rounded-2xl shadow-lg shadow-primary/10"
+                >
+                  Siguiente
+                </Button>
+              </div>
+            </div>
+          )}
 
         </Card>
       </div>

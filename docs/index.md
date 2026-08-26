@@ -43,6 +43,11 @@ A partir de agosto de 2026, el desarrollo se realiza de forma ordenada utilizand
     *   [Especificación Funcional (spec.md)](file:///docs/specs/001-sorteo-en-vivo-tv/spec.md)
     *   [Plan Técnico (plan.md)](file:///docs/specs/001-sorteo-en-vivo-tv/plan.md)
     *   [Slices de Tareas (slices.md)](file:///docs/specs/001-sorteo-en-vivo-tv/slices.md)
+*   **002-pagos-vendedores (Planeado - Agosto 2026):**
+    *   [Especificación Funcional (spec.md)](file:///docs/specs/002-pagos-vendedores/spec.md)
+    *   [Plan Técnico (plan.md)](file:///docs/specs/002-pagos-vendedores/plan.md)
+    *   [Slices de Tareas (slices.md)](file:///docs/specs/002-pagos-vendedores/slices.md)
+
 
 ---
 

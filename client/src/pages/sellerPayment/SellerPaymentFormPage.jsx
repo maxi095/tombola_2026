@@ -20,7 +20,7 @@ function SellerPaymentFormPage() {
     setValue,
     watch,
     getValues,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm();
 
   const { fields: checkFields, append: appendCheck, remove: removeCheck } = useFieldArray({
@@ -175,6 +175,7 @@ function SellerPaymentFormPage() {
           styles={customSelectStyles}
           placeholder="Seleccionar vendedor..."
           isClearable
+          autoFocus
         />
       )}
     />
@@ -336,9 +337,14 @@ function SellerPaymentFormPage() {
     </button>
   </div>
 
-  {/* Submit */}
   <div className="md:col-span-2 text-right">
-    <button type="submit" className="btn-primary mt-4">Registrar Pago</button>
+    <button 
+      type="submit" 
+      className="btn-primary mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+      disabled={isSubmitting}
+    >
+      {isSubmitting ? "Registrando..." : "Registrar Pago"}
+    </button>
   </div>
 </form>
       </div>

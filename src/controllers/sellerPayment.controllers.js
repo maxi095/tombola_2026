@@ -51,6 +51,26 @@ export const createSellerPayment = async (req, res) => {
       });
     }
 
+    // 🛡️ Control de Idempotencia (Evitar doble submit en margen de 10 segundos)
+    const tenSecondsAgo = new Date(Date.now() - 10 * 1000);
+    const duplicate = await SellerPayment.findOne({
+      seller,
+      edition,
+      cashAmount: Number(cashAmount),
+      transferAmount: Number(transferAmount),
+      tarjetaUnicaAmount: Number(tarjetaUnicaAmount),
+      checkAmount: Number(checkAmount),
+      status: "Activo",
+      createdAt: { $gte: tenSecondsAgo }
+    });
+
+    if (duplicate) {
+      console.log("⚠️ Intento de pago duplicado bloqueado para vendedor:", seller);
+      return res.status(409).json({
+        message: "Ya se registró un pago idéntico para este vendedor en los últimos 10 segundos. Verifique si el pago ya fue creado."
+      });
+    }
+
     const newPayment = new SellerPayment({
       edition,
       seller,
