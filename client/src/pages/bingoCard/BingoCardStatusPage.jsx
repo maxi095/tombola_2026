@@ -453,9 +453,6 @@ function BingoCardStatusPage() {
                   <h2 className="text-2xl md:text-3xl font-black text-red-400 mb-3 uppercase tracking-wider">
                     No participa
                   </h2>
-                  <p className="text-lg md:text-xl text-red-200 font-bold mb-2 uppercase tracking-wide">
-                    Solicitud No Vendida
-                  </p>
                   <p className="text-base md:text-lg text-gray-300 mb-4 leading-relaxed">
                     La solicitud N° <strong className="text-white text-lg md:text-xl font-black">{result.bingoCardNumber}</strong> no ha sido registrada como vendida.
                   </p>
@@ -485,9 +482,6 @@ function BingoCardStatusPage() {
                   <h2 className="text-2xl md:text-3xl font-black text-yellow-500 mb-3 uppercase tracking-wider">
                     No participa
                   </h2>
-                  <p className="text-lg md:text-xl text-yellow-400 font-bold mb-2 uppercase tracking-wide">
-                    Cuotas pendientes
-                  </p>
                   <p className="text-base md:text-lg text-gray-200 mb-4">
                     La solicitud N° <strong className="text-white text-lg md:text-xl font-black">{result.bingoCardNumber}</strong> presenta cuotas pendientes de pago.
                   </p>
@@ -518,9 +512,6 @@ function BingoCardStatusPage() {
                   <h2 className="text-2xl md:text-3xl font-black text-orange-400 mb-3 uppercase tracking-wider">
                     No participa
                   </h2>
-                  <p className="text-lg md:text-xl text-orange-300 font-bold mb-2 uppercase tracking-wide">
-                    Pago de contado incompleto
-                  </p>
                   <p className="text-base md:text-lg text-gray-200 mb-4 leading-relaxed">
                     La solicitud N° <strong className="text-white text-lg md:text-xl font-black">{result.bingoCardNumber}</strong> está al día con sus cuotas, pero no ha sido cancelada en su totalidad.
                   </p>
