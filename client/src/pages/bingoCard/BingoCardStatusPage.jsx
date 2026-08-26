@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useBingoCards } from '../../context/BingoCardContext';
 import { useEditions } from '../../context/EditionContext';
 import confetti from 'canvas-confetti';
@@ -14,12 +14,29 @@ function BingoCardStatusPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [gameState, setGameState] = useState('idle'); // 'idle' | 'searching' | 'winner' | 'not-sold' | 'debt'
+  const [gameState, setGameState] = useState('idle'); // 'idle' | 'searching' | 'winner' | 'not-sold' | 'debt' | 'not-full-paid'
+  const [drawMode, setDrawMode] = useState('cuota'); // 'cuota' | 'contado'
   const [sparkles, setSparkles] = useState([]);
+
+  const inputRef = useRef(null);
 
   useEffect(() => {
     getEditions();
   }, [getEditions]);
+
+  // Autoseleccionar la primera edición disponible si no hay una seleccionada
+  useEffect(() => {
+    if (editions.length > 0 && !editionId) {
+      setEditionId(editions[0]._id);
+    }
+  }, [editions, editionId]);
+
+  // Autofoco en el input de número de cartón al cargar la página o al limpiar la consulta
+  useEffect(() => {
+    if (gameState === 'idle' && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [gameState]);
 
   useEffect(() => {
     // Generar destellos dorados en el fondo al montar
@@ -49,6 +66,8 @@ function BingoCardStatusPage() {
         setGameState('not-sold');
       } else if (!data.upToDate) {
         setGameState('debt');
+      } else if (drawMode === 'contado' && data.plan !== 'Pago contado') {
+        setGameState('not-full-paid');
       } else {
         setGameState('winner');
       }
@@ -245,6 +264,57 @@ function BingoCardStatusPage() {
         ))}
       </div>
 
+      {/* Panel de Control Superior Oculto (Hover-Activated) */}
+      <div className="absolute top-0 left-0 right-0 h-24 bg-black/90 backdrop-blur-md translate-y-[-88%] hover:translate-y-0 focus-within:translate-y-0 transition-transform duration-300 z-50 flex items-center justify-between px-8 border-b border-yellow-400/30">
+        <div className="flex items-center gap-8">
+          <div className="flex flex-col">
+            <span className="text-xs font-black text-yellow-400 uppercase tracking-widest mb-1.5">Edición</span>
+            <select
+              className="text-black text-sm px-3 py-2 rounded-lg border border-gray-300 font-bold focus:ring-2 focus:ring-yellow-400 outline-none transition-all"
+              value={editionId}
+              onChange={e => setEditionId(e.target.value)}
+            >
+              <option value="">-- Seleccionar edición --</option>
+              {editions.map(e => (
+                <option key={e._id} value={e._id}>{e.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col">
+            <span className="text-xs font-black text-yellow-400 uppercase tracking-widest mb-1.5">Modalidad del Sorteo</span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setDrawMode('cuota')}
+                className={`px-4 py-2 rounded-lg text-xs font-black tracking-wider uppercase transition-all ${
+                  drawMode === 'cuota'
+                    ? 'bg-yellow-400 text-black shadow-md'
+                    : 'bg-white/10 text-white hover:bg-white/20'
+                }`}
+              >
+                Cuotas al Día
+              </button>
+              <button
+                type="button"
+                onClick={() => setDrawMode('contado')}
+                className={`px-4 py-2 rounded-lg text-xs font-black tracking-wider uppercase transition-all ${
+                  drawMode === 'contado'
+                    ? 'bg-yellow-400 text-black shadow-md'
+                    : 'bg-white/10 text-white hover:bg-white/20'
+                }`}
+              >
+                Pago de Contado
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <span className="text-xs text-gray-400 font-bold italic animate-pulse">
+          Desliza el mouse aquí arriba para configurar ↑
+        </span>
+      </div>
+
       {/* Botón para activar pantalla completa */}
       {!isFullscreen && (
         <button
@@ -256,7 +326,16 @@ function BingoCardStatusPage() {
       )}
 
       {/* Bloque Central (logo y tarjeta) - Centrado en el espacio restante */}
-      <div className="flex-grow flex items-center justify-center px-4 md:px-8 py-4 overflow-hidden z-10">
+      <div className="flex-grow flex flex-col items-center justify-center px-4 md:px-8 py-4 overflow-hidden z-10">
+        
+        {/* Indicador de Modalidad de Sorteo Activa en el Vivo */}
+        <div className="mb-4 text-center">
+          <p className="text-yellow-400 font-black tracking-widest text-lg md:text-2xl uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+            SORTEO {drawMode === 'cuota' ? 'CUOTAS AL DÍA' : 'PAGO DE CONTADO'} {editions.find(e => e._id === editionId) && ` - ${editions.find(e => e._id === editionId).name}`}
+          </p>
+          <div className="h-1 w-24 bg-yellow-400 mx-auto mt-1 rounded-full shadow-lg"></div>
+        </div>
+
         <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 w-full max-w-7xl h-full">
 
           {/* Lado izquierdo: Contenedor del Logo con brillo radial detrás */}
@@ -283,28 +362,14 @@ function BingoCardStatusPage() {
                 className="bg-black/40 backdrop-blur-md border border-white/10 p-6 md:p-8 rounded-3xl flex flex-col justify-center gap-5 w-full shadow-2xl transition-all duration-500"
               >
                 <div className="flex flex-col w-full">
-                  <label className="text-base md:text-lg font-bold text-gray-200 mb-1.5 uppercase tracking-wide">Edición</label>
-                  <select
-                    className="text-black text-lg p-3 md:p-4 rounded-xl border border-gray-300 font-medium focus:ring-4 focus:ring-yellow-400 outline-none transition-all w-full"
-                    value={editionId}
-                    onChange={e => setEditionId(e.target.value)}
-                    required
-                  >
-                    <option value="">-- Seleccionar edición --</option>
-                    {editions.map(e => (
-                      <option key={e._id} value={e._id}>{e.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex flex-col w-full">
                   <label className="text-base md:text-lg font-bold text-gray-200 mb-1.5 uppercase tracking-wide">Número de Solicitud</label>
                   <input
                     type="number"
-                    className="text-black text-lg p-3 md:p-4 rounded-xl border border-gray-300 font-semibold focus:ring-4 focus:ring-yellow-400 outline-none transition-all w-full"
+                    ref={inputRef}
+                    className="text-black text-lg p-3 md:p-4 rounded-xl border border-gray-300 font-semibold focus:ring-4 focus:ring-yellow-400 outline-none transition-all w-full text-center"
                     value={cardNumber}
                     onChange={e => setCardNumber(e.target.value)}
-                    placeholder="Ej: 123"
+                    placeholder="Escribe el número aquí y pulsa Enter"
                     required
                   />
                 </div>
@@ -354,24 +419,12 @@ function BingoCardStatusPage() {
                         {result.client?.toUpperCase()}
                       </span>
                     </div>
-                    {/*<div className="flex justify-between items-center border-t border-white/5 pt-2">
-                      <span className="text-[#FFD700] text-sm md:text-base uppercase tracking-wider font-black flex-shrink-0">N° Asociado:</span>
-                      <span className="text-lg md:text-xl font-black text-white text-right">
-                        {result.clientNumber}
-                      </span>
-                    </div>*/}
                     <div className="flex justify-between items-center border-t border-white/5 pt-2">
                       <span className="text-[#FFD700] text-sm md:text-base uppercase tracking-wider font-black flex-shrink-0">Vendedor:</span>
                       <span className="text-lg md:text-xl font-black text-white text-right break-words pl-2 max-w-[70%]">
                         {result.seller?.toUpperCase()}
                       </span>
                     </div>
-                    {/*<div className="flex justify-between items-center border-t border-white/5 pt-2">
-                      <span className="text-[#FFD700] text-sm md:text-base uppercase tracking-wider font-black flex-shrink-0">Plan:</span>
-                      <span className="text-lg md:text-xl font-black text-white text-right">
-                        {result.plan}
-                      </span>
-                    </div>*/}
                   </div>
                 </div>
 
@@ -398,10 +451,13 @@ function BingoCardStatusPage() {
                 <div>
                   <div className="text-4xl md:text-5xl mb-3">❌</div>
                   <h2 className="text-2xl md:text-3xl font-black text-red-400 mb-3 uppercase tracking-wider">
-                    Solicitud No Vendida
+                    No participa
                   </h2>
-                  <p className="text-lg md:text-xl text-gray-300 mb-4 leading-relaxed">
-                    La solicitud N° <strong className="text-white text-xl md:text-2xl font-black">{result.bingoCardNumber}</strong> no ha sido registrada como vendida.
+                  <p className="text-lg md:text-xl text-red-200 font-bold mb-2 uppercase tracking-wide">
+                    Solicitud No Vendida
+                  </p>
+                  <p className="text-base md:text-lg text-gray-300 mb-4 leading-relaxed">
+                    La solicitud N° <strong className="text-white text-lg md:text-xl font-black">{result.bingoCardNumber}</strong> no ha sido registrada como vendida.
                   </p>
                 </div>
                 <div className="flex justify-center">
@@ -419,18 +475,21 @@ function BingoCardStatusPage() {
               </div>
             )}
 
-            {/* Cartel de Deuda */}
+            {/* Cartel de Cuotas Pendientes (Antigua Deuda) */}
             {result && gameState === 'debt' && (
               <div
-                className="p-6 md:p-8 rounded-3xl border border-red-500/50 bg-red-950/80 backdrop-blur-md shadow-2xl text-center w-full text-white transition-all duration-500 cartel-winner-animate max-h-[75vh] flex flex-col justify-between"
+                className="p-6 md:p-8 rounded-3xl border border-yellow-500/50 bg-amber-950/80 backdrop-blur-md shadow-2xl text-center w-full text-white transition-all duration-500 cartel-winner-animate max-h-[75vh] flex flex-col justify-between"
               >
                 <div>
                   <div className="text-4xl md:text-5xl mb-3">⚠️</div>
                   <h2 className="text-2xl md:text-3xl font-black text-yellow-500 mb-3 uppercase tracking-wider">
-                    Solicitud con Deuda
+                    No participa
                   </h2>
-                  <p className="text-lg md:text-xl text-gray-200 mb-4">
-                    La solicitud N° <strong className="text-white text-xl md:text-2xl font-black">{result.bingoCardNumber}</strong> presenta cuotas pendientes.
+                  <p className="text-lg md:text-xl text-yellow-400 font-bold mb-2 uppercase tracking-wide">
+                    Cuotas pendientes
+                  </p>
+                  <p className="text-base md:text-lg text-gray-200 mb-4">
+                    La solicitud N° <strong className="text-white text-lg md:text-xl font-black">{result.bingoCardNumber}</strong> presenta cuotas pendientes de pago.
                   </p>
                 </div>
 
@@ -448,6 +507,39 @@ function BingoCardStatusPage() {
                 </div>
               </div>
             )}
+
+            {/* Cartel de Pago de Contado Incompleto */}
+            {result && gameState === 'not-full-paid' && (
+              <div
+                className="p-6 md:p-8 rounded-3xl border border-orange-500/50 bg-orange-950/80 backdrop-blur-md shadow-2xl text-center w-full text-white transition-all duration-500 cartel-winner-animate max-h-[75vh] flex flex-col justify-between"
+              >
+                <div>
+                  <div className="text-4xl md:text-5xl mb-3">⚠️</div>
+                  <h2 className="text-2xl md:text-3xl font-black text-orange-400 mb-3 uppercase tracking-wider">
+                    No participa
+                  </h2>
+                  <p className="text-lg md:text-xl text-orange-300 font-bold mb-2 uppercase tracking-wide">
+                    Pago de contado incompleto
+                  </p>
+                  <p className="text-base md:text-lg text-gray-200 mb-4 leading-relaxed">
+                    La solicitud N° <strong className="text-white text-lg md:text-xl font-black">{result.bingoCardNumber}</strong> está al día con sus cuotas, pero no ha sido cancelada en su totalidad.
+                  </p>
+                </div>
+
+                <div className="flex justify-center">
+                  <button
+                    onClick={() => {
+                      setResult(null);
+                      setGameState('idle');
+                      setCardNumber('');
+                    }}
+                    className="bg-orange-500 hover:bg-orange-400 text-black text-base md:text-lg font-bold px-6 py-3 rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95"
+                  >
+                    NUEVA CONSULTA
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
         </div>
@@ -455,15 +547,6 @@ function BingoCardStatusPage() {
 
       {/* Barra Fija de Auspiciantes */}
       <div className="w-full h-[16vh] bg-white flex items-center z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.15)] select-none border-t border-gray-200">
-        {/* Pestaña Naranja 'AUSPICIAN: ' 
-        <div
-          className="bg-gradient-to-r from-orange-600 to-orange-500 text-white font-black text-sm md:text-xl px-6 md:px-12 flex items-center justify-center h-full tracking-widest whitespace-nowrap z-30"
-          style={{ clipPath: 'polygon(0 0, 88% 0, 100% 100%, 0 100%)' }}
-        >
-          AUSPICIAN:
-        </div>
-        */}
-
         {/* Tira de Logos de Auspiciantes */}
         <div className="flex-grow h-full flex items-center justify-center px-6 overflow-hidden bg-white">
           <img

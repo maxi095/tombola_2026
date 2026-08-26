@@ -1,0 +1,80 @@
+# 🦾 Reglas Maestras: Premium 2026 v6.0 (Cerebro Blindado) ✨🚀
+
+Este archivo define el comportamiento obligatorio para el desarrollo en **Gestión Tómbola**. Su cumplimiento garantiza la consistencia, coherencia estética y robustez del sistema.
+
+---
+
+## 📚 Consulta Obligatoria (Knowledge Loop)
+
+Antes de realizar cualquier cambio, debes consultar y aplicar el índice maestro:
+1. `docs/index.md` (Índice Maestro de Navegación). **PRIORIDAD MÁXIMA**.
+2. `docs/legacy/08-GLOSARIO_WORDING.md` (Leyes de Wording Semántico).
+3. `docs/legacy/03-PATRONES_COMPONENTES.md` (Uso de componentes UI reutilizables).
+4. `docs/legacy/05-VISTAS_ALTA_DENSIDAD.md` (Estándares de Densidad y Espaciado).
+
+---
+
+## ⚖️ Ley de Integridad Semántica (Wording Absolute)
+
+Queda prohibido improvisar etiquetas de interfaz o acciones de botones:
+- **Acciones**: Usar imperativo: `Crear [Entidad]`, `Guardar cambios`, `Exportar`, `Volver`, `Eliminar`.
+- **Títulos**: `Gestión de [Entidad]` para listados; `Registrar [Entidad]` para altas; `Editar [Entidad]` para modificaciones.
+- **Estados**: Usar `Anulada` exclusivamente (no "Cancelada").
+
+---
+
+## 🏗️ Ley de Componentes y Hooks Atómicos
+
+Queda prohibido construir maquetaciones manuales en Tailwind si existe un componente en `client/src/components/ui/`:
+- **Estructura de Listado**: `<PageHeader />` -> `<FilterBar />` -> `<Card padding="p-0">` -> `<Table />` -> `<Pagination />`.
+- **Tablas Dinámicas**: Usar obligatoriamente `useTableColumns` para gestionar la visibilidad y mantener la columna `ACCIONES` fija al extremo derecho con `isFixed: true`.
+- **Inputs & Selects**: Utilizar `<InputField />` y `<Select />` para automatizar etiquetas y estados de error.
+- **Feedback Reactivo**: Utilizar el hook `useFeedback` (ej. `showToast`) para estados de éxito/error y `<ConfirmModal />` para proteger las bajas destructivas.
+
+---
+
+## 🎨 ADN Visual y Densidad (Paneles Administrativos)
+
+- **Color Primario**: Navy Institucional (`#1B3B5A`). Usar clases `text-primary` o `bg-primary`.
+- **Tipografía**: Dualidad estricta. `Manrope` para títulos y KPIs (`font-black`), e `Inter` para datos, tablas y formularios.
+- **Densidad de Datos (Zero-Air)**: En listados y grillas masivas, usar padding `p-0` en Cards y celdas atómicas compactas (`OperationCell`, `StockCell`, `UserCell`, `AmountCell`) para evitar el scroll vertical excesivo en pantallas de laptops HD (1366px).
+
+---
+
+## 📺 Estándar para Pantallas de Presentación y Sorteo Público (Vistas de TV)
+
+Para aquellas interfaces destinadas a visualización en televisores o proyección pública (como [BingoCardStatusPage.jsx](file:///client/src/pages/bingoCard/BingoCardStatusPage.jsx) o [DrawWinnersDisplayPage.jsx](file:///client/src/pages/draw/DrawWinnersDisplayPage.jsx)), se establecen las siguientes reglas excepcionales de alta gama:
+
+1. **Fiel Adaptación de Viewport (100vh sin scroll)**:
+   * Toda la interfaz debe estar encerrada en un contenedor principal con `h-screen overflow-hidden` para evitar scrolls verticales indeseados durante la presentación en televisores.
+   * Utilizar Flexbox vertical (`flex flex-col justify-between`) para distribuir la cabecera, el bloque central y los auspiciantes de forma estática.
+2. **Degradados Radial-Vibrantes y Destellos de Marca**:
+   * Usar fondos de degradados radiales dinámicos que representen la paleta del club (ej. naranja brillante en el centro con transición a rojo cálido en los bordes).
+   * Incorporar capas decorativas de destellos dorados ligeros animadas por CSS (`@keyframes sparkle-blink`) para dar vida a la interfaz.
+3. **Tarjetas con Resplandor Neón y Tipografías de Alto Impacto (Flyer Style)**:
+   * Las tarjetas de ganador o alertas deben lucir un borde grueso dorado brillante (`#FFD700`) con un efecto resplandeciente (`box-shadow` dorado neón).
+   * El título del evento debe emular la estética de carteles físicos empleando sombras perimetrales negras gruesas (`text-shadow` de contorno) para contraste.
+   * Las etiquetas internas deben vestir un color amarillo brillante o dorado y las variables deben mostrarse en blanco puro y nítido para legibilidad de larga distancia.
+4. **Botones de Consulta y CTA**:
+   * Los botones de acción del presentador deben utilizar degradados contrastantes de naranja/amarillo (`bg-gradient-to-r from-yellow-400 to-orange-500`) con bordes redondos `rounded-2xl` y tipografía en negro extra bold.
+5. **Auspiciantes**:
+   * Integrar una barra de auspiciantes horizontal de altura controlada (`12vh` o similar) con fondo blanco sólido y logos renderizados nítidamente (`object-contain`). Debe contener una pestaña naranja distintiva (`AUSPICIAN:`) a la izquierda inclinada con `clip-path` diagonal.
+
+---
+
+## 🚫 Prohibición de Resúmenes y Omisiones de Código
+
+Al escribir o modificar código:
+- **No omitir código**: Está prohibido usar comentarios del tipo `// ... resto del código`. Se debe proveer la estructura completa para evitar regresiones.
+- **Mantener Nombres Técnicos**: No traducir variables, hooks ni componentes de React en las explicaciones.
+- **Preservar Comentarios**: Mantener toda la documentación técnica existente que sea independiente del cambio.
+
+---
+
+## 🔄 Workflow de Sincronización (Atomic Path)
+
+1. **Analizar**: Mapear la lógica legacy y verificar si existen componentes utilizables en `ui/`.
+2. **Referenciar**: Citar los estándares específicos del canon.
+3. **Modularizar**: Implementar primero los átomos de UI antes de maquetar la estructura de la página.
+4. **Implementar**: Escribir código robusto y sin resúmenes.
+5. **Verificar**: Validar la compilación del proyecto (`npm run build`) para garantizar cero quiebres (Zero-Breakage).
