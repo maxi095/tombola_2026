@@ -2,6 +2,9 @@ import { useEffect, useState, useMemo } from "react";
 import { useQuotas } from "../../context/QuotaContext";
 import QuotaPaymentModal from "../../components/QuotaPaymentModal";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
 import {
   Calendar,
   Search,
@@ -142,16 +145,30 @@ function ExpiredQuotasPage() {
   };
 
   const handleExport = () => {
-    const columnMap = {
-      "sale.edition.name": "Edición",
-      "sale.bingoCard.number": "Nro Cartón",
-      "quotaNumber": "Nro Cuota",
-      "sale.seller.person.lastName": "Vendedor",
-      "sale.client.person.lastName": "Cliente",
-      "amount": "Monto",
-      "dueDate": "Vencimiento"
-    };
-    exportToExcel(filteredQuotas, "Cuotas_Vencidas_Audit", columnMap);
+    const dataToExport = filteredQuotas.map(q => {
+      const sellerPerson = q.sale?.seller?.person;
+      const clientPerson = q.sale?.client?.person;
+
+      const sellerName = sellerPerson
+        ? `${sellerPerson.lastName || ""} ${sellerPerson.firstName || ""}`.trim() || "No asignado"
+        : "No asignado";
+
+      const clientName = clientPerson
+        ? `${clientPerson.lastName || ""} ${clientPerson.firstName || ""}`.trim() || "S/D"
+        : "S/D";
+
+      return {
+        "Edición": q.sale?.edition?.name || "S/E",
+        "Nro Cartón": q.sale?.bingoCard?.number || "S/N",
+        "Nro Cuota": q.quotaNumber,
+        "Vendedor": sellerName,
+        "Cliente": clientName,
+        "Monto": q.amount || 0,
+        "Vencimiento": q.dueDate ? dayjs.utc(q.dueDate).format("DD/MM/YYYY") : "S/F"
+      };
+    });
+
+    exportToExcel(dataToExport, "Cuotas_Vencidas_Audit");
   };
 
   const activeFiltersArr = useMemo(() => {
