@@ -19,6 +19,7 @@ import sellerPaymentRoutes from './routes/sellerPayment.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
 import drawRoutes from './routes/draw.routes.js';
 import balanceRoutes from './routes/balance.routes.js';
+import vendedorRoutes from './routes/vendedor.routes.js';
 
 const app = express();
 
@@ -45,6 +46,7 @@ app.use("/api", sellerPaymentRoutes);
 app.use("/api", dashboardRoutes);
 app.use("/api", drawRoutes);
 app.use("/api", balanceRoutes);
+app.use("/api", vendedorRoutes);
 
 // Middleware global de captura y sanitización de errores
 app.use((err, req, res, next) => {

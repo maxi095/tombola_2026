@@ -24,7 +24,7 @@
 ---
 
 ### Slice 2 — Endpoints Dedicados de Campo (`/api/vendedor/*`)
-- [ ] **Objetivo:** Construir la API que alimentará la aplicación móvil del vendedor para consultas, ventas rápidas y cobro de cuotas.
+- [x] **Objetivo:** Construir la API que alimentará la aplicación móvil del vendedor para consultas, ventas rápidas y cobro de cuotas.
 - **Valor observable:** Endpoints `/api/vendedor/summary`, `/api/vendedor/cards`, `/api/vendedor/quotas`, `/api/vendedor/sale` y `/api/vendedor/quota-payment` respondiendo con datos aislados por vendedor.
 - **Archivos a crear/modificar:**
   - `src/controllers/vendedor.controllers.js` (nuevo).
