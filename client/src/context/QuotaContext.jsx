@@ -111,13 +111,15 @@ export const QuotaProvider = ({ children }) => {
         }
     }, []);
 
-    const getExpiredQuotas = useCallback(async () => {
+    const getExpiredQuotas = useCallback(async (params = {}) => {
         try {
-            const res = await getExpiredQuotasRequest();
+            const res = await getExpiredQuotasRequest(params);
             setQuotas(res.data);
+            return res.data;
         } catch (error) {
             setError(error);
             console.error(error);
+            return [];
         }
     }, []);
 

@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import dayjs from "dayjs";
 import {
-  Ticket,
   Search,
   FileSpreadsheet,
   ExternalLink,
@@ -16,7 +15,9 @@ import {
   ChevronDown,
   Database,
   ArrowRightLeft,
-  UserX
+  UserX,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 
 // Infraestructura Premium 2026 ⚓ 🛡️
@@ -46,8 +47,8 @@ import EliteSelect from "../../components/ui/Select";
 import { useTableColumns } from "../../hooks/useTableColumns";
 
 /**
- * BingoCardPage V19.5.4 - Polished Audit Hub 🏹⚖️✨💎🚀
- * Refinamiento visual de badges y placeholders unificados.
+ * BingoCardPage V20.0 - Polished Audit Hub & High-Speed Pagination 🏹⚖️✨💎🚀
+ * Filtra por edición en el servidor y pagina en bloques para evitar renderizar >1000 filas simultáneas en el DOM.
  */
 export default function BingoCardPage() {
   const { getBingoCardsWithSales, bingoCardsWithSales, loading } = useBingoCards();
@@ -61,6 +62,9 @@ export default function BingoCardPage() {
   const [assignmentFilter, setAssignmentFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   // CONFIGURACIÓN DE COLUMNAS v19.5.4 (Audit Sync) 🛡️
   const initialColumns = [
@@ -78,9 +82,16 @@ export default function BingoCardPage() {
 
   useEffect(() => {
     if (user) {
-      getBingoCardsWithSales();
+      const params = {};
+      if (selectedEdition) params.edition = selectedEdition;
+      getBingoCardsWithSales(params);
     }
-  }, [getBingoCardsWithSales, user]);
+  }, [getBingoCardsWithSales, user, selectedEdition]);
+
+  // Volver a la página 1 cuando cambian los filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [omniSearch, statusFilter, assignmentFilter, dateFilter, selectedEdition, pageSize]);
 
   const filteredCards = useMemo(() => {
     let filtered = bingoCardsWithSales || [];
@@ -122,6 +133,13 @@ export default function BingoCardPage() {
 
     return filtered;
   }, [bingoCardsWithSales, omniSearch, statusFilter, assignmentFilter, dateFilter, selectedEdition]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredCards.length / pageSize));
+
+  const paginatedCards = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredCards.slice(startIndex, startIndex + pageSize);
+  }, [filteredCards, currentPage, pageSize]);
 
   const activeFilters = useMemo(() => {
     const list = [];
@@ -174,7 +192,7 @@ export default function BingoCardPage() {
   return (
     <div className="flex flex-col px-12 animate-in fade-in duration-700 bg-slate-50/50 min-h-screen">
       <PageHeader
-        title="Inventario de Cartones"
+        title="Gestión de Cartones"
         compact={true}
         actions={[
           {
@@ -297,7 +315,7 @@ export default function BingoCardPage() {
                   ))}
                 </THead>
                 <TBody>
-                  {filteredCards.map((card) => (
+                  {paginatedCards.map((card) => (
                     <TR key={card._id} className="group transition-all duration-300">
                       {visibleColumns.map(col => {
                         if (col.id === 'card') return (
@@ -389,10 +407,54 @@ export default function BingoCardPage() {
             )}
           </div>
 
-          <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/30 rounded-b-[32px]">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-6">
-              Elite Cross-Audit Center v19.5
-            </span>
+          {/* PAGINACIÓN PREMIUM 📐 */}
+          <div className="p-6 border-t border-slate-100 flex items-center justify-between bg-slate-50/30 rounded-b-[32px]">
+            <div className="flex items-center gap-6 pl-6">
+              <div className="flex flex-col">
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Visualización</span>
+                <span className="text-[11px] font-black text-primary uppercase tracking-tighter">
+                  Página {currentPage} de {totalPages}
+                </span>
+              </div>
+              <div className="h-8 w-px bg-slate-100" />
+              <div className="flex items-center gap-3">
+                <select
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                  className="bg-white border border-slate-200 rounded-xl text-[11px] font-black text-slate-600 px-3 py-1.5 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all cursor-pointer shadow-sm"
+                >
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                  <option value={200}>200</option>
+                </select>
+                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest italic">Registros</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 pr-6">
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                icon={ChevronLeft}
+                className="px-6 h-10 rounded-2xl"
+              >
+                Anterior
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                icon={ChevronRight}
+                iconPosition="right"
+                className="px-6 h-10 rounded-2xl shadow-lg shadow-primary/10"
+              >
+                Siguiente
+              </Button>
+            </div>
           </div>
         </Card>
       </div>

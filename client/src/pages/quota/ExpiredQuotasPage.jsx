@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useQuotas } from "../../context/QuotaContext";
 import QuotaPaymentModal from "../../components/QuotaPaymentModal";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 import {
   Calendar,
   Search,
@@ -10,10 +11,12 @@ import {
   Settings2,
   ChevronDown,
   CreditCard,
-  User,
   Hash,
   Database,
-  TrendingDown
+  TrendingDown,
+  Loader2,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 
 // Infraestructura Premium 2026 ⚓ 🛡️ 🏹⚖️
@@ -41,9 +44,11 @@ import { useEditionFilter } from "../../context/EditionFilterContext";
 // HOOK DE LAYOUT DINÁMICO v17.5 ✨💎🚀
 import { useTableColumns } from "../../hooks/useTableColumns";
 
+dayjs.extend(utc);
+
 /**
- * ExpiredQuotasPage V19.5 - Morosity Hub 🏹⚖️✨💎🚀
- * Gestión de morosidad con estándar de alta densidad y KPIs de deuda.
+ * ExpiredQuotasPage V20.0 - Morosity Hub & High-Speed Pagination 🏹⚖️✨💎🚀
+ * Filtra por edición en el servidor y pagina en bloques para evitar renderizar cientos de filas simultáneas en el DOM.
  */
 function ExpiredQuotasPage() {
   const { getExpiredQuotas, quotas, updateQuota } = useQuotas();
@@ -54,10 +59,13 @@ function ExpiredQuotasPage() {
     dueDate: ""
   });
 
-  const [filteredQuotas, setFilteredQuotas] = useState([]);
   const [selectedQuota, setSelectedQuota] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   // CONFIGURACIÓN DE COLUMNAS v19.5 🛡️
   const initialColumns = [
@@ -76,15 +84,25 @@ function ExpiredQuotasPage() {
   useEffect(() => {
     const fetchExpired = async () => {
       try {
-        await getExpiredQuotas();
+        setLoading(true);
+        const params = {};
+        if (selectedEdition) params.edition = selectedEdition;
+        await getExpiredQuotas(params);
       } catch (error) {
         console.error("Error al obtener cuotas vencidas:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchExpired();
-  }, [getExpiredQuotas]);
+  }, [getExpiredQuotas, selectedEdition]);
 
+  // Volver a la página 1 cuando cambian los filtros
   useEffect(() => {
+    setCurrentPage(1);
+  }, [filters.searchTerm, filters.dueDate, selectedEdition, pageSize]);
+
+  const filteredQuotas = useMemo(() => {
     let filtered = Array.isArray(quotas) ? quotas : [];
 
     if (selectedEdition) {
@@ -108,8 +126,15 @@ function ExpiredQuotasPage() {
       filtered = filtered.filter(quota => dayjs(quota.dueDate).format("YYYY-MM-DD") === filters.dueDate);
     }
 
-    setFilteredQuotas(filtered);
+    return filtered;
   }, [quotas, filters, selectedEdition]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredQuotas.length / pageSize));
+
+  const paginatedQuotas = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredQuotas.slice(startIndex, startIndex + pageSize);
+  }, [filteredQuotas, currentPage, pageSize]);
 
   // KPIs DINÁMICOS 📊
   const totalMoroso = useMemo(() => {
@@ -134,7 +159,9 @@ function ExpiredQuotasPage() {
   const handleSaveQuota = async (updatedQuota) => {
     try {
       await updateQuota(updatedQuota._id, updatedQuota);
-      await getExpiredQuotas();
+      const params = {};
+      if (selectedEdition) params.edition = selectedEdition;
+      await getExpiredQuotas(params);
       handleCloseModal();
     } catch (error) {
       console.error("Error al actualizar cuota:", error);
@@ -164,7 +191,7 @@ function ExpiredQuotasPage() {
   return (
     <div className="flex flex-col px-12 animate-in fade-in duration-700 bg-slate-50/50 min-h-screen">
       <PageHeader
-        title="Cuotas Vencidas"
+        title="Gestión de Cuotas Vencidas"
         compact={true}
         actions={[
           {
@@ -243,7 +270,12 @@ function ExpiredQuotasPage() {
           </div>
 
           <div className="overflow-auto flex-1 custom-scrollbar min-h-0 bg-white">
-            {filteredQuotas.length === 0 ? (
+            {loading ? (
+              <div className="py-40 flex flex-col items-center gap-6">
+                <Loader2 className="animate-spin text-primary opacity-20" size={64} />
+                <p className="text-[11px] font-black text-muted tracking-widest uppercase animate-pulse">Analizando Cuotas Vencidas...</p>
+              </div>
+            ) : filteredQuotas.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <Database className="w-12 h-12 text-slate-100 mb-4" />
                 <h3 className="text-sm font-bold text-slate-400 font-manrope tracking-tight">No se detectaron cuotas vencidas bajo este criterio</h3>
@@ -256,7 +288,7 @@ function ExpiredQuotasPage() {
                   ))}
                 </THead>
                 <TBody>
-                  {filteredQuotas.map(quota => (
+                  {paginatedQuotas.map(quota => (
                     <TR key={quota._id} className="group transition-all duration-300">
                       {visibleColumns.map(col => {
                         if (col.id === 'stock') return (
@@ -322,10 +354,54 @@ function ExpiredQuotasPage() {
             )}
           </div>
 
-          <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/30 rounded-b-[32px]">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-6">
-              Elite 2026 Morosity Analytics
-            </span>
+          {/* PAGINACIÓN PREMIUM 📐 */}
+          <div className="p-6 border-t border-slate-100 flex items-center justify-between bg-slate-50/30 rounded-b-[32px]">
+            <div className="flex items-center gap-6 pl-6">
+              <div className="flex flex-col">
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Visualización</span>
+                <span className="text-[11px] font-black text-primary uppercase tracking-tighter">
+                  Página {currentPage} de {totalPages}
+                </span>
+              </div>
+              <div className="h-8 w-px bg-slate-100" />
+              <div className="flex items-center gap-3">
+                <select
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                  className="bg-white border border-slate-200 rounded-xl text-[11px] font-black text-slate-600 px-3 py-1.5 outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all cursor-pointer shadow-sm"
+                >
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                  <option value={200}>200</option>
+                </select>
+                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest italic">Registros</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 pr-6">
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                icon={ChevronLeft}
+                className="px-6 h-10 rounded-2xl"
+              >
+                Anterior
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                icon={ChevronRight}
+                iconPosition="right"
+                className="px-6 h-10 rounded-2xl shadow-lg shadow-primary/10"
+              >
+                Siguiente
+              </Button>
+            </div>
           </div>
         </Card>
       </div>

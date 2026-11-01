@@ -1,8 +1,8 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 import { 
     getBingoCardsRequest,
     getBingoCardRequest,
-    getBingoCardsWithSalesRequest, // Importamos la nueva función de la API
+    getBingoCardsWithSalesRequest,
     createBingoCardRequest,
     deleteBingoCardRequest,
     updateBingoCardRequest,
@@ -10,7 +10,7 @@ import {
     assignSellerToBingoCardRequest,
     removeSellerToBingoCardRequest,
     getBingoCardsBySellerRequest
-} from "../api/bingoCard.js"; // Asegúrate de que la ruta sea correcta
+} from "../api/bingoCard.js";
 
 const BingoCardContext = createContext();
 
@@ -25,26 +25,30 @@ export const useBingoCards = () => {
 export const BingoCardProvider = ({ children }) => {
     const [bingoCards, setBingoCards] = useState([]); 
     const [availableBingoCards, setAvailableBingoCards] = useState([]); 
-    const [bingoCardsWithSales, setBingoCardsWithSales] = useState([]); // Nuevo estado
+    const [bingoCardsWithSales, setBingoCardsWithSales] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null); 
 
-    const getBingoCards = useCallback(async () => {
+    const getBingoCards = useCallback(async (filters = {}) => {
         try {
-            const res = await getBingoCardsRequest();
-            console.log("🧩 Cartones obtenidos:", res.data);
+            setLoading(true);
+            const res = await getBingoCardsRequest(filters);
             setBingoCards(res.data);
             return res.data;
         } catch (error) {
             console.error("❌ Error al obtener cartones:", error);
             setError(error);
             return null;
+        } finally {
+            setLoading(false);
         }
     }, []);
 
-    const getAvailableBingoCards = useCallback(async () => {
+    const getAvailableBingoCards = useCallback(async (editionId) => {
         try {
-            const res = await getBingoCardsRequest({ status: "Disponible" }); // <-- pasamos el filtro
-            console.log("🎯 Cartones disponibles:", res.data);
+            const filters = { status: "Disponible" };
+            if (editionId) filters.edition = editionId;
+            const res = await getBingoCardsRequest(filters);
             setAvailableBingoCards(res.data); 
             return res.data;
         } catch (error) {
@@ -54,14 +58,18 @@ export const BingoCardProvider = ({ children }) => {
         }
     }, []);
 
-    // Nuevo método para obtener los cartones junto con sus ventas
-    const getBingoCardsWithSales = useCallback(async () => {
+    const getBingoCardsWithSales = useCallback(async (params = {}) => {
         try {
-            const res = await getBingoCardsWithSalesRequest();
+            setLoading(true);
+            const res = await getBingoCardsWithSalesRequest(params);
             setBingoCardsWithSales(res.data);
+            return res.data;
         } catch (error) {
             setError(error);
             console.error("Error al obtener cartones con ventas:", error);
+            return [];
+        } finally {
+            setLoading(false);
         }
     }, []);
 
@@ -109,9 +117,8 @@ export const BingoCardProvider = ({ children }) => {
         } catch (err) {
           throw err.response?.data?.message || "Error al consultar el estado del cartón";
         }
-      };
+    };
 
-    
     const assignSellerToBingoCard = async (id, sellerId) => {
         try {
             const res = await assignSellerToBingoCardRequest(id, sellerId);
@@ -130,38 +137,29 @@ export const BingoCardProvider = ({ children }) => {
         }
     };
 
-    const getBingoCardsBySeller = async (sellerId) => {
+    const getBingoCardsBySeller = useCallback(async (sellerId) => {
         try {
             const res = await getBingoCardsBySellerRequest(sellerId);
-            return res.data; // podés hacer setBingoCards(res.data) si querés actualizar el estado global
+            return res.data;
         } catch (error) {
             console.error("Error fetching bingo cards by seller:", error);
             return [];
         }
-    };
-    
-    
-
-    const [loaded, setLoaded] = useState(false);
-
-    useEffect(() => {
-    if (!loaded) {
-        getBingoCards().then(() => setLoaded(true));
-    }
-    }, [getBingoCards, loaded]);
+    }, []);
 
     return (
         <BingoCardContext.Provider 
             value={{ 
                 bingoCards, 
-                bingoCardsWithSales, // Exponemos el nuevo estado
+                bingoCardsWithSales,
                 availableBingoCards,
+                loading,
                 createBingoCard, 
                 updateBingoCard, 
                 deleteBingoCard, 
                 getBingoCards, 
                 getBingoCard, 
-                getBingoCardsWithSales, // Exponemos la nueva función
+                getBingoCardsWithSales,
                 getBingoCardStatus,
                 getAvailableBingoCards,
                 assignSellerToBingoCard,

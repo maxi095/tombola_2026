@@ -19,16 +19,15 @@ export const updateBingoCardRequest = (id, bingoCard) => axios.put(`/bingoCard/$
 // Eliminar una tarjeta de bingo
 export const deleteBingoCardRequest = (id) => axios.delete(`/bingoCard/${id}`);
 
-export const getBingoCardsWithSalesRequest = () => axios.get('/bingoCardsWithSales');
+export const getBingoCardsWithSalesRequest = (params = {}) => axios.get('/bingoCardsWithSales', { params });
 
 export const getBingoCardStatusRequest = (editionId, number) => 
     axios.get('/bingoCardStatus', {
       params: { edition: editionId, number }
     });
 
-
 export const assignSellerToBingoCardRequest = (id, sellerId) => axios.put(`/bingoCard/assignSeller/${id}`, { sellerId });
 
-export const removeSellerToBingoCardRequest = (id) => axios.put(`/bingoCard/removeSeller/${id}`)
+export const removeSellerToBingoCardRequest = (id) => axios.put(`/bingoCard/removeSeller/${id}`);
 
 export const getBingoCardsBySellerRequest = (sellerId) => axios.get(`/bingoCardsBySeller/${sellerId}`);

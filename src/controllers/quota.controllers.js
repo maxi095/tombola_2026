@@ -105,15 +105,24 @@ export const getQuotasV2 = async (req, res) => {
 export const getExpiredQuotas = async (req, res) => {
     try {
       const today = dayjs().startOf("day").toDate();
+
+      const saleMatch = { status: { $ne: "Anulada" } };
+      if (req.query.edition) {
+        saleMatch.edition = req.query.edition;
+      }
+
+      const validSales = await Sale.find(saleMatch).select('_id').lean();
+      if (!validSales.length) {
+        return res.json([]);
+      }
   
       const quotas = await Quota.find({
-        paymentMethod: null,
+        sale: { $in: validSales.map(s => s._id) },
         paymentDate: null,
         dueDate: { $lt: today },
       })
         .populate({
           path: "sale",
-          match: { status: { $ne: "Anulada" } }, 
           populate: [
             { path: "seller", model: "Seller", populate: { path: "person", model: "Person" } },
             { path: "client", model: "Client", populate: { path: "person", model: "Person" } },
@@ -121,11 +130,10 @@ export const getExpiredQuotas = async (req, res) => {
             { path: "edition", model: "Edition" },
           ],
         })
+        .sort({ dueDate: 1 })
         .lean();
   
-      const filteredQuotas = quotas.filter(quota => quota.sale !== null);
-  
-      res.json(filteredQuotas);
+      res.json(quotas);
     } catch (error) {
       console.error("Error al obtener cuotas vencidas:", error);
       return res.status(500).json({ message: error.message });

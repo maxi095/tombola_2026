@@ -19,7 +19,7 @@ export const updateQuotaRequest = (id, quota) => axios.put(`/quota/${id}`, quota
 // Eliminar una cuota
 export const deleteQuotaRequest = (id) => axios.delete(`/quota/${id}`);
 
-// Obtener todas las cuotas de un bingo card
+// Obtener todas las cuotas de una venta
 export const getQuotasBySaleRequest = (id) => axios.get(`/quotasBySale/${id}`);
 
-export const getExpiredQuotasRequest = () => axios.get('/expiredQuotas');
+export const getExpiredQuotasRequest = (params = {}) => axios.get('/expiredQuotas', { params });
