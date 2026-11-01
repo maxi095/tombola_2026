@@ -15,8 +15,6 @@ import EditionFormPage from "./pages/edition/EditionFormPage";
 
 import { EditionFilterProvider } from "./context/EditionFilterContext";
 
-import { PersonProvider } from "./context/PersonContext";
-
 import { SellerProvider } from "./context/SellerContext";
 import SellerPage from "./pages/seller/SellerPage";
 import SellerFormPage from "./pages/seller/SellerFormPage";
@@ -79,27 +77,25 @@ function App() {
             <EditionFilterProvider>
               <BingoCardProvider>
                 <QuotaProvider>
-                  <PersonProvider>
-                    <SellerProvider>
-                      <SellerPaymentProvider>
-                        <BalanceProvider>
-                          <ClientProvider>
-                            <SalesProvider>
-                              <DashboardProvider>
-                                <DrawProvider>
-                                  <UserProvider>
-                                    <BrowserRouter>
-                                      <Layout />
-                                    </BrowserRouter>
-                                  </UserProvider>
-                                </DrawProvider>
-                              </DashboardProvider>
-                            </SalesProvider>
-                          </ClientProvider>
-                        </BalanceProvider>
-                      </SellerPaymentProvider>
-                    </SellerProvider>
-                  </PersonProvider>
+                  <SellerProvider>
+                    <SellerPaymentProvider>
+                      <BalanceProvider>
+                        <ClientProvider>
+                          <SalesProvider>
+                            <DashboardProvider>
+                              <DrawProvider>
+                                <UserProvider>
+                                  <BrowserRouter>
+                                    <Layout />
+                                  </BrowserRouter>
+                                </UserProvider>
+                              </DrawProvider>
+                            </DashboardProvider>
+                          </SalesProvider>
+                        </ClientProvider>
+                      </BalanceProvider>
+                    </SellerPaymentProvider>
+                  </SellerProvider>
                 </QuotaProvider>
               </BingoCardProvider>
             </EditionFilterProvider>
@@ -112,7 +108,7 @@ function App() {
 
 function Layout() {
   const location = useLocation();
-  const { isSidebarCollapsed, isSidebarHovered } = useLayout(); // Inyectamos isSidebarHovered
+  const { isSidebarCollapsed, isSidebarHovered } = useLayout();
   const isDrawDisplay = location.pathname.startsWith("/draw/display/");
   const hideNavbar = ["/bingoCardStatus", "/login", "/"]
     .includes(location.pathname) || isDrawDisplay;
@@ -120,23 +116,24 @@ function Layout() {
     .includes(location.pathname) ||
     location.pathname.startsWith("/sellerPayment/") && location.pathname.endsWith("/print") ||
     isDrawDisplay;
-  // EL TRUCO ÉLITE:
-  const structuralWidth = isSidebarCollapsed ? '70px' : '220px'; // El margen real
-  const visualWidth = (isSidebarCollapsed && !isSidebarHovered) ? '70px' : '220px'; // El ancho visual
+
+  const structuralWidth = isSidebarCollapsed ? '70px' : '220px';
+  const visualWidth = (isSidebarCollapsed && !isSidebarHovered) ? '70px' : '220px';
+
   return (
     <div className="app-layout bg-slate-50 flex min-h-screen">
       <Toast />
       {!hideSidebar && (
         <div
           className="fixed h-full z-[60] bg-white border-r border-slate-100 transition-all duration-300 ease-in-out overflow-hidden shadow-2xl shadow-slate-900/5"
-          style={{ width: visualWidth }} // Usamos visualWidth para el Sidebar
+          style={{ width: visualWidth }}
         >
           <SidebarWrapper />
         </div>
       )}
       <div
         className="main-container flex-1 flex flex-col transition-all duration-300 ease-in-out"
-        style={{ marginLeft: !hideSidebar ? structuralWidth : '0px' }} // El contenido NO se mueve por el hover
+        style={{ marginLeft: !hideSidebar ? structuralWidth : '0px' }}
       >
         {!hideNavbar && (
           <header className={`h-16 border-b border-slate-100 bg-white sticky top-0 z-50`}>

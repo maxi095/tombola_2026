@@ -36,11 +36,11 @@ import NoChargeModal from "../../components/NoChargeModal";
 dayjs.extend(utc);
 
 /**
- * SaleViewPage V6.0 - Elite Architecture Edition 2026
- * Refactorización atómica con KPICard, InfoItem y QuotaCard.
+ * SaleViewPage V6.5 - Elite Architecture Edition 2026
+ * Refactorización atómica con KPICard, InfoItem, QuotaCard y operaciones batch O(1).
  */
 function SaleViewPage() {
-  const { getSale, updateSale } = useSales();
+  const { getSale, batchSalePayment } = useSales();
   const { getQuotasBySale, updateQuota } = useQuotas();
   const { showToast } = useFeedback();
   const [sale, setSale] = useState(null);
@@ -57,12 +57,12 @@ function SaleViewPage() {
     const loadSale = async () => {
       if (!params.id) return;
       try {
-        const saleData = await getSale(params.id);
+        const [saleData, quotasData] = await Promise.all([
+          getSale(params.id),
+          getQuotasBySale(params.id)
+        ]);
         setSale(saleData);
-        if (saleData?._id) {
-          const quotasData = await getQuotasBySale(params.id);
-          setQuotas(Array.isArray(quotasData) ? quotasData : []);
-        }
+        setQuotas(Array.isArray(quotasData) ? quotasData : []);
       } catch (error) {
         console.error("Error obteniendo datos:", error);
       }
@@ -86,7 +86,11 @@ function SaleViewPage() {
     if (!window.confirm("¿Anular este pago institucional?")) return;
     try {
       await updateQuota(quota._id, { ...quota, paymentDate: null, paymentMethod: null });
-      const refreshedQuotas = await getQuotasBySale(sale._id);
+      const [refreshedSale, refreshedQuotas] = await Promise.all([
+        getSale(sale._id),
+        getQuotasBySale(sale._id)
+      ]);
+      setSale(refreshedSale);
       setQuotas(refreshedQuotas);
       showToast("Pago institucional anulado", "info");
     } catch (error) {
@@ -98,7 +102,11 @@ function SaleViewPage() {
   const handleSaveQuota = async (updatedQuota) => {
     try {
       await updateQuota(updatedQuota._id, updatedQuota);
-      const refreshedQuotas = await getQuotasBySale(sale._id);
+      const [refreshedSale, refreshedQuotas] = await Promise.all([
+        getSale(sale._id),
+        getQuotasBySale(sale._id)
+      ]);
+      setSale(refreshedSale);
       setQuotas(refreshedQuotas);
       showToast("Cobro registrado correctamente", "success");
     } catch (error) {
@@ -110,17 +118,14 @@ function SaleViewPage() {
 
   const handleFullPaymentSave = async (data) => {
     try {
-      const updatedQs = quotas.map((q) => ({ ...q, paymentDate: data.date, paymentMethod: data.method }));
-      await Promise.all(updatedQs.map((q) => updateQuota(q._id, q)));
-      if (data.cardDetails) {
-        await updateSale(sale._id, {
-          fullPaymentMethod: data.method,
-          lastFullPayment: data.date,
-          cardPaymentDetails: { ...data.cardDetails },
-        });
-      }
-      const refreshed = await getQuotasBySale(sale._id);
-      setQuotas(refreshed);
+      const result = await batchSalePayment(sale._id, {
+        action: "full_payment",
+        date: data.date,
+        method: data.method,
+        cardDetails: data.cardDetails
+      });
+      if (result?.sale) setSale(result.sale);
+      if (result?.quotas) setQuotas(result.quotas);
       showToast("Liquidación de contado realizada con éxito", "success");
     } catch (err) {
       console.error(err);
@@ -132,11 +137,12 @@ function SaleViewPage() {
 
   const handleNoChargeSave = async (data) => {
     try {
-      const updatedQs = quotas.map((q) => ({ ...q, paymentDate: data.date, paymentMethod: "Entregado sin cargo" }));
-      await Promise.all(updatedQs.map((q) => updateQuota(q._id, q)));
-      await updateSale(sale._id, { status: "Entregado sin cargo", lastFullPayment: data.date, fullPaymentMethod: "Otro" });
-      const refreshed = await getQuotasBySale(sale._id);
-      setQuotas(refreshed);
+      const result = await batchSalePayment(sale._id, {
+        action: "no_charge",
+        date: data.date
+      });
+      if (result?.sale) setSale(result.sale);
+      if (result?.quotas) setQuotas(result.quotas);
       showToast("Bonificación de entrega sin cargo aplicada", "success");
     } catch (err) {
       console.error(err);
@@ -149,11 +155,11 @@ function SaleViewPage() {
   const handleUndoNoCharge = async () => {
     if (!confirm("¿Anular entrega sin cargo?")) return;
     try {
-      const updatedQs = quotas.map((q) => ({ ...q, paymentDate: null, paymentMethod: "" }));
-      await Promise.all(updatedQs.map((q) => updateQuota(q._id, q)));
-      await updateSale(sale._id, { status: "Pendiente de pago", lastFullPayment: null, fullPaymentMethod: "" });
-      const refreshed = await getQuotasBySale(sale._id);
-      setQuotas(refreshed);
+      const result = await batchSalePayment(sale._id, {
+        action: "undo_no_charge"
+      });
+      if (result?.sale) setSale(result.sale);
+      if (result?.quotas) setQuotas(result.quotas);
       showToast("Bonificación de entrega sin cargo revertida", "info");
     } catch (err) {
       console.error(err);
@@ -273,7 +279,7 @@ function SaleViewPage() {
       </div>
 
       <QuotaPaymentModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} quota={selectedQuota} onSave={handleSaveQuota} />
-      <FullPaymentModal isOpen={isFullModalOpen} onClose={() => setIsFullModalOpen(false)} quotas={quotas} saleId={sale._id} bingoCardId={sale.bingoCard._id} onSave={handleFullPaymentSave} />
+      <FullPaymentModal isOpen={isFullModalOpen} onClose={() => setIsFullModalOpen(false)} quotas={quotas} saleId={sale._id} bingoCardId={sale.bingoCard?._id} onSave={handleFullPaymentSave} />
       <NoChargeModal isOpen={isNoChargeModalOpen} onClose={() => setIsNoChargeModalOpen(false)} onSave={handleNoChargeSave} />
     </div>
   );

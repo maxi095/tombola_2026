@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useSellers } from "../../context/SellerContext";
 import { useSales } from "../../context/SaleContext";
-import { useQuotas } from "../../context/QuotaContext";
 import { useBingoCards } from "../../context/BingoCardContext";
 import { useSellerPayments } from "../../context/SellerPaymentContext";
 import SellerPaymentReceipt from "../../components/SellerPaymentReceipt";
@@ -21,7 +20,6 @@ import {
   Search,
   ExternalLink,
   MapPin,
-  AlertCircle,
   CheckCircle2,
   DollarSign,
   Briefcase,
@@ -38,7 +36,6 @@ import {
   TR,
   TH,
   TD,
-  OperationCell,
   UserCell,
   AmountCell,
   StockCell
@@ -56,8 +53,8 @@ import { formatCurrency, formatDocument } from "../../libs/formatters";
 dayjs.extend(utc);
 
 /**
- * SellerViewPage v25.0 - Elite Audit 2026 🛡️💎🚀
- * Vista de detalle 360° para vendedores con sistema de pestañas y auditoría HD.
+ * SellerViewPage v26.0 - Elite Audit 2026 🛡️💎🚀
+ * Vista de detalle 360° para vendedores optimizada sin peticiones N+1 (usa paidAmount directo de getSalesBySeller).
  */
 function SellerViewPage() {
   const { id } = useParams();
@@ -71,7 +68,6 @@ function SellerViewPage() {
 
   const { getSeller } = useSellers();
   const { getSalesBySeller } = useSales();
-  const { getQuotasBySale } = useQuotas();
   const { getSellerPaymentsBySeller, cancelSellerPayment } = useSellerPayments();
   const { getBingoCardsBySeller, removeSellerFromBingoCard } = useBingoCards();
   const { selectedEdition } = useEditionFilter();
@@ -80,12 +76,11 @@ function SellerViewPage() {
   const [sales, setSales] = useState([]);
   const [bingoCards, setBingoCards] = useState([]);
   const [sellerPayments, setSellerPayments] = useState([]);
-  const [quotasBySale, setQuotasBySale] = useState({});
   const [loading, setLoading] = useState(true);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [filterBingoCard, setFilterBingoCardNumber] = useState("");
 
-  // Carga inicial coordinada
+  // Carga inicial coordinada en 4 requests fijas (0 llamadas N+1 a cuotas)
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -101,16 +96,6 @@ function SellerViewPage() {
         setSales(salesData);
         setBingoCards(cardsData);
         setSellerPayments(paymentsData);
-
-        // Carga diferida de cuotas para conciliación
-        const quotasArray = await Promise.all(
-          salesData.map((sale) => getQuotasBySale(sale._id))
-        );
-        const quotasMap = {};
-        salesData.forEach((sale, index) => {
-          quotasMap[sale._id] = quotasArray[index];
-        });
-        setQuotasBySale(quotasMap);
       } catch (error) {
         console.error("Error cargando datos:", error);
         showToast("Error al cargar el perfil del vendedor", "error");
@@ -119,11 +104,11 @@ function SellerViewPage() {
       }
     };
     loadData();
-  }, [id, getSeller, getSalesBySeller, getBingoCardsBySeller, getSellerPaymentsBySeller, getQuotasBySale, showToast]);
+  }, [id, getSeller, getSalesBySeller, getBingoCardsBySeller, getSellerPaymentsBySeller, showToast]);
 
   // Filtros dinámicos por edición global
   const filteredData = useMemo(() => {
-    if (loading) return { cards: [], sales: [], payments: [], quotas: {} };
+    if (loading) return { cards: [], sales: [], payments: [] };
 
     const fCards = selectedEdition
       ? bingoCards.filter(c => c.edition?._id === selectedEdition)
@@ -137,25 +122,14 @@ function SellerViewPage() {
       ? sellerPayments.filter(p => p.edition?._id === selectedEdition)
       : sellerPayments;
 
-    const fQuotas = {};
-    fSales.forEach(sale => {
-      fQuotas[sale._id] = quotasBySale[sale._id] || [];
-    });
+    return { cards: fCards, sales: fSales, payments: fPayments };
+  }, [selectedEdition, loading, bingoCards, sales, sellerPayments]);
 
-    return { cards: fCards, sales: fSales, payments: fPayments, quotas: fQuotas };
-  }, [selectedEdition, loading, bingoCards, sales, sellerPayments, quotasBySale]);
-
-  // Cálculos financieros para KPIs
+  // Cálculos financieros para KPIs usando paidAmount precalculado en servidor
   const financialSummary = useMemo(() => {
-    let salesTotal = 0;
-    const { quotas, sales: fSales } = filteredData;
-
-    for (const [saleId, qList] of Object.entries(quotas)) {
-      const sale = fSales.find(s => s._id === saleId);
-      if (sale && sale.status !== "Anulada" && sale.status !== "Entregado sin cargo") {
-        salesTotal += qList.reduce((acc, q) => acc + (q.paymentDate ? q.amount : 0), 0);
-      }
-    }
+    const salesTotal = filteredData.sales
+      .filter(s => s.status !== "Anulada" && s.status !== "Entregado sin cargo")
+      .reduce((acc, s) => acc + (s.paidAmount || 0), 0);
 
     const totalPaidToSeller = filteredData.payments
       .filter(p => p.status !== "Anulado")
@@ -432,7 +406,7 @@ function SellerViewPage() {
                   variant="primary"
                   size="sm"
                 >
-                  Nueva Venta
+                  Crear Venta
                 </Button>
               </div>
             </div>
@@ -470,7 +444,7 @@ function SellerViewPage() {
                           {s.status}
                         </Badge>
                       </TD>
-                      <AmountCell value={filteredData.quotas[s._id]?.reduce((a, q) => a + (q.paymentDate ? q.amount : 0), 0) || 0} />
+                      <AmountCell value={s.status === "Entregado sin cargo" ? 0 : (s.paidAmount || 0)} />
                       <TD className="text-right px-6">
                         <Button
                           variant="ghost"

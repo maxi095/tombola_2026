@@ -49,11 +49,12 @@ Este documento ordena de manera lógica y técnica todo lo necesario para llevar
   - `Quota`: Índices en `{ sale: 1, quotaNumber: 1 }`, `{ paymentDate: 1, dueDate: 1 }` y `{ dueDate: 1 }`.
   - `SellerPayment` y `Balance`: Índices en `{ edition: 1, status: 1 }`, `{ seller: 1, edition: 1, createdAt: -1 }` y `{ sellerPaymentRef: 1 }`.
   - `Person`: Índices en `{ document: 1 }`, `{ lastName: 1, firstName: 1 }` y `{ city: 1 }` (no-únicos, 100% compatibles con datos históricos).
-- [ ] **2.2 Eliminación de N+1 y Endpoints Batch:**
-  - Crear endpoint atómico en backend para Pago Contado / Bonificación Sin Cargo de una Venta (`PUT /api/sale/:id/pay-all` y `no-charge`) en lugar de disparar 8 requests `PUT /api/quota/:id` en paralelo desde `SaleViewPage.jsx`.
-  - Eliminar el bucle N+1 de `getQuotasBySale` en `SellerViewPage.jsx`.
-- [ ] **2.3 Optimización de Consultas Pesadas y Filtro por Edición Server-Side:**
-  - Optimizar `getBingoCardsWithSales`, `getSales`, `getQuotasV2` y `getDashboard` usando proyecciones (`.select('-cardSets')` cuando no se necesiten los 100 números del cartón), `.lean()` y filtrado directo por `editionId` en MongoDB.
+- [x] **2.2 Eliminación de N+1 y Endpoints Batch:**
+  - Crear endpoint atómico en backend para Pago Contado / Bonificación Sin Cargo / Revertir Sin Cargo de una Venta (`PUT /api/sale/:id/batch-payment`) en lugar de disparar 8 requests `PUT /api/quota/:id` en paralelo desde `SaleViewPage.jsx`.
+  - Eliminar el bucle N+1 de `getQuotasBySale` en `SellerViewPage.jsx` devolviendo `paidAmount` directamente desde `getSalesBySeller`.
+- [x] **2.3 Optimización de Consultas Pesadas y Filtro por Edición Server-Side:**
+  - Optimizar `getBingoCardsWithSales`, `getBingoCards`, `getSales`, `getQuotasV2` y `getExpiredQuotas` usando proyecciones (`.select('-cardSets -numbers')` cuando no se necesiten los 100 números del cartón), `.lean()`, cruce en $O(N)$ con `Map` y filtrado directo por `edition` y `updatedDate` en MongoDB.
+  - Eliminar las descargas masivas innecesarias al iniciar la app (`getQuotas` completo en `QuotaContext` y el contexto duplicado muerto `PersonContext`).
 - [ ] **2.4 Activación y Alineación de Schemas Zod (`src/schemas/`):**
   - Actualizar `sale.schema.js`, `quota.schema.js`, `balance.schema.js` a los estados reales (`'Anulada'`, etc.) y conectarlos en las rutas correspondientes.
 - [ ] **2.5 Suite Base de Tests Unitarios / Integración (Backend):**

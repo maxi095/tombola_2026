@@ -4,103 +4,107 @@ import Quota from "../models/quota.model.js";
 import Edition from "../models/edition.model.js";
 import mongoose from 'mongoose';
 
+// Helper interno para calcular métricas de cuotas por venta en una sola pasada
+const attachQuotaMetrics = async (salesDocs) => {
+    if (!salesDocs.length) return [];
+
+    const salesIds = salesDocs.map(s => s._id);
+    const quotas = await Quota.find({ sale: { $in: salesIds } })
+        .select('sale amount paymentDate')
+        .lean();
+
+    const metricsBySale = {};
+    for (const q of quotas) {
+        const saleIdStr = q.sale.toString();
+        if (!metricsBySale[saleIdStr]) {
+            metricsBySale[saleIdStr] = { totalQuotas: 0, paidQuotas: 0, paidAmount: 0 };
+        }
+        metricsBySale[saleIdStr].totalQuotas += 1;
+        if (q.paymentDate !== null && q.paymentDate !== undefined) {
+            metricsBySale[saleIdStr].paidQuotas += 1;
+            metricsBySale[saleIdStr].paidAmount += (q.amount || 0);
+        }
+    }
+
+    return salesDocs.map(sale => {
+        const plainSale = typeof sale.toObject === 'function' ? sale.toObject() : sale;
+        const m = metricsBySale[plainSale._id.toString()] || { totalQuotas: 0, paidQuotas: 0, paidAmount: 0 };
+        return {
+            ...plainSale,
+            totalQuotas: m.totalQuotas,
+            paidQuotas: m.paidQuotas,
+            paidAmount: m.paidAmount
+        };
+    });
+};
+
 // Obtener todas las ventas
 export const getSales = async (req, res) => {
     try {
-        const sales = await Sale.find()
-            .sort({ saleNumber: -1 }) // 1 = ascendente, -1 = descendente
+        const filter = {};
+        if (req.query.edition) {
+            filter.edition = req.query.edition;
+        }
+
+        const sales = await Sale.find(filter)
+            .sort({ saleNumber: -1 })
             .populate([
                 { path: 'edition' },
-                { path: 'bingoCard' },
+                { path: 'bingoCard', select: '-cardSets -numbers' },
                 {
                     path: 'client',
-                    populate: { path: 'person' } // 👈 anidado
+                    populate: { path: 'person' }
                 },
                 {
                     path: 'seller',
-                    populate: { path: 'person' } // 👈 anidado
+                    populate: { path: 'person' }
                 },
                 { path: 'user' }
-            ]);
+            ])
+            .lean();
 
-        const salesIds = sales.map(s => s._id);
-        const quotas = await Quota.find({ sale: { $in: salesIds } });
-        
-        const quotasBySale = {};
-        quotas.forEach(q => {
-            const saleIdStr = q.sale.toString();
-            if (!quotasBySale[saleIdStr]) {
-                quotasBySale[saleIdStr] = [];
-            }
-            quotasBySale[saleIdStr].push(q);
-        });
-
-        const salesWithQuotasInfo = sales.map(sale => {
-            const saleQuotas = quotasBySale[sale._id.toString()] || [];
-            const totalQuotas = saleQuotas.length;
-            const paidQuotas = saleQuotas.filter(q => q.paymentDate !== null).length;
-            
-            return {
-                ...sale.toObject(),
-                totalQuotas,
-                paidQuotas
-            };
-        });
-
+        const salesWithQuotasInfo = await attachQuotaMetrics(sales);
         res.json(salesWithQuotasInfo);
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
 };
 
-
 // Obtener una venta por ID
 export const getSale = async (req, res) => {
     try {
       const sale = await Sale.findById(req.params.id).populate([
         { path: 'edition' },
-        { path: 'bingoCard' },
+        { path: 'bingoCard', select: '-cardSets -numbers' },
         {
           path: 'client',
-          populate: { path: 'person' } // anidado
+          populate: { path: 'person' }
         },
         {
           path: 'seller',
-          populate: { path: 'person' } // anidado
+          populate: { path: 'person' }
         },
         { path: 'user' }
-      ])
-      .sort({ createdAt: -1 }); // más recientes primero;
+      ]).lean();
   
       if (!sale) return res.status(404).json({ message: 'Sale not found' });
 
-      const quotas = await Quota.find({ sale: sale._id });
-      const totalQuotas = quotas.length;
-      const paidQuotas = quotas.filter(q => q.paymentDate !== null).length;
-
-      res.json({
-        ...sale.toObject(),
-        totalQuotas,
-        paidQuotas
-      });
+      const [saleWithMetrics] = await attachQuotaMetrics([sale]);
+      res.json(saleWithMetrics);
     } catch (error) {
       return res.status(500).json({ message: error.message });
     }
-  };
+};
 
 // Crear una nueva venta y generar sus cuotas automáticamente
 export const createSale = async (req, res) => {
     try {
-        console.log("📥 Datos recibidos en createSale:", req.body);
-
         const { edition, seller, client, bingoCard, saleDate, status } = req.body;
 
-        // Validación básica
         if (!edition || !seller || !client || !bingoCard || !saleDate || !status) {
             return res.status(400).json({ message: "Todos los campos son obligatorios" });
         }
 
-        // Buscar edición
         const editionData = await Edition.findById(edition);
         if (!editionData) {
             return res.status(404).json({ message: "Edición no encontrada" });
@@ -111,7 +115,6 @@ export const createSale = async (req, res) => {
             return res.status(400).json({ message: "La edición no tiene cuotas definidas" });
         }
 
-        // Crear venta
         const newSale = new Sale({
             edition,
             seller,
@@ -123,13 +126,9 @@ export const createSale = async (req, res) => {
         });
 
         const savedSale = await newSale.save();
-        console.log("✅ Venta creada exitosamente:", savedSale);
 
-        // Marcar cartón como vendido
         await BingoCard.findByIdAndUpdate(bingoCard, { status: "Vendido" });
-        console.log(`🎟️ Cartón ${bingoCard} marcado como "Vendido"`);
 
-        // Generar cuotas desde edición
         const quotas = installments.map((installment) => ({
             sale: savedSale._id,
             quotaNumber: installment.quotaNumber,
@@ -139,35 +138,31 @@ export const createSale = async (req, res) => {
             paymentMethod: null,
         }));
 
-        // Insertar cuotas
         const createdQuotas = await Quota.insertMany(quotas);
-        console.log("✅ Cuotas generadas desde edición:", createdQuotas);
 
         res.json({ sale: savedSale, quotas: createdQuotas });
-
     } catch (error) {
         console.error("❌ Error en createSale:", error);
         res.status(500).json({ message: "Error al crear la venta y cuotas", error: error.message });
     }
 };
 
-
-
 // Editar una venta
 export const updateSale = async (req, res) => {
     try {
-        const sale = await Sale.findByIdAndUpdate(req.params.id, req.body, { new: true }).populate(['edition', 'seller', 'bingoCard', 'client', 'user']);
+        const sale = await Sale.findByIdAndUpdate(req.params.id, req.body, { new: true })
+            .populate([
+                { path: 'edition' },
+                { path: 'bingoCard', select: '-cardSets -numbers' },
+                { path: 'seller', populate: { path: 'person' } },
+                { path: 'client', populate: { path: 'person' } },
+                { path: 'user' }
+            ])
+            .lean();
         if (!sale) return res.status(404).json({ message: 'Sale not found' });
         
-        const quotas = await Quota.find({ sale: sale._id });
-        const totalQuotas = quotas.length;
-        const paidQuotas = quotas.filter(q => q.paymentDate !== null).length;
-
-        res.json({
-            ...sale.toObject(),
-            totalQuotas,
-            paidQuotas
-        });
+        const [saleWithMetrics] = await attachQuotaMetrics([sale]);
+        res.json(saleWithMetrics);
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
@@ -175,54 +170,40 @@ export const updateSale = async (req, res) => {
 
 export const cancelSale = async (req, res) => {
     try {
-        console.log("🛠 ID de la venta a cancelar:", req.params.id);
-        
-        // Buscar la venta
         const sale = await Sale.findById(req.params.id);
         
         if (!sale) {
-            console.log("❌ Venta no encontrada");
             return res.status(404).json({ message: 'Sale not found' });
         }
 
-        console.log("✅ Venta encontrada:", sale);
-
-        // Actualizar el estado de la venta a "Anulada"
         sale.status = "Anulada";
-        const savedSale = await sale.save(); // Guarda los cambios
+        await sale.save();
 
-        console.log("🔄 Estado de la venta actualizado:", savedSale);
-
-        // Verificar si la venta tiene un cartón de bingo asociado
         if (sale.bingoCard) {
-            const updatedBingoCard = await BingoCard.findByIdAndUpdate(
+            await BingoCard.findByIdAndUpdate(
                 sale.bingoCard, 
                 { status: "Disponible" },
                 { new: true } 
             );
-            console.log("🎟 Estado del cartón de bingo actualizado:", updatedBingoCard);
-        } else {
-            console.log("⚠ La venta no tiene un cartón de bingo asociado");
         }
 
-        // Obtener la venta actualizada con los datos poblados
-        const updatedSale = await Sale.findById(req.params.id).populate(['edition', 'seller', 'bingoCard', 'client', 'user']);
+        const updatedSale = await Sale.findById(req.params.id)
+            .populate([
+                { path: 'edition' },
+                { path: 'bingoCard', select: '-cardSets -numbers' },
+                { path: 'seller', populate: { path: 'person' } },
+                { path: 'client', populate: { path: 'person' } },
+                { path: 'user' }
+            ])
+            .lean();
 
-        const quotas = await Quota.find({ sale: updatedSale._id });
-        const totalQuotas = quotas.length;
-        const paidQuotas = quotas.filter(q => q.paymentDate !== null).length;
-
-        res.json({
-            ...updatedSale.toObject(),
-            totalQuotas,
-            paidQuotas
-        });
+        const [saleWithMetrics] = await attachQuotaMetrics([updatedSale]);
+        res.json(saleWithMetrics);
     } catch (error) {
         console.error("❌ Error en cancelSale:", error.message);
         return res.status(500).json({ message: error.message });
     }
 };
-
 
 // Eliminar una venta
 export const deleteSale = async (req, res) => {
@@ -236,52 +217,111 @@ export const deleteSale = async (req, res) => {
     }
 };
 
-// Obtener ventas por vendedor
+// Obtener ventas por vendedor (incluye totalQuotas, paidQuotas y paidAmount para evitar N+1 en frontend)
 export const getSalesBySeller = async (req, res) => {
     try {
         const { sellerId } = req.params;
 
-        const sales = await Sale.find({ seller: sellerId }).populate([
-            { path: 'edition' },
-            { path: 'bingoCard' },
-            {
-                path: 'client',
-                populate: { path: 'person' }
-            },
-            {
-                path: 'seller',
-                populate: { path: 'person' }
-            },
-            { path: 'user' }
-        ]);
+        const sales = await Sale.find({ seller: sellerId })
+            .populate([
+                { path: 'edition' },
+                { path: 'bingoCard', select: '-cardSets -numbers' },
+                {
+                    path: 'client',
+                    populate: { path: 'person' }
+                },
+                {
+                    path: 'seller',
+                    populate: { path: 'person' }
+                },
+                { path: 'user' }
+            ])
+            .lean();
 
-        const salesIds = sales.map(s => s._id);
-        const quotas = await Quota.find({ sale: { $in: salesIds } });
-        
-        const quotasBySale = {};
-        quotas.forEach(q => {
-            const saleIdStr = q.sale.toString();
-            if (!quotasBySale[saleIdStr]) {
-                quotasBySale[saleIdStr] = [];
-            }
-            quotasBySale[saleIdStr].push(q);
-        });
-
-        const salesWithQuotasInfo = sales.map(sale => {
-            const saleQuotas = quotasBySale[sale._id.toString()] || [];
-            const totalQuotas = saleQuotas.length;
-            const paidQuotas = saleQuotas.filter(q => q.paymentDate !== null).length;
-            
-            return {
-                ...sale.toObject(),
-                totalQuotas,
-                paidQuotas
-            };
-        });
-
+        const salesWithQuotasInfo = await attachQuotaMetrics(sales);
         res.json(salesWithQuotasInfo);
     } catch (error) {
         console.error("❌ Error en getSalesBySeller:", error.message);
         res.status(500).json({ message: error.message });
+    }
+};
+
+// Operación atómica batch para Pago Contado, Entrega Sin Cargo y Reversión Sin Cargo (elimina N+1 de PUT /quota/:id)
+export const processBatchSalePayment = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { action, date, method, cardDetails } = req.body;
+
+        const sale = await Sale.findById(id);
+        if (!sale) {
+            return res.status(404).json({ message: "Venta no encontrada" });
+        }
+
+        if (action === "full_payment") {
+            const paymentDate = date ? new Date(date) : new Date();
+            const paymentMethod = method || "Efectivo";
+
+            await Quota.updateMany(
+                { sale: sale._id },
+                { $set: { paymentDate, paymentMethod } }
+            );
+
+            sale.status = "Pagado";
+            sale.fullPaymentMethod = paymentMethod;
+            sale.lastFullPayment = paymentDate;
+            if (cardDetails) {
+                sale.cardPaymentDetails = { ...cardDetails };
+            }
+            await sale.save();
+        } else if (action === "no_charge") {
+            const paymentDate = date ? new Date(date) : new Date();
+
+            await Quota.updateMany(
+                { sale: sale._id },
+                { $set: { paymentDate, paymentMethod: "Entregado sin cargo" } }
+            );
+
+            sale.status = "Entregado sin cargo";
+            sale.lastFullPayment = paymentDate;
+            sale.fullPaymentMethod = "Otro";
+            await sale.save();
+        } else if (action === "undo_no_charge") {
+            await Quota.updateMany(
+                { sale: sale._id },
+                { $set: { paymentDate: null, paymentMethod: null } }
+            );
+
+            sale.status = "Pendiente de pago";
+            sale.lastFullPayment = null;
+            sale.fullPaymentMethod = undefined;
+            await sale.save();
+        } else {
+            return res.status(400).json({ message: "Acción batch inválida" });
+        }
+
+        const updatedSale = await Sale.findById(sale._id)
+            .populate([
+                { path: 'edition' },
+                { path: 'bingoCard', select: '-cardSets -numbers' },
+                { path: 'client', populate: { path: 'person' } },
+                { path: 'seller', populate: { path: 'person' } },
+                { path: 'user' }
+            ])
+            .lean();
+
+        const updatedQuotas = await Quota.find({ sale: sale._id })
+            .populate("sale")
+            .sort({ quotaNumber: 1 })
+            .lean();
+
+        const [saleWithMetrics] = await attachQuotaMetrics([updatedSale]);
+
+        return res.json({
+            sale: saleWithMetrics,
+            quotas: updatedQuotas
+        });
+    } catch (error) {
+        console.error("❌ Error en processBatchSalePayment:", error);
+        return res.status(500).json({ message: error.message });
     }
 };

@@ -5,23 +5,30 @@ import dayjs from "dayjs";
 // Obtener todas las cuotas
 export const getQuotas = async (req, res) => {
     try {
-        const quotas = await Quota.find().populate('sale');
+        const quotas = await Quota.find().populate('sale').lean();
         res.json(quotas);
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
 };
 
-// Obtener cuotas con paginación y filtros
+// Obtener cuotas con paginación y filtros (incluye filtro por edición y fecha de actualización en servidor)
 export const getQuotasV2 = async (req, res) => {
   try {
-    // Paginación
-    const page = parseInt(req.query.page) || 1; // Página actual
-    const limit = parseInt(req.query.limit) || 10; // Cuotas por página
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    // Filtros
     const filter = {};
+
+    // Filtro por edición en servidor (resuelve el desfase de paginación en QuotasPage)
+    if (req.query.edition) {
+      const editionSales = await Sale.find({
+        edition: req.query.edition,
+        status: { $ne: "Anulada" }
+      }).select('_id').lean();
+      filter.sale = { $in: editionSales.map(s => s._id) };
+    }
 
     // Filtro por estado de pago
     if (req.query.paid === 'true') {
@@ -42,7 +49,14 @@ export const getQuotasV2 = async (req, res) => {
       if (req.query.dueTo) filter.dueDate.$lte = new Date(req.query.dueTo);
     }
 
-    // Filtro por ID de venta (sale)
+    // Filtro por fecha de modificación (updatedDate en QuotasPage)
+    if (req.query.updatedDate) {
+      const startOfDay = dayjs(req.query.updatedDate).startOf('day').toDate();
+      const endOfDay = dayjs(req.query.updatedDate).endOf('day').toDate();
+      filter.updatedAt = { $gte: startOfDay, $lte: endOfDay };
+    }
+
+    // Filtro por ID de venta específico
     if (req.query.saleId) {
       filter.sale = req.query.saleId;
     }
@@ -51,18 +65,14 @@ export const getQuotasV2 = async (req, res) => {
       filter.quotaNumber = parseInt(req.query.quotaNumber);
     }
 
-    // Orden (por defecto: más recientes primero, luego bingo y cuota descendente)
     let sort = {};
     if (req.query.sortBy) {
-      const [field, direction] = req.query.sortBy.split(':'); // Ej: sortBy=dueDate:asc
+      const [field, direction] = req.query.sortBy.split(':');
       sort[field] = direction === 'desc' ? -1 : 1;
     } else {
-      sort = {
-        updatedAt: -1,   // Últimas actualizaciones primero
-      };
+      sort = { updatedAt: -1 };
     }
 
-    // Consulta principal
     const [total, quotas] = await Promise.all([
       Quota.countDocuments(filter),
       Quota.find(filter)
@@ -71,19 +81,20 @@ export const getQuotasV2 = async (req, res) => {
           populate: [
             { path: "seller", model: "Seller", populate: { path: "person", model: "Person" } },
             { path: "client", model: "Client", populate: { path: "person", model: "Person" } },
-            { path: "bingoCard", model: "BingoCard" },
+            { path: "bingoCard", model: "BingoCard", select: "-cardSets -numbers" },
             { path: "edition", model: "Edition" },
           ],
         })
         .sort(sort)
         .skip(skip)
         .limit(limit)
+        .lean()
     ]);
 
     res.json({
       total,
       page,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.ceil(total / limit) || 1,
       quotas
     });
   } catch (error) {
@@ -106,12 +117,12 @@ export const getExpiredQuotas = async (req, res) => {
           populate: [
             { path: "seller", model: "Seller", populate: { path: "person", model: "Person" } },
             { path: "client", model: "Client", populate: { path: "person", model: "Person" } },
-            { path: "bingoCard", model: "BingoCard" },
+            { path: "bingoCard", model: "BingoCard", select: "-cardSets -numbers" },
             { path: "edition", model: "Edition" },
           ],
-        });
+        })
+        .lean();
   
-      // Filtrar cuotas donde sale no sea null (porque match puede dejarlo null)
       const filteredQuotas = quotas.filter(quota => quota.sale !== null);
   
       res.json(filteredQuotas);
@@ -130,8 +141,10 @@ export const getQuotasBySale = async (req, res) => {
             return res.status(400).json({ message: "saleId es requerido" });
         }
 
-        // Buscar cuotas que correspondan a la venta y poblar la información de Sale
-        const quotas = await Quota.find({ sale: saleId }).populate("sale");
+        const quotas = await Quota.find({ sale: saleId })
+            .populate("sale")
+            .sort({ quotaNumber: 1 })
+            .lean();
 
         if (!quotas.length) {
             return res.status(404).json({ message: "No se encontraron cuotas para esta venta" });
@@ -179,20 +192,19 @@ export const createQuota = async (req, res) => {
 // Editar una cuota
 export const updateQuota = async (req, res) => {
     try {
-        // 1️⃣ Actualizar la cuota con los datos nuevos
         const quota = await Quota.findByIdAndUpdate(req.params.id, req.body, { new: true }).populate('sale');
         if (!quota) return res.status(404).json({ message: 'Cuota no encontrada' });
 
-        // 2️⃣ Obtener todas las cuotas asociadas a la misma venta (Sale)
-        const quotas = await Quota.find({ sale: quota.sale._id });
+        const quotas = await Quota.find({ sale: quota.sale._id }).select('paymentDate').lean();
 
-        // 3️⃣ Verificar si TODAS las cuotas tienen un `paymentDate` definido
         const allPaid = quotas.every(q => q.paymentDate !== null);
 
-        // 4️⃣ Determinar el nuevo estado de la venta
-        const newStatus = allPaid ? "Pagado" : "Pendiente de pago";
+        // Si la venta estaba entregada sin cargo y siguen todas con fecha, preservar o recalcular estado
+        const currentSale = quota.sale;
+        const newStatus = allPaid
+            ? (currentSale.status === "Entregado sin cargo" ? "Entregado sin cargo" : "Pagado")
+            : "Pendiente de pago";
 
-        // 5️⃣ Actualizar la venta con el nuevo estado
         const sale = await Sale.findByIdAndUpdate(
             quota.sale._id,
             { status: newStatus },

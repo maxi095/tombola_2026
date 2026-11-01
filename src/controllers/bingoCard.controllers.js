@@ -5,29 +5,33 @@ import Quota from "../models/quota.model.js";
 import mongoose from 'mongoose';
 import dayjs from 'dayjs';
 
-// Obtener todas las tarjetas de bingo
+// Obtener todas las tarjetas de bingo (excluyendo cardSets pesados para listados)
 export const getBingoCards = async (req, res) => {
     try {
         const filter = {};
 
-        // Si hay un status en la query, lo usamos como filtro
         if (req.query.status) {
             filter.status = req.query.status;
         }
+        if (req.query.edition) {
+            filter.edition = req.query.edition;
+        }
 
         const bingoCards = await BingoCard.find(filter)
-        .populate({
-            path: 'seller',
-            populate: { path: 'person' }
-        })
-        .populate(['edition', 'user']); 
+            .select('-cardSets -numbers')
+            .populate({
+                path: 'seller',
+                populate: { path: 'person' }
+            })
+            .populate(['edition', 'user'])
+            .lean();
         res.json(bingoCards);
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
 };
 
-// Obtener una tarjeta de bingo por ID
+// Obtener una tarjeta de bingo por ID (incluye cardSets completo)
 export const getBingoCard = async (req, res) => {
     try {
         const bingoCard = await BingoCard.findById(req.params.id).populate(['edition', 'user']);
@@ -80,11 +84,17 @@ export const deleteBingoCard = async (req, res) => {
     }
 };
 
-// Obtener todas las tarjetas de bingo con información de venta (incluyendo fecha de venta)
+// Obtener todas las tarjetas de bingo con información de venta (optimizado O(N) con Map y sin cardSets pesados)
 export const getBingoCardsWithSales = async (req, res) => {
   try {
-    // 1. Obtener todos los cartones con seller, edition y user
-    const bingoCards = await BingoCard.find()
+    const filter = {};
+    if (req.query.edition) {
+      filter.edition = req.query.edition;
+    }
+
+    // 1. Obtener cartones excluyendo arrays pesados de 100 números (cardSets / numbers)
+    const bingoCards = await BingoCard.find(filter)
+      .select('-cardSets -numbers')
       .populate({
         path: 'seller',
         populate: { path: 'person' }
@@ -92,18 +102,32 @@ export const getBingoCardsWithSales = async (req, res) => {
       .populate('edition user')
       .lean();
 
-    // 2. Obtener todas las ventas NO anuladas
-    const sales = await Sale.find({
-      bingoCard: { $in: bingoCards.map(c => c._id) },
+    // 2. Obtener todas las ventas NO anuladas asociadas
+    const salesFilter = {
       status: { $ne: 'Anulada' }
-    })
+    };
+    if (req.query.edition) {
+      salesFilter.edition = req.query.edition;
+    } else {
+      salesFilter.bingoCard = { $in: bingoCards.map(c => c._id) };
+    }
+
+    const sales = await Sale.find(salesFilter)
       .populate({ path: 'seller', populate: { path: 'person' } })
       .populate({ path: 'client', populate: { path: 'person' } })
       .lean();
 
+    // Indexar ventas por bingoCardId en O(1) en lugar de sales.find() O(N*M)
+    const salesByCardId = new Map();
+    for (const s of sales) {
+      if (s.bingoCard) {
+        salesByCardId.set(s.bingoCard.toString(), s);
+      }
+    }
+
     // 3. Armar respuesta con venta si existe, o null
     const cardsWithSales = bingoCards.map(card => {
-      const sale = sales.find(s => s.bingoCard.toString() === card._id.toString());
+      const sale = salesByCardId.get(card._id.toString());
 
       return {
         ...card,
@@ -150,8 +174,6 @@ export const getBingoCardsWithSales = async (req, res) => {
   }
 };
 
-
-
 export const getBingoCardStatus = async (req, res) => {
     try {
       const { edition, number } = req.query;
@@ -162,11 +184,13 @@ export const getBingoCardStatus = async (req, res) => {
   
       const editionId = new mongoose.Types.ObjectId(edition);
   
-      // ✅ Populamos la edición directamente en bingoCard
       const bingoCard = await BingoCard.findOne({
         edition: editionId,
         number: Number(number)
-      }).populate('edition');
+      })
+        .select('-cardSets -numbers')
+        .populate('edition')
+        .lean();
   
       if (!bingoCard) {
         return res.status(404).json({ message: 'El número de cartón ingresado no existe' });
@@ -175,26 +199,15 @@ export const getBingoCardStatus = async (req, res) => {
       const sale = await Sale.findOne({
         edition: editionId,
         bingoCard: bingoCard._id,
-        status: { $ne: 'Anulada' } // ✅ Excluir ventas anuladas
+        status: { $ne: 'Anulada' }
       }).populate([
         { path: 'client', populate: { path: 'person' } },
         { path: 'seller', populate: { path: 'person' } },
-      ]);
+      ]).lean();
   
-      const quotas = sale ? await Quota.find({ sale: sale._id }) : [];
+      const quotas = sale ? await Quota.find({ sale: sale._id }).lean() : [];
   
-      
-      {/* 
-      Comprobar si el plan es "CUOTA" o "PAGO CONTADO" (valida que todas las cuotas tengan misma fecha de pago)
-      const arePaymentDatesEqual = quotas.every(quota => 
-        quota.paymentDate === null ||
-        dayjs(quota.paymentDate).isSame(dayjs(quotas[0].paymentDate), 'day')
-      );
-      const plan = quotas.some(quota => quota.paymentDate === null) ? 'Pago en cuotas' : (arePaymentDatesEqual ? 'Pago contado' : 'Pago en cuotas');
-
-       */}
-
-       // Si todas las cuotas están pagas => pago contado
+      // Si todas las cuotas están pagas => pago contado
       const allQuotasPaid = quotas.length > 0 && quotas.every(quota => quota.paymentDate !== null);
 
       const plan = allQuotasPaid ? 'Pago contado' : 'Pago en cuotas';
@@ -204,9 +217,7 @@ export const getBingoCardStatus = async (req, res) => {
       const hasDebt = quotas.some(q =>
         dayjs(q.dueDate).isBefore(now, 'day') && q.paymentDate === null
       );
-
   
-      // Respuesta con la información de la venta y el estado del cartón
       const response = {
         edition: bingoCard.edition._id.toString(),
         editionName: bingoCard.edition.name,
@@ -220,9 +231,9 @@ export const getBingoCardStatus = async (req, res) => {
           ? `${sale.seller.person.firstName} ${sale.seller.person.lastName}`
           : 'Vendedor no asignado',
         sellerNumber: sale?.seller?.sellerNumber,
-        upToDate: !!sale && !hasDebt, // Si no hay deuda, está al día
-        plan: plan, // Agregar el plan (CUOTA o PAGO CONTADO)
-        quotaUpToDate: plan === 'CUOTA' && !hasDebt, // Si es CUOTA, verificar si está al día
+        upToDate: !!sale && !hasDebt,
+        plan: plan,
+        quotaUpToDate: plan === 'CUOTA' && !hasDebt,
       };
   
       res.json(response);
@@ -232,20 +243,19 @@ export const getBingoCardStatus = async (req, res) => {
     }
   };
   
-  // Asignar un vendedor a un cartón de bingo
+// Asignar un vendedor a un cartón de bingo
 export const assignSellerToBingoCard = async (req, res) => {
     const { bingoCardId } = req.params;
     const { sellerId } = req.body;
-
-    console.log('Received bingoCardId:', bingoCardId);
-    console.log('Received sellerId:', sellerId);
   
     try {
       const updatedCard = await BingoCard.findByIdAndUpdate(
         bingoCardId,
         { seller: sellerId },
         { new: true }
-      ).populate(['edition', 'user', 'seller']);
+      )
+        .select('-cardSets -numbers')
+        .populate(['edition', 'user', 'seller']);
   
       if (!updatedCard) {
         return res.status(404).json({ message: 'Bingo card not found' });
@@ -257,8 +267,8 @@ export const assignSellerToBingoCard = async (req, res) => {
     }
   };
   
-  // Eliminar la relación de un vendedor con un cartón
-  export const removeSellerFromBingoCard = async (req, res) => {
+// Eliminar la relación de un vendedor con un cartón
+export const removeSellerFromBingoCard = async (req, res) => {
     const { bingoCardId } = req.params;
   
     try {
@@ -266,7 +276,9 @@ export const assignSellerToBingoCard = async (req, res) => {
         bingoCardId,
         { $unset: { seller: "" } },
         { new: true }
-      ).populate(['edition', 'user']);
+      )
+        .select('-cardSets -numbers')
+        .populate(['edition', 'user']);
   
       if (!updatedCard) {
         return res.status(404).json({ message: 'Bingo card not found' });
@@ -278,17 +290,18 @@ export const assignSellerToBingoCard = async (req, res) => {
     }
   };
 
-  export const getBingoCardsBySeller = async (req, res) => {
+export const getBingoCardsBySeller = async (req, res) => {
     const { sellerId } = req.params;
   
     try {
       const bingoCards = await BingoCard.find({ seller: sellerId })
+        .select('-cardSets -numbers')
         .populate(['edition', 'user', 'seller'])
-        .sort({ createdAt: -1, number: -1 });
+        .sort({ createdAt: -1, number: -1 })
+        .lean();
   
       res.status(200).json(bingoCards);
     } catch (error) {
       res.status(500).json({ message: 'Error retrieving bingo cards for seller', error: error.message });
     }
   };
-  

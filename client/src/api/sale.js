@@ -12,6 +12,9 @@ export const createSaleRequest = (sale) => axios.post('/sale', sale);
 // Actualizar una venta
 export const updateSaleRequest = (id, sale) => axios.put(`/sale/${id}`, sale);
 
+// Operación atómica batch de pago/bonificación de venta
+export const batchSalePaymentRequest = (id, payload) => axios.put(`/sale/${id}/batch-payment`, payload);
+
 // Eliminar una venta
 export const deleteSaleRequest = (id) => axios.delete(`/sale/${id}`);
 

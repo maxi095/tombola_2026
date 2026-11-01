@@ -23,7 +23,7 @@ const quotaSchema = new mongoose.Schema({
     },
     paymentMethod: {
         type: String,
-        enum: ['Efectivo', 'Tarjeta', 'Transferencia', 'Otro'],
+        enum: ['Efectivo', 'Tarjeta', 'Transferencia', 'Cheque', 'Otro', 'Entregado sin cargo', ''],
     }
 }, {
     timestamps: true

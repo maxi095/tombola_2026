@@ -7,7 +7,8 @@ import {
     updateSale,
     deleteSale,
     cancelSale,
-    getSalesBySeller
+    getSalesBySeller,
+    processBatchSalePayment
 } from "../controllers/sale.controllers.js";
 import { checkRole } from "../middlewares/role.middleware.js";
 
@@ -25,13 +26,16 @@ router.post('/sale', authRequired, checkRole(['Administrador']), createSale);
 // Editar una venta
 router.put('/sale/:id', authRequired, checkRole(['Administrador']), updateSale);
 
+// Operación atómica batch (Pago Contado / Sin Cargo / Revertir Sin Cargo)
+router.put('/sale/:id/batch-payment', authRequired, checkRole(['Administrador']), processBatchSalePayment);
+
 // Eliminar una venta
 router.delete('/sale/:id', authRequired, checkRole(['Administrador']), deleteSale);
 
 // Anular una venta
 router.put('/cancelSale/:id', authRequired, checkRole(['Administrador']), cancelSale);
 
-
+// Obtener ventas por vendedor
 router.get("/sales/seller/:sellerId", authRequired, checkRole(['Administrador']), getSalesBySeller);
 
 export default router;

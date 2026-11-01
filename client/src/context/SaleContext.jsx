@@ -5,9 +5,10 @@ import {
     createSaleRequest,
     deleteSaleRequest,
     updateSaleRequest,
-    cancelSaleRequest, // Importar la nueva función de la API
+    batchSalePaymentRequest,
+    cancelSaleRequest,
     getSalesBySellerRequest
-} from "../api/sale.js"; // Asegúrate de que la ruta sea correcta
+} from "../api/sale.js";
 
 const SalesContext = createContext();
 
@@ -21,19 +22,19 @@ export const useSales = () => {
 
 export const SalesProvider = ({ children }) => {
     const [sales, setSales] = useState([]); 
-    const [error, setError] = useState(null); // Estado para manejar errores
+    const [error, setError] = useState(null);
 
     const getSales = useCallback(async () => {
         try {
             const res = await getSalesRequest();
-            setSales(res.data); // Asegúrate de que 'res.data' sea un arreglo
+            setSales(res.data);
         } catch (error) {
-            setError(error); // Maneja el error
+            setError(error);
             console.error(error);
         }
-    }, []); // Asegúrate de que esto no cambie en futuras renderizaciones
+    }, []);
 
-    const getSale = async (id) => {
+    const getSale = useCallback(async (id) => {
         try {
             const res = await getSaleRequest(id);
             return res.data; 
@@ -41,7 +42,7 @@ export const SalesProvider = ({ children }) => {
             console.error("Error loading sale:", error);
             throw error; 
         }
-    };
+    }, []);
 
     const createSale = async (sale) => {
         try {
@@ -55,9 +56,23 @@ export const SalesProvider = ({ children }) => {
     const updateSale = async (id, sale) => {
         try {
             const res = await updateSaleRequest(id, sale);
-            setSales((prev) => prev.map(s => (s._id === id ? res.data : s))); 
+            setSales((prev) => prev.map(s => (s._id === id ? res.data : s)));
+            return res.data;
         } catch (error) {
             console.error("Error updating sale:", error);
+        }
+    };
+
+    const batchSalePayment = async (id, payload) => {
+        try {
+            const res = await batchSalePaymentRequest(id, payload);
+            if (res.data?.sale) {
+                setSales((prev) => prev.map(s => (s._id === id ? res.data.sale : s)));
+            }
+            return res.data;
+        } catch (error) {
+            console.error("Error in batchSalePayment:", error);
+            throw error;
         }
     };
 
@@ -72,9 +87,9 @@ export const SalesProvider = ({ children }) => {
 
     const cancelSale = async (id) => {
         try {
-            const res = await cancelSaleRequest(id); // Llamar a la API
+            const res = await cancelSaleRequest(id);
             if (res.data) {
-                setSales((prev) => prev.map(s => (s._id === id ? { ...s, status: "Anulada" } : s))); // Asegurar actualización del estado
+                setSales((prev) => prev.map(s => (s._id === id ? { ...s, status: "Anulada" } : s)));
             } else {
                 console.error("Error: Respuesta vacía al cancelar la venta");
             }
@@ -83,7 +98,7 @@ export const SalesProvider = ({ children }) => {
         }
     };
 
-    const getSalesBySeller = async (sellerId) => {
+    const getSalesBySeller = useCallback(async (sellerId) => {
         try {
           const res = await getSalesBySellerRequest(sellerId);
           return res.data;
@@ -91,15 +106,14 @@ export const SalesProvider = ({ children }) => {
           console.error("Error obteniendo ventas por vendedor:", error);
           return [];
         }
-      };
-    
+    }, []);
 
     useEffect(() => {
         getSales();
     }, [getSales]);
 
     return (
-        <SalesContext.Provider value={{ sales, createSale, updateSale, deleteSale, cancelSale, getSales, getSale, getSalesBySeller, error }}>
+        <SalesContext.Provider value={{ sales, createSale, updateSale, batchSalePayment, deleteSale, cancelSale, getSales, getSale, getSalesBySeller, error }}>
             {children}
         </SalesContext.Provider>
     );
