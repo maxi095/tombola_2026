@@ -50,7 +50,7 @@ const QuotaPaymentModal = ({ isOpen, onClose, quota, onSave }) => {
         className="px-6 font-black text-[10px] uppercase tracking-widest"
         onClick={onClose}
       >
-        Cancelar
+        Volver
       </Button>
       <Button 
         type="submit" 

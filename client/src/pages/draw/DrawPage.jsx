@@ -271,9 +271,11 @@ export default function DrawPage() {
                         size="sm"
                         icon={Eye}
                         title="Ver Detalle"
-                        className="h-8 w-8 p-0"
+                        className="h-8 px-2.5 text-[10px] text-slate-700 hover:text-primary"
                         onClick={() => navigate(`/draw/view/${draw._id}`)}
-                      />
+                      >
+                        Ver
+                      </Button>
                       {draw.status === "Programado" && (
                         <>
                           <Button
@@ -281,17 +283,21 @@ export default function DrawPage() {
                             size="sm"
                             icon={Edit2}
                             title="Editar Sorteo"
-                            className="h-8 w-8 p-0 text-slate-600 hover:text-primary"
+                            className="h-8 px-2.5 text-[10px] text-slate-600 hover:text-primary"
                             onClick={() => navigate(`/draw/edit/${draw._id}`)}
-                          />
+                          >
+                            Editar
+                          </Button>
                           <Button
-                            variant="ghost"
+                            variant="danger"
                             size="sm"
                             icon={Trash2}
                             title="Eliminar Sorteo"
-                            className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700"
+                            className="h-8 px-2 text-[10px]"
                             onClick={() => confirmDelete(draw)}
-                          />
+                          >
+                            Eliminar
+                          </Button>
                         </>
                       )}
                     </div>

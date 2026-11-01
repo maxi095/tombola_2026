@@ -340,7 +340,7 @@ export default function SellerPaymentDetailPage() {
                             }}
                             className="h-8 text-[10px] px-3"
                           >
-                            Cancelar
+                            Descartar
                           </Button>
                         </div>
                       </div>
@@ -409,7 +409,7 @@ export default function SellerPaymentDetailPage() {
                       }}
                       className="h-8 text-[10px] px-3"
                     >
-                      Cancelar
+                      Descartar
                     </Button>
                   </div>
                 </div>

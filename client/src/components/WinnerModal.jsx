@@ -1,10 +1,13 @@
-import ReactModal from "react-modal";
 import { useState, useEffect } from "react";
+import { useFeedback } from "../context/FeedbackContext";
+import Modal from "./ui/Modal";
+import InputField from "./ui/InputField";
+import Button from "./ui/Button";
+import { Trophy, Save } from "lucide-react";
 
-ReactModal.setAppElement("#root");
-
-function WinnerModal({ isOpen, onClose, prize, onSave }) {
+export default function WinnerModal({ isOpen, onClose, prize, onSave }) {
   const [bingoCardNumber, setBingoCardNumber] = useState("");
+  const { showToast } = useFeedback();
 
   useEffect(() => {
     if (isOpen) {
@@ -14,72 +17,69 @@ function WinnerModal({ isOpen, onClose, prize, onSave }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!bingoCardNumber || bingoCardNumber <= 0) {
-      alert("Ingresá un número de cartón válido");
+    const num = parseInt(bingoCardNumber, 10);
+    if (!num || num <= 0) {
+      showToast("Ingresá un número de cartón válido", "warning");
       return;
     }
-    onSave(bingoCardNumber);
+    onSave(num);
     setBingoCardNumber("");
   };
 
+  const footer = (
+    <>
+      <Button
+        type="button"
+        variant="ghost"
+        className="px-6 font-black text-[10px] uppercase tracking-widest"
+        onClick={onClose}
+      >
+        Volver
+      </Button>
+      <Button
+        type="submit"
+        form="winner-form"
+        variant="primary"
+        className="px-8 h-12 shadow-lg shadow-primary/20 min-w-[140px]"
+        icon={Save}
+      >
+        Registrar
+      </Button>
+    </>
+  );
+
   return (
-    <ReactModal
+    <Modal
       isOpen={isOpen}
-      onRequestClose={onClose}
-      className="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl overflow-y-auto max-h-[90vh]"
-      overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+      onClose={onClose}
+      title={`Registrar Ganador - ${prize?.position || 1}° Premio`}
+      subtitle={prize?.description || "Premio en sorteo"}
+      icon={Trophy}
+      variant="default"
+      maxWidth="max-w-md"
+      footer={footer}
     >
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl overflow-y-auto max-h-[90vh]">
-        <div className="form-card">
-          <h2 className="title">
-            Registrar Ganador - {prize?.position}° Premio
-          </h2>
-
-          {prize ? (
-            <form onSubmit={handleSubmit} className="form-grid">
-              <div className="form-section col-span-2">
-                <label className="label">Premio:</label>
-                <input
-                  value={prize.description || "Sin descripción"}
-                  disabled
-                  className="form-input bg-gray-100 cursor-not-allowed"
-                />
-              </div>
-
-              <div className="form-section col-span-2">
-                <label className="label">Número de Cartón Ganador</label>
-                <input
-                  type="number"
-                  value={bingoCardNumber}
-                  onChange={(e) => setBingoCardNumber(e.target.value)}
-                  className="form-input"
-                  placeholder="Ej: 1234"
-                  min="1"
-                  required
-                  autoFocus
-                />
-              </div>
-
-              <div className="col-span-2 flex justify-end mt-4 space-x-2">
-                <button
-                  type="button"
-                  className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition"
-                  onClick={onClose}
-                >
-                  Cancelar
-                </button>
-                <button type="submit" className="btn-primary">
-                  Registrar
-                </button>
-              </div>
-            </form>
-          ) : (
-            <p className="text-gray-500 mt-4">No hay datos disponibles</p>
-          )}
+      <form id="winner-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div>
+          <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1.5 block">
+            Descripción del Premio
+          </label>
+          <div className="bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700">
+            {prize?.description || "Sin descripción"}
+          </div>
         </div>
-      </div>
-    </ReactModal>
+
+        <InputField
+          label="Número de Cartón Ganador"
+          type="number"
+          value={bingoCardNumber}
+          onChange={(e) => setBingoCardNumber(e.target.value)}
+          placeholder="Ej: 1234"
+          min="1"
+          required
+          autoFocus
+        />
+      </form>
+    </Modal>
   );
 }
-
-export default WinnerModal;

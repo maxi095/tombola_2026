@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
@@ -67,6 +68,7 @@ export default function SellerPaymentPage() {
 
   const { selectedEdition } = useEditionFilter();
   const { showToast } = useFeedback();
+  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
   const [filtered, setFiltered] = useState([]);
@@ -267,7 +269,7 @@ export default function SellerPaymentPage() {
         stats={metrics}
         actions={[
           { label: "Exportar", icon: FileSpreadsheet, variant: "ghost", onClick: handleExport },
-          { label: "Crear Pago", icon: PlusCircle, onClick: () => window.location.href = "/sellerPayment/new" }
+          { label: "Crear Pago", icon: PlusCircle, onClick: () => navigate("/sellerPayment/new") }
         ]}
       />
 
@@ -453,7 +455,7 @@ export default function SellerPaymentPage() {
                                   variant="ghost"
                                   size="sm"
                                   icon={Eye}
-                                  onClick={() => window.location.href = `/sellerPayment/view/${p._id}`}
+                                  onClick={() => navigate(`/sellerPayment/view/${p._id}`)}
                                 />
                               </Tooltip>
                               <Tooltip text="Descargar Recibo">

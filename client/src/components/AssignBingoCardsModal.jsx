@@ -1,135 +1,160 @@
-import ReactModal from "react-modal";
-import { useState, useEffect } from "react";
-import { useBingoCards} from "../context/BingoCardContext";
+import { useState, useEffect, useMemo } from "react";
+import { useBingoCards } from "../context/BingoCardContext";
+import { useFeedback } from "../context/FeedbackContext";
+import Modal from "./ui/Modal";
+import InputField from "./ui/InputField";
+import Button from "./ui/Button";
+import { Layers, CheckCircle2 } from "lucide-react";
 
-ReactModal.setAppElement("#root");
+export default function AssignBingoCardsModal({ isOpen, onClose, sellerId }) {
+  const { assignSellerToBingoCard, getBingoCards } = useBingoCards();
+  const { showToast } = useFeedback();
 
-const AssignBingoCardsModal = ({ isOpen, onClose, sellerId }) => {
-  const { bingoCards, assignSellerToBingoCard, getBingoCards } = useBingoCards();
-  const [edition, setEdition] = useState("");
   const [selectedCards, setSelectedCards] = useState([]);
   const [unassignedCards, setUnassignedCards] = useState([]);
-
   const [searchTerm, setSearchTerm] = useState("");
-
-// Antes de renderizar
-const filteredCards = unassignedCards.filter(card => {
-  const search = searchTerm.toLowerCase();
-  const numberMatch = card.number?.toString().includes(search);
-  const editionMatch = card.edition?.name?.toLowerCase().includes(search);
-  return numberMatch || editionMatch;
-});
-
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchUnassignedCards = async () => {
       if (!isOpen) return;
-
-      const cards = await getBingoCards(); // Esperamos los datos directamente
-      if (!cards) return; // En caso de error o respuesta nula
-
-      const cardsWithoutSeller = cards.filter(
-        (card) => !card.seller || Object.keys(card.seller).length === 0
-      );
-
-      console.log("📋 Cartones sin asignar:", cardsWithoutSeller); // DEBUG
-      setUnassignedCards(cardsWithoutSeller);
+      try {
+        const cards = await getBingoCards();
+        if (Array.isArray(cards)) {
+          const cardsWithoutSeller = cards.filter(
+            (card) => !card.seller || Object.keys(card.seller).length === 0
+          );
+          setUnassignedCards(cardsWithoutSeller);
+        }
+      } catch (err) {
+        console.error("Error al obtener cartones sin asignar:", err);
+      }
     };
 
     fetchUnassignedCards();
   }, [isOpen, getBingoCards]);
 
+  const filteredCards = useMemo(() => {
+    const search = searchTerm.toLowerCase();
+    return unassignedCards.filter((card) => {
+      const numberMatch = card.number?.toString().includes(search);
+      const editionMatch = card.edition?.name?.toLowerCase().includes(search);
+      return numberMatch || editionMatch;
+    });
+  }, [unassignedCards, searchTerm]);
+
   const handleCheckboxChange = (cardId) => {
-    setSelectedCards(prev =>
+    setSelectedCards((prev) =>
       prev.includes(cardId)
-        ? prev.filter(id => id !== cardId)
+        ? prev.filter((id) => id !== cardId)
         : [...prev, cardId]
     );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (selectedCards.length === 0) return; // Solo verifica que haya cartones seleccionados
-  
-    for (const cardId of selectedCards) {
-      await assignSellerToBingoCard(cardId, sellerId);
+    if (selectedCards.length === 0) {
+      showToast("Seleccioná al menos un cartón para asignar", "warning");
+      return;
     }
-    onClose(); 
-    setSelectedCards([]);
+
+    setLoading(true);
+    try {
+      for (const cardId of selectedCards) {
+        await assignSellerToBingoCard(cardId, sellerId);
+      }
+      showToast(`${selectedCards.length} cartones asignados correctamente`, "success");
+      onClose();
+      setSelectedCards([]);
+    } catch (err) {
+      showToast("Error al asignar los cartones", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const footer = (
+    <>
+      <Button
+        type="button"
+        variant="ghost"
+        className="px-6 font-black text-[10px] uppercase tracking-widest"
+        onClick={onClose}
+      >
+        Volver
+      </Button>
+      <Button
+        type="submit"
+        form="assign-bingo-form"
+        variant="primary"
+        className="px-8 h-12 shadow-lg shadow-primary/20 min-w-[140px]"
+        loading={loading}
+        disabled={loading || selectedCards.length === 0}
+        icon={CheckCircle2}
+      >
+        Asignar ({selectedCards.length})
+      </Button>
+    </>
+  );
+
   return (
-    <ReactModal
+    <Modal
       isOpen={isOpen}
-      onRequestClose={onClose}
-      className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl overflow-y-auto max-h-[90vh]"
-      overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+      onClose={onClose}
+      title="Asignar Cartones"
+      subtitle="Vincular cartones disponibles al vendedor"
+      icon={Layers}
+      variant="default"
+      maxWidth="max-w-2xl"
+      footer={footer}
     >
-      <h2 className="text-2xl font-semibold mb-4">Asignar Cartones al Vendedor</h2>
+      <form id="assign-bingo-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <InputField
+          label="Buscar Cartón o Edición"
+          placeholder="Escribí un número o nombre de edición..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* 
         <div>
-          <label className="label">Edición</label>
-          <input
-            type="text"
-            className="form-input"
-            value={edition}
-            onChange={(e) => setEdition(e.target.value)}
-            required
-          />
-        </div>
-        */}
+          <div className="flex justify-between items-center mb-2">
+            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest block">
+              Cartones Disponibles ({filteredCards.length})
+            </label>
+            <span className="text-[11px] font-bold text-primary">
+              {selectedCards.length} seleccionados
+            </span>
+          </div>
 
-<div>
-  <label className="label">Cartones sin asignar</label>
-
-  {/* 🔍 Buscador */}
-  <input
-    type="text"
-    placeholder="Buscar por número o edición..."
-    className="form-input mb-2"
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-  />
-
-  <div className="max-h-64 overflow-y-auto border p-2 rounded">
-    {filteredCards.length === 0 ? (
-      <p className="text-gray-500 text-sm">No hay cartones disponibles</p>
-    ) : (
-      filteredCards.map(card => (
-        <label key={card._id} className="block">
-          <input
-            type="checkbox"
-            checked={selectedCards.includes(card._id)}
-            onChange={() => handleCheckboxChange(card._id)}
-            className="mr-2"
-          />
-          Cartón N° {card.number} (Edición {card.edition?.name || "Sin edición"}) 
-        </label>
-      ))
-    )}
-  </div>
-</div>
-
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-            onClick={onClose}
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="btn-primary"
-          >
-            Asignar
-          </button>
+          <div className="max-h-64 overflow-y-auto border border-slate-200 rounded-xl p-3 bg-slate-50 divide-y divide-slate-100">
+            {filteredCards.length === 0 ? (
+              <p className="text-slate-400 text-center py-6 text-xs font-medium">
+                No hay cartones disponibles para asignar
+              </p>
+            ) : (
+              filteredCards.map((card) => (
+                <label
+                  key={card._id}
+                  className="flex items-center gap-3 py-2 px-2 hover:bg-white rounded-lg cursor-pointer transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedCards.includes(card._id)}
+                    onChange={() => handleCheckboxChange(card._id)}
+                    className="w-4 h-4 rounded text-primary focus:ring-primary border-slate-300"
+                  />
+                  <div className="flex items-center justify-between w-full text-xs font-bold text-slate-700">
+                    <span>Cartón N° <strong className="text-slate-900 font-black">{card.number}</strong></span>
+                    <span className="text-slate-500 font-medium text-[11px]">
+                      Edición: {card.edition?.name || "Sin edición"}
+                    </span>
+                  </div>
+                </label>
+              ))
+            )}
+          </div>
         </div>
       </form>
-    </ReactModal>
+    </Modal>
   );
-};
-
-export default AssignBingoCardsModal;
+}

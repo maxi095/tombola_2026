@@ -13,7 +13,7 @@ export default function ConfirmModal({
   title = "¿Confirmar acción?", 
   message = "Esta acción no se puede deshacer.",
   confirmText = "Confirmar",
-  cancelText = "Cancelar",
+  cancelText = "Volver",
   variant = "danger", // 'danger' | 'primary'
   loading = false
 }) {

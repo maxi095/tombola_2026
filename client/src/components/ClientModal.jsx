@@ -75,7 +75,7 @@ function ClientModal({ isOpen, onClose, onClientCreated }) {
         onClick={handleClose}
         className="px-6 font-black text-[10px] uppercase tracking-widest"
       >
-        Cancelar
+        Volver
       </Button>
       <Button
         type="submit"
@@ -100,7 +100,7 @@ function ClientModal({ isOpen, onClose, onClientCreated }) {
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Nuevo Asociado"
+      title="Registrar Asociado"
       subtitle="Socio / Cliente Final"
       icon={UserPlus}
       variant="default"

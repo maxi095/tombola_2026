@@ -38,7 +38,7 @@ const NoChargeModal = ({ isOpen, onClose, onSave }) => {
         className="px-6 font-black text-[10px] uppercase tracking-widest text-slate-400 hover:text-slate-600"
         onClick={onClose}
       >
-        Cancelar
+        Volver
       </Button>
       <Button
         type="submit"
