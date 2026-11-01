@@ -37,7 +37,7 @@
 ---
 
 ### Slice 3 — Gestión de Usuarios y Accesos en Panel Central (Admin UI)
-- [ ] **Objetivo:** Permitir al Administrador dar de alta usuarios vendedores con vinculación obligatoria desde el formulario de usuarios y desde la lista de vendedores.
+- [x] **Objetivo:** Permitir al Administrador dar de alta usuarios vendedores con vinculación obligatoria desde el formulario de usuarios y desde la lista de vendedores.
 - **Valor observable:** En `UserFormPage.jsx`, al seleccionar rol "Vendedor" se activa el desplegable de vendedores registrados precargando sus datos personales; en `SellerPage.jsx` se visualiza el estado del acceso móvil.
 - **Archivos a crear/modificar:**
   - `client/src/pages/user/UserFormPage.jsx`.

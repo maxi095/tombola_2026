@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useUsers } from "../../context/UserContext";
-import { useNavigate, useParams } from "react-router-dom";
+import { useSellers } from "../../context/SellerContext";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   Save,
   Key,
@@ -9,7 +10,7 @@ import {
   Eye,
   EyeOff,
   Info,
-  Loader2,
+  Smartphone
 } from "lucide-react";
 
 // Importación de la Librería de UI Premium 2026
@@ -17,7 +18,6 @@ import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import InputField from "../../components/ui/InputField";
 import PageHeader from "../../components/ui/PageHeader";
-// Se renombra a EliteSelect para evitar colisiones de identificadores con Babel/Vite
 import EliteSelect from "../../components/ui/Select";
 import LoadingOverlay from "../../components/ui/LoadingOverlay";
 import FormGrid from "../../components/ui/FormGrid";
@@ -25,20 +25,28 @@ import { useFeedback } from "../../context/FeedbackContext";
 import { formatNumber, stripNonDigits } from "../../libs/formatters";
 
 /**
- * UserFormPage - Slim & Atomic 2026 v5
- * Optimización de espacios y estandarización de componentes.
+ * UserFormPage - Slim & Atomic 2026 v6 (Multi-Role Integration)
+ * Soporta vinculación de vendedor obligatoria (RN-ROL-09) y autocompletado.
  */
 export default function UserFormPage() {
-  const { register, handleSubmit, setValue, control, formState: { errors } } = useForm();
+  const { register, handleSubmit, setValue, watch, control, formState: { errors } } = useForm();
   const { createUser, updateUser, getUser } = useUsers();
+  const { sellers, getSellers } = useSellers();
   const { showToast } = useFeedback();
   const navigate = useNavigate();
   const params = useParams();
+  const [searchParams] = useSearchParams();
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const watchRoles = watch("roles");
+
+  useEffect(() => {
+    getSellers();
+  }, [getSellers]);
 
   useEffect(() => {
     async function loadUser() {
@@ -50,6 +58,9 @@ export default function UserFormPage() {
             setValue("username", user.username);
             setValue("email", user.email);
             setValue("roles", user.roles);
+            if (user.seller) {
+              setValue("seller", typeof user.seller === 'object' ? user.seller._id : user.seller);
+            }
             if (user.person) {
               setValue("firstName", user.person.firstName);
               setValue("lastName", user.person.lastName);
@@ -63,10 +74,42 @@ export default function UserFormPage() {
         } finally {
           setLoading(false);
         }
+      } else {
+        // Si viene con parámetro ?sellerId=... desde la lista de vendedores
+        const sellerParamId = searchParams.get("sellerId");
+        if (sellerParamId) {
+          setValue("roles", "Vendedor");
+          setValue("seller", sellerParamId);
+        }
       }
     }
     loadUser();
-  }, [params.id, getUser, setValue]);
+  }, [params.id, getUser, setValue, searchParams]);
+
+  // Autocompletar datos personales al seleccionar un vendedor
+  const handleSellerSelect = (sellerId) => {
+    setValue("seller", sellerId);
+    const targetSeller = sellers.find(s => s._id === sellerId);
+    if (targetSeller && targetSeller.person) {
+      const p = targetSeller.person;
+      if (p.firstName) setValue("firstName", p.firstName);
+      if (p.lastName) setValue("lastName", p.lastName);
+      if (p.document) setValue("document", p.document);
+      if (p.phone) setValue("phone", p.phone);
+      if (p.address) setValue("address", p.address);
+      if (p.email) setValue("email", p.email);
+
+      // Sugerir nombre de usuario si está vacío
+      const cleanUsername = `${(p.firstName || '').charAt(0)}${p.lastName || ''}`
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]/g, "");
+      if (cleanUsername) {
+        setValue("username", cleanUsername);
+      }
+    }
+  };
 
   const onSubmit = handleSubmit(async (data) => {
     setSaving(true);
@@ -74,21 +117,33 @@ export default function UserFormPage() {
       if (params.id && !isChangingPassword) {
         delete data.password;
       }
+
+      if (data.roles === "Vendedor" && !data.seller) {
+        showToast("Debe seleccionar un vendedor del club para el rol Vendedor", "warning");
+        setSaving(false);
+        return;
+      }
+
       if (params.id) {
         await updateUser(params.id, data);
         showToast("Usuario actualizado con éxito", "success");
       } else {
         await createUser(data);
-        showToast("Nuevo usuario registrado correctamente", "success");
+        showToast("Usuario registrado correctamente", "success");
       }
       navigate("/users");
     } catch (error) {
       console.error("Error al guardar:", error);
-      showToast("Hubo un error al procesar la solicitud", "error");
+      showToast(error.response?.data?.message || "Hubo un error al procesar la solicitud", "error");
     } finally {
       setSaving(false);
     }
   });
+
+  const sellerOptions = (sellers || []).map(s => ({
+    value: s._id,
+    label: `N° ${s.sellerNumber} — ${s.person?.lastName || ''}, ${s.person?.firstName || ''} (${s.isParticular ? 'Particular' : 'Club'})`
+  }));
 
   if (loading) {
     return <LoadingOverlay message="Sincronizando Usuario..." fullScreen />;
@@ -96,10 +151,8 @@ export default function UserFormPage() {
 
   return (
     <div className="flex flex-col px-8 animate-in fade-in duration-700">
-
       <PageHeader
         title={params.id ? "Editar Usuario" : "Registrar Usuario"}
-        //subtitle="Monitoreo de seguridad y actualización de información personal del equipo."
         compact={true}
         breadcrumbs={[
           { label: "Usuarios", href: "/users" },
@@ -121,34 +174,18 @@ export default function UserFormPage() {
       />
 
       <form onSubmit={onSubmit} className="flex flex-col gap-6 pb-20">
-
         {/* SECCIÓN: SEGURIDAD ACCESO */}
         <Card
           size="slim"
-          title="Seguridad Acceso"
+          title="Seguridad y Credenciales"
           icon={Key}
-          description="Gestión de credenciales"
+          description="Gestión de acceso y roles de usuario"
         >
           <FormGrid>
-            <InputField
-              label="Nombre de Usuario"
-              placeholder="ej. usuario_nob"
-              className="lg:col-span-2"
-              {...register("username", { required: "Usuario requerido" })}
-              error={errors.username?.message}
-            />
-
-            <InputField
-              label="Email"
-              type="email"
-              placeholder="personal@tombola.com"
-              className="lg:col-span-2"
-              {...register("email", { required: "Email requerido" })}
-              error={errors.email?.message}
-            />
-
             <div className="flex flex-col gap-2 lg:col-span-2">
-              <label className="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-1">Rol de Acceso</label>
+              <label className="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-1">
+                Rol de Acceso
+              </label>
               <Controller
                 name="roles"
                 control={control}
@@ -157,12 +194,21 @@ export default function UserFormPage() {
                   <EliteSelect
                     {...field}
                     options={[
-                      { value: "Vendedor", label: "Vendedor" },
-                      { value: "Administrador", label: "Administrador" }
+                      { value: "Vendedor", label: "Vendedor (Acceso Móvil PWA)" },
+                      { value: "Administrador", label: "Administrador (Control Total)" },
+                      { value: "Directiva", label: "Directiva (Solo Lectura)" }
                     ]}
                     value={
                       field.value
-                        ? { value: field.value, label: field.value }
+                        ? {
+                            value: field.value,
+                            label:
+                              field.value === "Vendedor"
+                                ? "Vendedor (Acceso Móvil PWA)"
+                                : field.value === "Directiva"
+                                ? "Directiva (Solo Lectura)"
+                                : "Administrador (Control Total)"
+                          }
                         : null
                     }
                     onChange={(selected) => field.onChange(selected.value)}
@@ -173,10 +219,60 @@ export default function UserFormPage() {
               {errors.roles && <p className="text-[10px] font-bold text-red-500 ml-1">{errors.roles.message}</p>}
             </div>
 
+            {/* Si es Vendedor, selector obligatorio del Vendedor del club */}
+            {watchRoles === "Vendedor" && (
+              <div className="flex flex-col gap-2 lg:col-span-2 animate-in fade-in slide-in-from-top-1">
+                <label className="text-[10px] font-black text-primary uppercase tracking-[0.2em] ml-1 flex items-center gap-1.5">
+                  <Smartphone size={13} className="text-primary" />
+                  Vendedor del Club Vinculado (Obligatorio)
+                </label>
+                <Controller
+                  name="seller"
+                  control={control}
+                  rules={{ required: watchRoles === "Vendedor" ? "Debe seleccionar un vendedor" : false }}
+                  render={({ field }) => (
+                    <EliteSelect
+                      {...field}
+                      options={sellerOptions}
+                      placeholder="Seleccionar vendedor para vincular..."
+                      value={
+                        field.value
+                          ? sellerOptions.find(opt => opt.value === field.value) || null
+                          : null
+                      }
+                      onChange={(selected) => handleSellerSelect(selected?.value)}
+                      isSearchable={true}
+                    />
+                  )}
+                />
+                {errors.seller && <p className="text-[10px] font-bold text-red-500 ml-1">{errors.seller.message}</p>}
+              </div>
+            )}
+
+            <InputField
+              label="Nombre de Usuario"
+              placeholder="ej. c_gomez"
+              className="lg:col-span-2"
+              {...register("username", { required: "Usuario requerido" })}
+              error={errors.username?.message}
+            />
+
+            <InputField
+              label="Email"
+              type="email"
+              placeholder="vendedor@tombola.com"
+              className="lg:col-span-2"
+              {...register("email", { required: "Email requerido" })}
+              error={errors.email?.message}
+            />
+
             <div className="flex flex-col gap-2 lg:col-span-2">
-              <label className="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-1">Contraseña</label>
+              <label className="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-1">
+                Contraseña
+              </label>
               {params.id && !isChangingPassword ? (
                 <Button
+                  type="button"
                   variant="ghost"
                   className="w-full py-3.5 rounded-premium-input border border-dashed border-slate-200 bg-slate-50/30 hover:bg-white text-[11px] font-bold"
                   onClick={() => setIsChangingPassword(true)}
@@ -246,7 +342,7 @@ export default function UserFormPage() {
               <Info size={16} />
             </div>
             <p className="text-[10px] font-bold text-slate-500 leading-relaxed tracking-tight">
-              Los datos personales son protegidos bajo la normativa vigente de seguridad informática. Cualquier modificación en los rangos de acceso será notificada a la gerencia central a través de los sistemas de auditoría interna conformes al estándar 2026.
+              Los usuarios con rol <strong>Vendedor</strong> operan de forma exclusiva en el portal móvil (PWA) accediendo únicamente a sus cartones y ventas asignadas. Toda modificación o alta es auditada conforme al Standard 2026.
             </p>
           </div>
         </Card>

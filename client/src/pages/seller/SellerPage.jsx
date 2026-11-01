@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useSellers } from "../../context/SellerContext";
+import { useUsers } from "../../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -14,9 +15,8 @@ import {
   Settings2,
   ChevronDown,
   Eye,
-  Percent,
-  CircleDollarSign,
-  Loader2
+  Loader2,
+  Smartphone
 } from "lucide-react";
 
 import PageHeader from "../../components/ui/PageHeader";
@@ -28,7 +28,6 @@ import {
   TR,
   TH,
   TD,
-  UserCell,
   OperationCell
 } from "../../components/ui/Table";
 import Card from "../../components/ui/Card";
@@ -47,6 +46,7 @@ import { useFeedback } from "../../context/FeedbackContext";
  */
 function SellerPage() {
   const { getSellers, sellers, loading: contextLoading } = useSellers();
+  const { users, getUsers } = useUsers();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useFeedback();
@@ -70,8 +70,11 @@ function SellerPage() {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   useEffect(() => {
-    if (user) getSellers();
-  }, [user, getSellers]);
+    if (user) {
+      getSellers();
+      getUsers();
+    }
+  }, [user, getSellers, getUsers]);
 
   // Lógica de Filtrado Omnicanal 🏹
   const filteredSellers = useMemo(() => {
@@ -273,28 +276,48 @@ function SellerPage() {
                           </TD>
                         );
 
-                        if (col.id === 'actions') return (
-                          <TD key={col.id} className="text-right px-10 bg-slate-50/10">
-                            <div className="flex justify-end gap-3 transition-all">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => navigate(`/seller/view/${seller._id}`)}
-                                icon={Eye}
-                              >
-                                Ver
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => navigate(`/seller/edit/${seller._id}`)}
-                                icon={Edit3}
-                              >
-                                Editar
-                              </Button>
-                            </div>
-                          </TD>
-                        );
+                        if (col.id === 'actions') {
+                          const hasAppUser = (users || []).some(u => (u.seller?._id || u.seller) === seller._id);
+                          return (
+                            <TD key={col.id} className="text-right px-6 bg-slate-50/10">
+                              <div className="flex items-center justify-end gap-2 transition-all">
+                                {hasAppUser ? (
+                                  <span className="inline-flex items-center gap-1 text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100" title="Acceso Móvil PWA Habilitado">
+                                    <Smartphone size={11} />
+                                    App Activa
+                                  </span>
+                                ) : (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => navigate(`/users/new?sellerId=${seller._id}`)}
+                                    icon={Smartphone}
+                                    className="text-[9.5px] px-2 text-slate-600 hover:text-primary"
+                                    title="Habilitar Acceso Móvil para el Vendedor"
+                                  >
+                                    Crear Acceso
+                                  </Button>
+                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => navigate(`/seller/view/${seller._id}`)}
+                                  icon={Eye}
+                                >
+                                  Ver
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => navigate(`/seller/edit/${seller._id}`)}
+                                  icon={Edit3}
+                                >
+                                  Editar
+                                </Button>
+                              </div>
+                            </TD>
+                          );
+                        }
                         return <TD key={col.id}>—</TD>;
                       })}
                     </TR>
