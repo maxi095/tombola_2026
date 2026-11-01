@@ -1,77 +1,41 @@
 ---
 name: plan
-description: Etapa 3 del flujo SDD. Convierte una spec funcional cerrada en un plan técnico de implementación (plan.md) — diseño, decisiones de arquitectura, contratos, cambios de datos, puntos de integración — sin todavía romperlo en tareas. Usalo cuando existe spec.md cerrada y falta el plan técnico. Tech-agnostic — deriva el stack del proyecto, no lo impone.
+description: Etapa 3 del Carril SDD. Convierte una spec funcional cerrada en un plan técnico de implementación (plan.md) definiendo cambios en modelos Mongoose, índices, endpoints Express/Zod y componentes React/UI.
 ---
 
 # SDD · Plan
 
-Traducís el QUÉ (spec) al CÓMO técnico. Producís un `plan.md` que `slice` pueda cortar en tareas pequeñas sin tener que rediseñar. No escribís código de producción todavía.
+Traducís el QUÉ (`spec.md`) al CÓMO técnico en `docs/specs/<NNN-slug>/plan.md`, respetando la arquitectura real del proyecto en `AGENTS.md`, `docs/SYSTEM_BLUEPRINT.md` y `docs/UI_UX_STANDARD.md`.
 
-## Principio rector
-
-El plan se **deriva del proyecto**, no de tus preferencias. Leé el código existente y la constitution, y reutilizá patrones, capas y convenciones que ya están. Introducí abstracciones nuevas solo si la spec lo exige; nada especulativo.
-
-## Proceso
-
-1. **Leé** `spec.md` (cerrada), `CLAUDE.md` y el código relevante existente. Si la spec tiene ambigüedades materiales abiertas, volvé a `clarify` antes de planificar.
-2. **Mapeá la spec al sistema real**: qué módulos/archivos existentes tocan, qué falta crear, cómo fluye el dato extremo a extremo.
-3. **Resolvé las decisiones técnicas** y dejalas registradas (con su porqué y alternativas descartadas).
-4. **Escribí `plan.md`** con la estructura de abajo.
-5. **No excedas el diseño necesario.** Si una parte de la spec no requiere diseño, no inventes uno.
+## Principio Rector
+Reutilizar > Crear. Antes de proponer un componente o endpoint nuevo, verificá qué existe en `src/controllers/`, `src/models/` y `client/src/components/ui/`.
 
 ## Estructura de `plan.md`
 
 ```markdown
-# Plan técnico — <Nombre del feature>
+# Plan Técnico — <Nombre del Feature>
 
 **Spec:** ./spec.md
 **Estado:** Borrador | Aprobado
 
-## 1. Enfoque general
-2-5 frases: la estrategia técnica y por qué encaja con el proyecto.
+## 1. Enfoque General
+Estrategia técnica en 2-5 frases y cómo se integra sin romper lo existente.
 
-## 2. Contexto del código existente
-Qué módulos/archivos/patrones ya existen y se reutilizan. Qué se ajusta vs. qué se crea.
+## 2. Diseño por Capa
+- **Base de Datos y Modelos (`src/models/`):** Cambios de esquema Mongoose e índices requeridos (`.index()`).
+- **Seguridad, Roles y Validación (`src/middlewares/`, `src/schemas/`):** Permisos RBAC (`checkRole`, aislamiento por vendedor) y esquemas Zod.
+- **Lógica y Endpoints (`src/controllers/`, `src/routes/`):** Rutas, contratos request/response, prevención de N+1 y paginación.
+- **Frontend y UI (`client/src/`):** Páginas, contextos, componentes atómicos de `client/src/components/ui/` y adaptación al viewport (Notebook 1366px sin scroll horizontal vs. Mobile PWA).
 
-## 3. Diseño por capa
-(Adaptá a la arquitectura real del proyecto.)
-- **Datos / persistencia:** entidades, migraciones, índices, cambios de esquema.
-- **Lógica / dominio:** servicios, reglas, validaciones.
-- **Interfaz / API / UI:** endpoints, contratos, componentes, rutas.
-- **Integraciones:** servicios externos, contratos, manejo de fallas/timeouts.
+## 3. Decisiones Técnicas y Riesgos
+Decisiones tomadas, alternativas descartadas y cuidado de compatibilidad con datos productivos.
 
-## 4. Contratos
-Formas de datos clave (request/response, eventos, payloads) a nivel de campos. Suficiente para implementar sin re-decidir.
+## 4. Estrategia de Verificación
+Pruebas unitarias/integración (Backend), pruebas funcionales y gate `npm run build`.
 
-## 5. Decisiones técnicas
-| # | Decisión | Por qué | Alternativas descartadas |
-|---|----------|---------|--------------------------|
-
-## 5b. Diagramas (solo si el feature introduce un cambio de arquitectura no trivial)
-Omití esta sección si el feature es una extensión simple de algo existente y no cambia la forma del sistema. Cuando aplique, usá Mermaid y elegí solo los diagramas que aporten (no fuerces los cuatro si uno solo ya explica el cambio):
-- **Context:** el sistema y con quién interactúa (usuarios, sistemas externos) — útil si el feature agrega una integración o actor nuevo.
-- **Container/Component:** las piezas que se agregan o modifican y cómo se conectan — útil si hay más de un componente nuevo interactuando.
-- **Data flow:** cómo viaja el dato en el flujo principal — útil si el feature mueve datos entre varios pasos/sistemas.
-
-Si hubo más de una forma razonable de resolver el diseño (no solo detalles menores), documentá las alternativas evaluadas con sus pros/contras antes de la tabla de decisiones — ayuda a quien revise a entender por qué no se eligió la otra.
-
-## 6. Impacto y riesgos
-Qué se puede romper, dependencias ocultas, migraciones de datos, compatibilidad.
-
-## 7. Estrategia de pruebas
-Qué se testea y a qué nivel (unidad, integración, e2e), por área.
-
-## 8. Sincronización de docs
-Qué hay que actualizar al implementar (CLAUDE.md, specs, .env.example, etc.).
+## 5. Sincronización con `SYSTEM_BLUEPRINT.md`
+Qué secciones de `docs/SYSTEM_BLUEPRINT.md` deberán actualizarse al finalizar el feature.
 ```
 
-## Reglas
-
-- **Reutilizar > crear.** Preferí extender lo existente antes que introducir nuevas estructuras.
-- **Sin sobre-ingeniería.** Nada de repos genéricos, capas de abstracción, feature flags o frameworks internos salvo que la spec lo pida explícitamente.
-- **Respetá la constitution.** Separación de capas, convenciones y límites de proceso son restricciones duras.
-- **Trazá a la spec.** Cada pieza del plan debe servir a un criterio de aceptación. Si algo no traza a la spec, sobra o falta en la spec.
-
-## Salida y handoff
-
-Escribí `plan.md`, mostrá un resumen de decisiones y riesgos, esperá confirmación. Handoff → `slice`.
+## Salida y Handoff
+Escribí `plan.md`, resumí las decisiones clave y esperá confirmación del usuario para pasar a `slice`.

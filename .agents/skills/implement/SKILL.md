@@ -1,51 +1,27 @@
 ---
 name: implement
-description: Etapa 5 (final) del flujo SDD. Ejecuta los slices definidos en slices.md de a uno por vez, respetando los límites de cambio, corriendo pruebas y marcando progreso. Usalo cuando existe slices.md con tareas pendientes y el usuario quiere empezar/continuar la implementación. Tech-agnostic.
+description: Ejecución incremental de código (Etapa 5 de SDD o paso de construcción de los carriles de Refactor, Performance y Bugfix). Implementa un slice o tarea acotada a la vez, sin omitir código y respetando AGENTS.md.
 ---
 
-# SDD · Implement
+# SDD · Implement (Incremental Builder)
 
-Convertís slices en código, **uno a la vez**, con disciplina. Cada slice termina en un estado verificable y revisable antes de pasar al siguiente.
+Convertís un slice de `slices.md` o un plan acotado (de Refactor, Performance o Bugfix) en **código real, completo y verificado**.
 
-## Principio rector
+## Reglas Duras de Implementación
 
-**Un slice por iteración.** No anticipes slices futuros, no agregues lo que no pide el slice actual, no refactorices de paso. La gracia del flujo es que cada paso sea chico y reversible.
+1. **Un paso / slice por iteración:** No te adelantes a slices futuros ni mezcles cambios fuera del alcance declarado.
+2. **Prohibición absoluta de código resumido:** Nunca escribas `// ... resto del código`. Escribí siempre los bloques completos para evitar regresiones.
+3. **Cumplimiento estricto del Estándar 2026 (`AGENTS.md` + `docs/UI_UX_STANDARD.md`):**
+   - Wording imperativo exacto (`Crear`, `Guardar`, `Volver`, `Anulada`).
+   - Reutilización de `client/src/components/ui/` (`PageHeader`, `Card`, `Table`, `InputField`, `Select`, `ConfirmModal`).
+   - Prohibido usar `window.confirm` o `alert()` nativos.
+   - Formateo monetario con `formatCurrency`, `formatCurrencyInput` y `cleanCurrencyInput`.
+   - Cero scroll horizontal en resoluciones de Notebook (1366px) y diseño Touch-First en vistas Mobile PWA.
+4. **Verificación Inmediata:**
+   - Si tocaste archivos en `client/`, corré `npm run build` dentro de `client/` para confirmar cero errores de compilación o imports rotos.
+   - Si estás ejecutando un `slices.md`, marcá el checkbox `[x]` del slice completado.
 
-## Proceso por slice
-
-1. **Leé el slice** en `slices.md` y su contexto en `plan.md`/`spec.md`. Releé las reglas de la constitution (`CLAUDE.md`) que apliquen.
-2. **Declará el alcance** antes de tocar nada: qué archivos vas a crear/modificar y por qué. Si el alcance real desborda lo que el slice definió (toca más áreas, deja de ser revisable de una sentada o reversible con un revert limpio — o excede lo que diga la constitution), **pará y proponé re-slicear**.
-3. **Implementá** solo lo del slice. Seguí las convenciones del código circundante (naming, estilo, densidad de comentarios, idioms).
-4. **Probá** según la estrategia del plan. Corré las pruebas relevantes y, si el proyecto lo tiene, lint/typecheck. Reportá resultados reales — si algo falla, decilo con la salida, no lo escondas.
-5. **Verificá criterios de aceptación** del slice contra la spec.
-6. **Sincronizá docs** si el slice cambió una decisión (CLAUDE.md, spec, .env.example…), en el mismo cambio.
-7. **Marcá el checkbox** del slice en `slices.md` y mostrá un resumen: qué se hizo, archivos tocados, estado de pruebas.
-8. **Checkpoint.** Esperá confirmación (o commit, si el usuario lo pide) antes del siguiente slice. Seguí las reglas de commit de la constitution; commiteá/pusheá solo si el usuario lo pide.
-
-## Reglas duras
-
-- **No te adelantes.** Prohibido implementar parte de un slice futuro "ya que estoy".
-- **No refactors oportunistas.** Solo se permite el refactor que el slice requiere para compilar/funcionar.
-- **No abstracciones especulativas.** Sin generalizar antes de tener 2 usos concretos.
-- **Blast radius acotado.** Si un slice empieza a tocar muchos archivos/carpetas, es señal de que estaba mal cortado → volvé a `slice`.
-- **Honestidad de estado.** "Hecho" significa implementado y verificado. Si saltaste una prueba o quedó algo a medias, decilo explícitamente.
-
-## Cuando algo no cierra
-
-- El slice no alcanza / falta diseño → volvé a `plan`.
-- Aparece una ambigüedad funcional → volvé a `clarify`.
-- El corte estaba mal → volvé a `slice`.
-
-No fuerces un slice mal definido; corregí aguas arriba.
-
-## Salida
-
-Código funcionando para el slice, pruebas en verde (o estado real reportado), `slices.md` con el progreso marcado. Repetí hasta completar todos los slices.
-
-Durante la implementación escribís los tests mínimos que cada slice necesita para verificarse. El **diseño sistemático de la suite** (unit/integration/smoke/e2e con cobertura de criterios) es trabajo de la etapa siguiente.
-
-## Al completar el último slice (handoff)
-
-Cuando todos los slices están hechos, **no cierres el feature todavía**. El cierre (fundir el delta + archivar) ocurre recién en la etapa Archive, después de testear y documentar.
-
-Handoff → `test` para diseñar y desarrollar la suite de pruebas que cubra los criterios de aceptación.
+## Salida y Handoff
+Mostrá un resumen conciso de los archivos modificados y el resultado de la verificación.
+- Si quedan slices pendientes → pedí confirmación para avanzar al siguiente slice.
+- Si se completó el último slice o la tarea del carril → pasá a `review-and-ship`.

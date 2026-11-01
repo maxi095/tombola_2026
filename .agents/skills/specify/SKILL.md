@@ -1,37 +1,32 @@
 ---
 name: specify
-description: Etapa 1 del flujo SDD. Convierte un requerimiento en lenguaje natural en una especificación funcional estructurada (spec.md), enfocada en QUÉ y POR QUÉ, no en el CÓMO técnico. Usalo cuando el usuario describe un feature/historia/módulo nuevo a desarrollar y todavía no existe una spec. Tech-agnostic.
+description: Etapa 1 del Carril SDD. Convierte un requerimiento funcional nuevo en una especificación estructurada (docs/specs/<NNN-slug>/spec.md), enfocada en QUÉ se construye, para QUÉ rol/dispositivo y POR QUÉ. Usalo para features o módulos nuevos medianos/grandes.
 ---
 
 # SDD · Specify
 
-Transformás un requerimiento informal en una **spec funcional** clara, verificable y libre de detalle de implementación. La spec describe el comportamiento esperado y el valor; el CÓMO técnico es trabajo de `plan`.
-
-## Principio rector
-
-Escribí para que **un revisor de negocio** pueda validarla y **`plan` y `slice`** puedan trabajar sobre ella sin adivinar. Si algo no se puede determinar del input ni del contexto, **NO lo inventes**: marcá `[NEEDS CLARIFICATION: pregunta concreta]`. Esos marcadores son la entrada de `clarify`.
+Transformás un requerimiento de negocio en una **spec funcional** clara, verificable y alineada con el dominio de **Gestión Tómbola**. La spec describe el comportamiento esperado, actores/roles, experiencia en pantalla y reglas de negocio; el CÓMO técnico va después en `plan`.
 
 ## Proceso
 
-1. **Leé la constitution** (`CLAUDE.md`) y specs vecinas para tono, convenciones y restricciones.
-2. **¿Es una migración de GeneXus con IR ya corrida?** Si existe `reverse/<objeto>/spec-draft.md`, usalo como insumo principal en vez de arrancar de un requerimiento en lenguaje natural: traducí su contenido a la estructura de abajo, preservando la trazabilidad a `evidence-matrix.md` y convirtiendo cada `[NEEDS_VALIDATION]`/pregunta abierta del borrador en un `[NEEDS CLARIFICATION: …]` de la spec.
-3. **Asigná carpeta**: `docs/specs/<NNN-slug>/` con `NNN` correlativo al último existente y `slug` kebab-case del feature. (Si el proyecto tiene convención propia de specs, adaptate a ella.)
-4. **Redactá `spec.md`** con la estructura de abajo.
-5. **Marcá ambigüedades** con `[NEEDS CLARIFICATION: …]` en vez de asumir. Sé honesto: es mejor 5 marcadores reales que una spec falsamente completa.
+1. **Leé el contexto vivo:** Consultá `AGENTS.md`, `docs/SYSTEM_BLUEPRINT.md` (para no contradecir modelos ni reglas existentes) y `docs/UI_UX_STANDARD.md` (para Wording y dispositivos objetivo: Notebook 1366px, Mobile PWA o TV).
+2. **Asigná carpeta:** `docs/specs/<NNN-slug>/spec.md` (ej. `003-portal-vendedores-mobile`).
+3. **Redactá `spec.md`** con la estructura oficial de abajo.
+4. **Marcá ambigüedades reales** con `[NEEDS CLARIFICATION: pregunta concreta]` en lugar de adivinar reglas contables o de permisos.
 
 ## Estructura de `spec.md`
 
 ```markdown
-# Spec — <Nombre del feature>
+# Spec — <Nombre del Feature>
 
 **Estado:** Borrador | En clarificación | Cerrada
 **Carpeta:** docs/specs/<NNN-slug>/
 
-## 1. Problema y objetivo
-Qué necesidad resuelve y por qué importa. 2-4 frases.
+## 1. Problema y Objetivo
+Qué necesidad resuelve y por qué importa (2-4 frases).
 
-## 2. Actores y permisos
-Quién interactúa y qué puede hacer cada rol.
+## 2. Actores, Roles y Dispositivos
+Qué roles interactúan (`Administrador`, `Vendedor`, `Directiva`, `Público`) y desde qué dispositivo principal (`Notebook 1366px`, `Mobile PWA`, `TV 100vh`).
 
 ## 3. Alcance
 ### Incluye
@@ -39,43 +34,24 @@ Quién interactúa y qué puede hacer cada rol.
 ### No incluye (explícito)
 - …
 
-## 4. Comportamiento esperado
-Flujos en términos funcionales. Usá escenarios:
-- **Flujo principal (happy path):** pasos observables.
-- **Flujos alternativos / errores:** qué pasa cuando algo falla o varía.
+## 4. Comportamiento Esperado y Experiencia de Usuario
+- **Flujo principal (Happy Path):** pasos observables y wording de acciones/estados según `docs/UI_UX_STANDARD.md`.
+- **Flujos alternativos / Errores:** validaciones, permisos denegados, idempotencia.
 
-## 5. Reglas de negocio
-Reglas, validaciones, restricciones, cálculos. Numeradas para poder referenciarlas.
+## 5. Reglas de Negocio
+Reglas, fórmulas contables y restricciones numeradas (`RN-XXX-01`).
 
-## 6. Datos / entidades (conceptual)
-Entidades y campos relevantes a nivel dominio, sin esquema físico ni tipos de framework.
+## 6. Impacto en Entidades de Dominio
+Qué entidades de `docs/SYSTEM_BLUEPRINT.md` participan o qué datos conceptuales nuevos se requieren.
 
-## 7. Criterios de aceptación
-Lista verificable (checkboxes). Cada uno debe ser testeable y sin ambigüedad.
+## 7. Criterios de Aceptación
+Lista verificable con checkboxes (`- [ ]`). Cada criterio debe poder probarse.
 
 ## 8. Clarificaciones
-(Vacío al inicio — lo completa clarify.)
-
-## 9. Dependencias y supuestos
-Otros módulos, servicios externos, supuestos que de romperse cambian la spec.
-
-## 10. No funcionales, seguridad y riesgos (solo si son materiales)
-Incluí esta sección **únicamente** cuando el feature tiene requisitos reales de este tipo — no la infles por completitud. Tres sub-bloques, cada uno opcional:
-- **No funcionales:** performance, escalabilidad, disponibilidad, auditoría, accesibilidad — solo los que el documento/usuario mencionó o que son evidentemente críticos para este feature.
-- **Seguridad:** roles/permisos más allá del básico de §2, datos sensibles, requerimientos regulatorios mencionados.
-- **Riesgos:** algo que si sale mal tiene impacto real (dato, seguridad, negocio) — no riesgos genéricos de "todo software tiene bugs".
-Si nada de esto aplica al feature, omití la sección entera en vez de dejarla vacía con placeholders.
+(Completado por la skill `clarify` si hubo dudas iniciales.)
 ```
 
-## Reglas de calidad
-
-- **Sin implementación.** Nada de tablas SQL, nombres de clases, endpoints concretos, librerías. Si te descubrís escribiendo eso, va a `plan.md`.
-- **Testeable.** Cada criterio de aceptación debe poder convertirse en una prueba.
-- **Honestidad sobre completitud.** Marcadores `[NEEDS CLARIFICATION]` antes que supuestos silenciosos.
-- **Conciso.** Sin relleno. Una spec corta y precisa vale más que una larga y vaga.
-
-## Salida y handoff
-
-Escribí `spec.md`, mostrá un resumen y la lista de `[NEEDS CLARIFICATION]` si los hay.
-- Si hay marcadores → handoff a `clarify`.
-- Si no hay → confirmá con el usuario y handoff a `plan`.
+## Salida y Handoff
+Escribí `spec.md` y mostrá un resumen ejecutivo.
+- Si hay marcadores `[NEEDS CLARIFICATION]` → handoff a `clarify`.
+- Si está todo claro → esperá confirmación del usuario y handoff a `plan`.
