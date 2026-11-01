@@ -30,12 +30,12 @@ Este documento ordena de manera lógica y técnica todo lo necesario para llevar
 
 - [x] **1.1 Resguardo y Consolidación Documental:** Crear tag `v1.0-pre-sdd-cleanup`, unificar `AGENTS.md`, `SYSTEM_BLUEPRINT.md`, `UI_UX_STANDARD.md`, `ROADMAP.md` y suite de skills SDD + Addy Osmani.
 - [x] **1.2 Estrategia de Ramas Git (`develop` vs `main`):** Crear la rama `develop` para usarla como entorno de trabajo/staging, dejando `main` en su estado productivo actual hasta validar cada entrega.
-- [ ] **1.3 Corrección de Bugs Puntuales Detectados en Auditoría:**
+- [x] **1.3 Corrección de Bugs Puntuales Detectados en Auditoría:**
   - `src/controllers/edition.controllers.js`: Corregir `updateEdition` que devuelve el modelo `Edition` en lugar del documento actualizado `edition`.
   - `src/controllers/auth.controllers.js`: Incluir `roles: userSaved.roles` al firmar el JWT en `register`.
   - `client/src/pages/draw/DrawViewPage.jsx`: Corregir `onClick={handleDownloadActa}` a `() => handleDownloadActa(draw)`.
-- [ ] **1.4 Eliminación de Código Legacy y Dependencias Basura:**
-  - Eliminar el modelo/controlador/ruta obsoleta `Installment` (`installment.model.js`, `installment.controllers.js`, `installment.routes.js`, `installment.schema.js`) y `client/src/ProtectedRoute.jsx` duplicado.
+- [x] **1.4 Eliminación de Código Legacy y Dependencias Basura:**
+  - Eliminar el modelo/controlador/ruta obsoleta `Installment` (`installment.model.js`, `installment.controllers.js`, `installment.routes.js`, `installment.schema.js`, `client/src/api/installment.js`, `client/src/context/installmentContext.jsx`) y `client/src/ProtectedRoute.jsx` duplicado.
   - Limpiar del `package.json` raíz (Backend) los paquetes de frontend instalados por error (`react-modal`, `react-select`, `html2pdf.js`, `xlsx`, `js`).
 
 ---
@@ -43,12 +43,12 @@ Este documento ordena de manera lógica y técnica todo lo necesario para llevar
 ### Fase 2: Optimización de Performance Backend y Base de Datos (Pre-Cloud)
 *Objetivo: Que el sistema vuele tanto en local como cuando la base de datos esté en MongoDB Atlas en la nube.*
 
-- [ ] **2.1 Indexación Estratégica en MongoDB (`src/models/`):**
-  - `BingoCard`: Índice único compuesto `{ edition: 1, number: 1 }`, e índices en `{ edition: 1, status: 1 }` y `{ edition: 1, seller: 1 }`.
-  - `Sale`: Índices en `{ edition: 1, status: 1 }`, `{ seller: 1, edition: 1 }`, `{ client: 1 }` y `{ bingoCard: 1 }`.
-  - `Quota`: Índices en `{ sale: 1, quotaNumber: 1 }` y `{ paymentDate: 1, dueDate: 1 }`.
-  - `SellerPayment` y `Balance`: Índices en `{ edition: 1, status: 1 }`, `{ seller: 1, createdAt: -1 }` y `{ sellerPaymentRef: 1 }`.
-  - `Person`: Índices en `{ document: 1 }` y `{ lastName: 1, firstName: 1 }`.
+- [x] **2.1 Indexación Estratégica y Segura en MongoDB (`src/models/`):**
+  - `BingoCard`: Índices de lectura en `{ edition: 1, number: 1 }`, `{ edition: 1, status: 1 }`, `{ edition: 1, seller: 1 }` y `{ seller: 1 }`.
+  - `Sale`: Índices en `{ edition: 1, status: 1 }`, `{ seller: 1, edition: 1 }`, `{ client: 1 }`, `{ bingoCard: 1, status: 1 }` y `{ saleDate: -1 }`.
+  - `Quota`: Índices en `{ sale: 1, quotaNumber: 1 }`, `{ paymentDate: 1, dueDate: 1 }` y `{ dueDate: 1 }`.
+  - `SellerPayment` y `Balance`: Índices en `{ edition: 1, status: 1 }`, `{ seller: 1, edition: 1, createdAt: -1 }` y `{ sellerPaymentRef: 1 }`.
+  - `Person`: Índices en `{ document: 1 }`, `{ lastName: 1, firstName: 1 }` y `{ city: 1 }` (no-únicos, 100% compatibles con datos históricos).
 - [ ] **2.2 Eliminación de N+1 y Endpoints Batch:**
   - Crear endpoint atómico en backend para Pago Contado / Bonificación Sin Cargo de una Venta (`PUT /api/sale/:id/pay-all` y `no-charge`) en lugar de disparar 8 requests `PUT /api/quota/:id` en paralelo desde `SaleViewPage.jsx`.
   - Eliminar el bucle N+1 de `getQuotasBySale` en `SellerViewPage.jsx`.

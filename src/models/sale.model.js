@@ -63,10 +63,15 @@ const saleSchema = new mongoose.Schema({
     timestamps: true
 });
 
+// Índices de lectura seguros para datos productivos e históricos
+saleSchema.index({ edition: 1, status: 1 });
+saleSchema.index({ seller: 1, edition: 1 });
+saleSchema.index({ client: 1 });
+saleSchema.index({ bingoCard: 1, status: 1 });
+saleSchema.index({ saleDate: -1 });
+
 saleSchema.pre("save", async function (next) {
   const sale = this;
-
-  console.log(">> Ejecutando pre-save sale");
 
   if (sale.isNew && !sale.saleNumber) {
     try {
@@ -76,7 +81,6 @@ saleSchema.pre("save", async function (next) {
         { new: true, upsert: true }
       );
       sale.saleNumber = counter.seq.toString().padStart(0, "0");
-      console.log(">> saleNumber generado:", sale.saleNumber);
       next();
     } catch (err) {
       next(err);

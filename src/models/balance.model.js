@@ -175,6 +175,11 @@ const balanceSchema = new mongoose.Schema(
   }
 );
 
+// Índices de lectura seguros para datos productivos e históricos
+balanceSchema.index({ edition: 1, status: 1, type: 1 });
+balanceSchema.index({ sellerPaymentRef: 1 });
+balanceSchema.index({ date: -1 });
+
 // ─── Pre-save: calcular montos y asignar número incremental ──────────────────
 balanceSchema.pre('save', async function (next) {
   const doc = this;

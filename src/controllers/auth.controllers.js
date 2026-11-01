@@ -29,7 +29,10 @@ export const register = async (req, res) => {
     });
 
     const userSaved = await newUser.save();
-    const token = await createAccessToken({ id: userSaved._id });
+    const token = await createAccessToken({
+      id: userSaved._id,
+      roles: userSaved.roles
+    });
 
     res.cookie("token", token);
     res.json({

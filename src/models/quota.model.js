@@ -29,4 +29,9 @@ const quotaSchema = new mongoose.Schema({
     timestamps: true
 });
 
+// Índices de lectura seguros para datos productivos e históricos
+quotaSchema.index({ sale: 1, quotaNumber: 1 });
+quotaSchema.index({ paymentDate: 1, dueDate: 1 });
+quotaSchema.index({ dueDate: 1 });
+
 export default mongoose.model('Quota', quotaSchema);

@@ -172,7 +172,7 @@ const handleDownloadActa = async (draw) => {
           </a>
           
           <button
-            onClick={handleDownloadActa} // Nota: asegúrate que pasas 'draw' si la función lo requiere: () => handleDownloadActa(draw)
+            onClick={() => handleDownloadActa(draw)}
             className="btn-primary"
           >
             📄 Descargar Acta

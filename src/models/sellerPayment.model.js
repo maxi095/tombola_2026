@@ -75,7 +75,7 @@ const sellerPaymentSchema = new mongoose.Schema({
   },
   sellerPaymentNumber: {
     type: Number,
-    unique: true // 👈 mantenemos la unicidad pero quitamos `required`
+    unique: true
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -93,13 +93,15 @@ const sellerPaymentSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Índices de lectura seguros para datos productivos e históricos (incluye consulta de idempotencia de 10s)
+sellerPaymentSchema.index({ edition: 1, status: 1, date: -1 });
+sellerPaymentSchema.index({ seller: 1, edition: 1, createdAt: -1 });
+
 sellerPaymentSchema.pre("save", async function (next) {
   const sellerPayment = this;
 
   // Calcular automáticamente checkAmount desde los cheques
   sellerPayment.checkAmount = sellerPayment.checks.reduce((sum, check) => sum + check.amount, 0);
-
-  console.log(">> Ejecutando pre-save SellerPayment");
 
   if (sellerPayment.isNew && !sellerPayment.sellerPaymentNumber) {
     try {
@@ -109,7 +111,6 @@ sellerPaymentSchema.pre("save", async function (next) {
         { new: true, upsert: true }
       );
       sellerPayment.sellerPaymentNumber = counter.seq.toString().padStart(0, "0");
-      console.log(">> sellerPaymentNumber generado:", sellerPayment.sellerPaymentNumber);
       next();
     } catch (err) {
       next(err);

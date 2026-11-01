@@ -250,7 +250,7 @@ export const updateEdition = async (req, res) => {
     try {
         const edition = await Edition.findByIdAndUpdate(req.params.id, req.body, { new: true }).populate('user');
         if (!edition) return res.status(404).json({ message: 'Edition not found' });
-        res.json(Edition);
+        res.json(edition);
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }

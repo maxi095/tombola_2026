@@ -38,4 +38,10 @@ const bingoCardSchema = new mongoose.Schema({
     timestamps: true
 });
 
+// Índices de lectura seguros para datos productivos e históricos
+bingoCardSchema.index({ edition: 1, number: 1 });
+bingoCardSchema.index({ edition: 1, status: 1 });
+bingoCardSchema.index({ edition: 1, seller: 1 });
+bingoCardSchema.index({ seller: 1 });
+
 export default mongoose.model('BingoCard', bingoCardSchema);

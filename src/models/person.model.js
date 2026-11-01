@@ -40,4 +40,9 @@ const personSchema = new mongoose.Schema({
     timestamps: true
 });
 
+// Índices no-únicos seguros sobre datos históricos (permite múltiples registros sin DNI o email)
+personSchema.index({ document: 1 });
+personSchema.index({ lastName: 1, firstName: 1 });
+personSchema.index({ city: 1 });
+
 export default mongoose.model('Person', personSchema);
