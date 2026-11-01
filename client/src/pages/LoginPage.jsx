@@ -8,8 +8,7 @@ import Button from "../components/ui/Button";
 import InputField from "../components/ui/InputField";
 
 /**
- * LoginPage - Premium 2026 v3 (Navy Alignment)
- * Refactorizada para usar componentes atómicos y eliminar inconsistencias visuales.
+ * LoginPage - Premium 2026 v3 (Navy Alignment & Smart Role Redirection)
  */
 function LoginPage() {
   const {
@@ -27,8 +26,14 @@ function LoginPage() {
   });
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/dashboard");
+    if (isAuthenticated && user) {
+      if (user.roles === "Vendedor") {
+        navigate("/vendedor");
+      } else if (user.roles === "Directiva") {
+        navigate("/directiva");
+      } else {
+        navigate("/dashboard");
+      }
     }
   }, [isAuthenticated, user, navigate]);
 
@@ -40,7 +45,7 @@ function LoginPage() {
             Iniciar Sesión
           </h1>
           <p className="text-slate-400 font-bold text-[12px] uppercase tracking-[0.2em] px-4">
-            Portal Administrativo Tómbola
+            Portal Institucional Tómbola
           </p>
         </div>
 
@@ -70,19 +75,14 @@ function LoginPage() {
             onClick={() => setShowPassword(!showPassword)}
           />
 
-          <div className="pt-4">
-            <Button type="submit" size="lg" className="w-full shadow-2xl" icon={Lock}>
-              Ingresar al Sistema
-            </Button>
-          </div>
+          <Button
+            type="submit"
+            className="w-full mt-2"
+            size="lg"
+          >
+            Ingresar
+          </Button>
         </form>
-
-        <div className="mt-10 text-center">
-          <p className="text-[11px] font-bold text-slate-300 uppercase tracking-widest leading-loose">
-            Copyright © 2026 Tómbola Software Team<br />
-            Todos los derechos reservados.
-          </p>
-        </div>
       </Card>
     </div>
   );

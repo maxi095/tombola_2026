@@ -97,6 +97,11 @@ const VendedorCuotasPage = lazy(() =>
   import("./pages/vendedor/VendedorCuotasPage").then((m) => ({ default: m.VendedorCuotasPage }))
 );
 
+// Portal Ejecutivo Directiva 🏛️
+const DirectivaDashboardPage = lazy(() =>
+  import("./pages/directiva/DirectivaDashboardPage").then((m) => ({ default: m.DirectivaDashboardPage }))
+);
+
 const PageLoader = () => (
   <div className="py-40 flex flex-col items-center justify-center gap-3">
     <div className="w-8 h-8 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
@@ -233,6 +238,16 @@ function Layout() {
               <Route path="/draw/edit/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><DrawFormPage /></ProtectedRoute>} />
               <Route path="/draw/view/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><DrawViewPage /></ProtectedRoute>} />
               <Route path="/draw/display/:id" element={<DrawWinnersDisplayPage />} />
+
+              {/* Portal Ejecutivo Directiva 🏛️ */}
+              <Route
+                path="/directiva"
+                element={
+                  <ProtectedRoute allowedRoles={['Directiva', 'Administrador']}>
+                    <DirectivaDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Portal Móvil Vendedor PWA 📱 */}
               <Route

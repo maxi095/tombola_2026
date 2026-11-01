@@ -69,7 +69,7 @@
 ---
 
 ### Slice 5 — Portal Ejecutivo Directiva & Configuración PWA
-- [ ] **Objetivo:** Habilitar el portal de solo lectura para directivos y transformar la aplicación web en una PWA instalable con Service Worker e íconos del club.
+- [x] **Objetivo:** Habilitar el portal de solo lectura para directivos y transformar la aplicación web en una PWA instalable con Service Worker e íconos del club.
 - **Valor observable:** La app se puede instalar en Android/iOS con modo standalone; los directivos acceden a `/directiva` para ver KPIs de recaudación en tiempo real; login redirige según el rol.
 - **Archivos a crear/modificar:**
   - `client/src/pages/directiva/DirectivaDashboardPage.jsx` (nuevo).
