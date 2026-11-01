@@ -5,6 +5,12 @@ import { createAccessToken } from "../libs/jwt.js";
 import jwt from 'jsonwebtoken';
 import { TOKEN_SECRET } from "../config.js";
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+};
+
 export const register = async (req, res) => {
   const { email, password, username, firstName, lastName, address, phone } = req.body;
 
@@ -34,8 +40,9 @@ export const register = async (req, res) => {
       roles: userSaved.roles
     });
 
-    res.cookie("token", token);
+    res.cookie("token", token, cookieOptions);
     res.json({
+      token,
       id: userSaved._id,
       username: userSaved.username,
       email: userSaved.email,
@@ -57,6 +64,10 @@ export const login = async (req, res) => {
 
     if (!userFound) return res.status(400).json({ message: "Usuario no encontrado" });
 
+    if (userFound.status === 'Inactivo') {
+      return res.status(403).json({ message: "El usuario se encuentra inactivo. Comuníquese con la administración." });
+    }
+
     const isMatch = await bcrypt.compare(password, userFound.password);
     if (!isMatch) return res.status(400).json({ message: "Contraseña incorrecta" });
 
@@ -65,8 +76,9 @@ export const login = async (req, res) => {
       roles: userFound.roles
     });
 
-    res.cookie("token", token);
+    res.cookie("token", token, cookieOptions);
     res.json({
+      token,
       id: userFound._id,
       username: userFound.username,
       email: userFound.email,
@@ -81,7 +93,7 @@ export const login = async (req, res) => {
 };
 
 export const logout = (req, res) => {
-  res.cookie("token", "", { expires: new Date(0) });
+  res.cookie("token", "", { ...cookieOptions, expires: new Date(0) });
   return res.sendStatus(200);
 };
 
@@ -102,7 +114,10 @@ export const profile = async (req, res) => {
 };
 
 export const verifyToken = async (req, res) => {
-  const { token } = req.cookies;
+  const token = req.cookies?.token || 
+    (req.headers.authorization?.startsWith('Bearer ') 
+      ? req.headers.authorization.split(' ')[1] 
+      : null);
 
   if (!token) return res.status(401).json({ message: "No autorizado" });
 

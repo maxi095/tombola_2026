@@ -5,8 +5,9 @@ import Person from '../models/person.model.js';
 export const getSellers = async (req, res) => {
     try {
         const sellers = await Seller.find()
-        .sort({ sellerNumber: -1 }) // 1 = ascendente, -1 = descendente
-        .populate('person');
+            .sort({ sellerNumber: -1 })
+            .populate('person')
+            .lean();
         res.json(sellers);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -16,7 +17,9 @@ export const getSellers = async (req, res) => {
 // Obtener un vendedor por ID (incluye persona asociada)
 export const getSeller = async (req, res) => {
     try {
-        const seller = await Seller.findById(req.params.id).populate('person');
+        const seller = await Seller.findById(req.params.id)
+            .populate('person')
+            .lean();
         if (!seller) return res.status(404).json({ message: 'Seller not found' });
         res.json(seller);
     } catch (error) {
@@ -40,7 +43,6 @@ export const createSeller = async (req, res) => {
         status,
         commissionRate,
         isParticular
-        
       } = req.body;
   
       // Validar datos obligatorios
@@ -79,9 +81,7 @@ export const createSeller = async (req, res) => {
       console.error("Error al crear vendedor:", error);
       return res.status(500).json({ message: "Error al crear vendedor", error });
     }
-  };
-  
-
+};
 
 // Actualizar un vendedor (y su persona)
 export const updateSeller = async (req, res) => {
@@ -108,13 +108,13 @@ export const updateSeller = async (req, res) => {
         }
 
         // Actualizar commissionRate si viene en el cuerpo
-    if (req.body.commissionRate !== undefined) {
-      const rate = parseFloat(req.body.commissionRate);
-      if (isNaN(rate) || rate < 0 || rate > 100) {
-        return res.status(400).json({ message: "El porcentaje de comisión debe ser un número entre 0 y 100" });
-      }
-      seller.commissionRate = rate;
-    }
+        if (req.body.commissionRate !== undefined) {
+            const rate = parseFloat(req.body.commissionRate);
+            if (isNaN(rate) || rate < 0 || rate > 100) {
+                return res.status(400).json({ message: "El porcentaje de comisión debe ser un número entre 0 y 100" });
+            }
+            seller.commissionRate = rate;
+        }
 
         await seller.save();
 
@@ -126,21 +126,17 @@ export const updateSeller = async (req, res) => {
     }
 };
 
-// Eliminar un vendedor y su persona asociada
+// Eliminar un vendedor y su persona asociada (baja lógica segura para proteger datos históricos)
 export const deleteSeller = async (req, res) => {
-    
-  /*Se comenta codigo deleteClient ya que quitamos la acción del front
-  
     try {
-        const seller = await Seller.findByIdAndDelete(req.params.id);
-        if (!seller) return res.status(404).json({ message: 'Seller not found' });
+        const seller = await Seller.findById(req.params.id);
+        if (!seller) return res.status(404).json({ message: 'Vendedor no encontrado' });
 
-        await Person.findByIdAndDelete(seller.person);
+        seller.status = 'Inactivo';
+        await seller.save();
 
-        res.status(204).json();
+        res.status(200).json({ message: 'Vendedor dado de baja correctamente', seller });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-        
-  */
 };

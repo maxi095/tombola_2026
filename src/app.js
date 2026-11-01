@@ -2,6 +2,7 @@ import express from 'express';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import compression from 'compression';
 import { FRONTEND_URL } from './config.js';
 
 import authRoutes from './routes/auth.routes.js';
@@ -25,6 +26,7 @@ app.use(cors({
     origin: FRONTEND_URL,
     credentials: true
 }));
+app.use(compression());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
@@ -43,5 +45,16 @@ app.use("/api", sellerPaymentRoutes);
 app.use("/api", dashboardRoutes);
 app.use("/api", drawRoutes);
 app.use("/api", balanceRoutes);
+
+// Middleware global de captura y sanitización de errores
+app.use((err, req, res, next) => {
+    console.error("❌ Unhandled Error:", err);
+    const status = err.status || 500;
+    const message = err.message || "Error interno del servidor";
+    res.status(status).json({
+        message,
+        ...(process.env.NODE_ENV === 'development' ? { stack: err.stack } : {})
+    });
+});
 
 export default app;

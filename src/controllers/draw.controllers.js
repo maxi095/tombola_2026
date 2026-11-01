@@ -7,7 +7,7 @@ import mongoose from 'mongoose';
 export const getDraws = async (req, res) => {
     try {
         const draws = await Draw.find()
-            .sort({ drawDate: -1 }) // Más recientes primero
+            .sort({ drawDate: -1 })
             .populate([
                 { path: 'edition' },
                 { 
@@ -22,7 +22,8 @@ export const getDraws = async (req, res) => {
                     ]
                 },
                 { path: 'user' }
-            ]);
+            ])
+            .lean();
 
         res.json(draws);
     } catch (error) {
@@ -49,7 +50,8 @@ export const getDraw = async (req, res) => {
                     ]
                 },
                 { path: 'user' }
-            ]);
+            ])
+            .lean();
 
         if (!draw) return res.status(404).json({ message: 'Draw not found' });
         res.json(draw);
@@ -80,7 +82,8 @@ export const getDrawsByEdition = async (req, res) => {
                     ]
                 },
                 { path: 'user' }
-            ]);
+            ])
+            .lean();
 
         res.json(draws);
     } catch (error) {
@@ -302,7 +305,7 @@ export const deleteDraw = async (req, res) => {
     }
 };
 
-// Agregar este nuevo controlador
+// Calcular top cartones con más aciertos para sorteos finales (optimizado en una sola consulta indexada con .lean())
 export const getTopBingoCards = async (req, res) => {
     try {
         const { drawId } = req.params;
@@ -326,15 +329,9 @@ export const getTopBingoCards = async (req, res) => {
 
         const cardSetNumber = draw.cardSetNumber || 1;
 
-        // Buscar todos los cartones vendidos de esta edición
-        const bingoCards = await BingoCard.find({
-            edition: draw.edition._id,
-            status: 'Vendido'
-        });
-
-        // Buscar las ventas asociadas a estos cartones
+        // Buscar directamente las ventas activas de esta edición en una sola consulta indexada con .lean()
         const sales = await Sale.find({
-            bingoCard: { $in: bingoCards.map(bc => bc._id) },
+            edition: draw.edition._id,
             status: { $ne: 'Anulada' }
         }).populate([
             {
@@ -346,17 +343,17 @@ export const getTopBingoCards = async (req, res) => {
                 populate: { path: 'person' }
             },
             { path: 'bingoCard' }
-        ]);
+        ]).lean();
 
         // Calcular aciertos para cada cartón
         const cardsWithMatches = sales.map(sale => {
-            const cardSet = sale.bingoCard.cardSets?.find(set => set.setNumber === cardSetNumber);
-            const cardNumbers = cardSet?.numbers || sale.bingoCard.numbers || []; // Fallback a numbers si no existe cardSets
+            const cardSet = sale.bingoCard?.cardSets?.find(set => set.setNumber === cardSetNumber);
+            const cardNumbers = cardSet?.numbers || sale.bingoCard?.numbers || [];
             const matches = cardNumbers.filter(num => drawnNumbers.includes(num));
             
             return {
-                bingoCardId: sale.bingoCard._id,
-                bingoCardNumber: sale.bingoCard.number,
+                bingoCardId: sale.bingoCard?._id,
+                bingoCardNumber: sale.bingoCard?.number,
                 totalNumbers: cardNumbers.length,
                 matches: matches.length,
                 matchedNumbers: matches,
@@ -391,7 +388,7 @@ export const getTopBingoCards = async (req, res) => {
     }
 };
 
-// Modificar el endpoint de registerDrawnNumbers para que sea incremental
+// Agregar número sorteado incrementalmente
 export const addDrawnNumber = async (req, res) => {
     try {
         console.log("🎲 Agregando número sorteado:", req.body);
@@ -450,7 +447,7 @@ export const addDrawnNumber = async (req, res) => {
     }
 };
 
-// Nuevo endpoint para eliminar el último número (por si se equivocan)
+// Eliminar el último número (por si se equivocan)
 export const removeLastDrawnNumber = async (req, res) => {
     try {
         const { drawId } = req.body;
@@ -485,4 +482,3 @@ export const removeLastDrawnNumber = async (req, res) => {
         });
     }
 };
-

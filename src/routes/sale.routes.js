@@ -35,7 +35,7 @@ router.delete('/sale/:id', authRequired, checkRole(['Administrador']), deleteSal
 // Anular una venta
 router.put('/cancelSale/:id', authRequired, checkRole(['Administrador']), cancelSale);
 
-// Obtener ventas por vendedor
-router.get("/sales/seller/:sellerId", authRequired, checkRole(['Administrador']), getSalesBySeller);
+// Obtener ventas por vendedor (accesible para Administrador y para el Vendedor respectivo)
+router.get("/sales/seller/:sellerId", authRequired, checkRole(['Administrador', 'Vendedor']), getSalesBySeller);
 
 export default router;

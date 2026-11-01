@@ -4,12 +4,8 @@ import Edition from '../models/edition.model.js';
 import { createBalanceFromSellerPayment } from './balance.controllers.js';
 import Balance from '../models/balance.model.js';
 
-
 // Crear nuevo pago de vendedor
 export const createSellerPayment = async (req, res) => {
-  console.log("REQ.BODY", req.body);
-  console.log("USER", req.user);
-
   try {
     const {
       edition,
@@ -18,7 +14,6 @@ export const createSellerPayment = async (req, res) => {
       transferAmount = 0,
       tarjetaUnicaAmount = 0,
       checks = [],
-      // checkAmount = 0, ---> se calcula automáticamente desde el pre-save en el modelo
       commissionRate,
       commissionAmount,
       commissionType,
@@ -39,11 +34,9 @@ export const createSellerPayment = async (req, res) => {
       return res.status(400).json({ message: "El campo 'seller' es obligatorio." });
     }
 
-    // ✅ Calcular automáticamente el total de cheques
+    // Calcular automáticamente el total de cheques
     const checkAmount = checks.reduce((sum, check) => sum + Number(check.amount || 0), 0);
-
-    //const totalAmount = Number(cashAmount) + Number(transferAmount) + Number(checkAmount);
-    const totalAmount = Number(cashAmount) + Number(transferAmount) + Number(tarjetaUnicaAmount) + Number(checkAmount)
+    const totalAmount = Number(cashAmount) + Number(transferAmount) + Number(tarjetaUnicaAmount) + Number(checkAmount);
 
     if (totalAmount <= 0) {
       return res.status(400).json({
@@ -51,7 +44,7 @@ export const createSellerPayment = async (req, res) => {
       });
     }
 
-    // 🛡️ Control de Idempotencia (Evitar doble submit en margen de 10 segundos)
+    // Control de Idempotencia (Evitar doble submit en margen de 10 segundos)
     const tenSecondsAgo = new Date(Date.now() - 10 * 1000);
     const duplicate = await SellerPayment.findOne({
       seller,
@@ -65,7 +58,6 @@ export const createSellerPayment = async (req, res) => {
     });
 
     if (duplicate) {
-      console.log("⚠️ Intento de pago duplicado bloqueado para vendedor:", seller);
       return res.status(409).json({
         message: "Ya se registró un pago idéntico para este vendedor en los últimos 10 segundos. Verifique si el pago ya fue creado."
       });
@@ -78,7 +70,6 @@ export const createSellerPayment = async (req, res) => {
       transferAmount,
       tarjetaUnicaAmount,
       checks,
-      //checkAmount,
       commissionRate,
       commissionAmount,
       commissionType,
@@ -88,27 +79,10 @@ export const createSellerPayment = async (req, res) => {
       createdBy
     });
 
-    console.log("NEW PAYMENT", {
-      edition,
-      seller,
-      cashAmount,
-      transferAmount,
-      tarjetaUnicaAmount,
-      checks,
-      //checkAmount,
-      commissionRate,
-      commissionAmount,
-      date,
-      reference,
-      observations,
-      createdBy
-    });
-
     const savedPayment = await newPayment.save();
 
-    // ─── Generar movimientos automáticos en Balance ────────────────────────────
+    // Generar movimientos automáticos en Balance
     try {
-      // Resolver nombre del vendedor para el campo counterpart
       const sellerDoc = await Seller.findById(seller).populate('person', 'firstName lastName');
       const sellerName = sellerDoc?.person
         ? `${sellerDoc.person.firstName} ${sellerDoc.person.lastName}`
@@ -127,12 +101,9 @@ export const createSellerPayment = async (req, res) => {
         date,
         createdBy,
       });
-      console.log('✅ Movimientos de Balance generados automáticamente');
     } catch (balanceError) {
-      // No bloqueamos el alta del pago si falla el balance, solo logueamos
       console.error('⚠️ Error al generar movimientos de Balance:', balanceError.message);
     }
-    // ─────────────────────────────────────────────────────────────────────────
 
     const populatedPayment = await savedPayment.populate([
       { path: 'seller' },
@@ -146,15 +117,17 @@ export const createSellerPayment = async (req, res) => {
   }
 };
 
-
-// Obtener todos los pagos
+// Obtener todos los pagos (soporta filtro opcional por edition y lectura liviana .lean())
 export const getSellerPayments = async (req, res) => {
   try {
-    const payments = await SellerPayment.find()
-      .sort({ sellerPaymentNumber: -1 }) // 1 = ascendente, -1 = descendente
-      .populate(
-        'edition'
-      )
+    const filter = {};
+    if (req.query.edition) {
+      filter.edition = req.query.edition;
+    }
+
+    const payments = await SellerPayment.find(filter)
+      .sort({ date: -1, sellerPaymentNumber: -1 })
+      .populate('edition')
       .populate({
         path: 'seller',
         populate: { path: 'person' }
@@ -167,7 +140,7 @@ export const getSellerPayments = async (req, res) => {
         path: 'canceledBy',
         populate: { path: 'person' }
       })
-      .sort({ date: -1 });
+      .lean();
 
     res.json(payments);
   } catch (error) {
@@ -175,15 +148,13 @@ export const getSellerPayments = async (req, res) => {
   }
 };
 
-
 // Obtener pagos por ID de vendedor
 export const getSellerPaymentsBySeller = async (req, res) => {
   try {
     const { sellerId } = req.params;
     const payments = await SellerPayment.find({ seller: sellerId })
-      .populate(
-        'edition'
-      )
+      .sort({ date: -1, sellerPaymentNumber: -1 })
+      .populate('edition')
       .populate({
         path: 'seller',
         populate: { path: 'person' }
@@ -196,7 +167,7 @@ export const getSellerPaymentsBySeller = async (req, res) => {
         path: 'canceledBy',
         populate: { path: 'person' }
       })
-      .sort({ date: -1 });
+      .lean();
 
     res.json(payments);
   } catch (error) {
@@ -221,16 +192,11 @@ export const deleteSellerPayment = async (req, res) => {
 
 export const cancelSellerPayment = async (req, res) => {
   try {
-    console.log("🛠 ID del pago a cancelar:", req.params.id);
-
     const payment = await SellerPayment.findById(req.params.id);
 
     if (!payment) {
-      console.log("❌ Pago no encontrado");
       return res.status(404).json({ message: 'Pago no encontrado' });
     }
-
-    console.log("✅ Pago encontrado:", payment);
 
     // Verificamos si ya está anulado
     if (payment.status === "Anulado") {
@@ -243,8 +209,6 @@ export const cancelSellerPayment = async (req, res) => {
     payment.canceledAt = new Date();
 
     const savedPayment = await payment.save();
-
-    console.log("🔄 Pago anulado:", savedPayment);
 
     // También anulamos los movimientos de balance asociados
     await Balance.updateMany(
@@ -274,13 +238,12 @@ export const cancelSellerPayment = async (req, res) => {
 export const getSellerPaymentById = async (req, res) => {
   try {
     const payment = await SellerPayment.findById(req.params.id)
-      .populate(
-          'edition'
-      )
+      .populate('edition')
       .populate({
         path: 'seller',
         populate: { path: 'person' }
       })
+      .lean();
 
     if (!payment) return res.status(404).json({ message: "Pago no encontrado" });
 
@@ -318,7 +281,7 @@ export const updateSellerPayment = async (req, res) => {
       return res.status(404).json({ message: "Pago no encontrado" });
     }
 
-    // ─── Sincronizar Comisión con Movimientos de Balance ─────────────────────
+    // Sincronizar Comisión con Movimientos de Balance
     if (updates.commissionType && updated.commissionAmount > 0) {
       try {
         const egresoCash = updates.commissionType === 'Efectivo' ? updated.commissionAmount : 0;
@@ -332,12 +295,10 @@ export const updateSellerPayment = async (req, res) => {
             observations: `Comisión ${updates.commissionType} generada automáticamente al registrar rendición`
           }
         );
-        console.log("✅ Movimiento de comisión en Balance sincronizado:", updates.commissionType);
       } catch (balanceSyncError) {
         console.error("⚠️ Error al sincronizar actualización en Balance:", balanceSyncError.message);
       }
     }
-    // ─────────────────────────────────────────────────────────────────────────
 
     res.json(updated);
   } catch (error) {

@@ -5,8 +5,9 @@ import Person from '../models/person.model.js';
 export const getClients = async (req, res) => {
   try {
     const clients = await Client.find()
-      .sort({ clientNumber: -1 }) // 1 = ascendente, -1 = descendente
-      .populate('person');
+      .sort({ clientNumber: -1 })
+      .populate('person')
+      .lean();
     res.json(clients);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -16,7 +17,9 @@ export const getClients = async (req, res) => {
 // Obtener un cliente por ID (incluye persona asociada)
 export const getClient = async (req, res) => {
   try {
-    const client = await Client.findById(req.params.id).populate('person');
+    const client = await Client.findById(req.params.id)
+      .populate('person')
+      .lean();
     if (!client) return res.status(404).json({ message: 'Client not found' });
     res.json(client);
   } catch (error) {
@@ -62,9 +65,6 @@ export const createClient = async (req, res) => {
     });
     const savedPerson = await newPerson.save();
 
-    // Generar número de cliente secuencial
-    //const clientNumber = (await Client.countDocuments()) + 1;
-
     // Crear cliente asociado
     const newClient = new Client({
       person: savedPerson._id,
@@ -96,6 +96,10 @@ export const updateClient = async (req, res) => {
       client.notes = req.body.notes;
     }
 
+    if (req.body.status !== undefined) {
+      client.status = req.body.status;
+    }
+
     await client.save();
 
     const updatedClient = await Client.findById(req.params.id).populate('person');
@@ -106,19 +110,17 @@ export const updateClient = async (req, res) => {
   }
 };
 
-// Eliminar un cliente y su persona asociada
+// Eliminar un cliente y su persona asociada (baja lógica segura para proteger datos históricos)
 export const deleteClient = async (req, res) => {
+  try {
+    const client = await Client.findById(req.params.id);
+    if (!client) return res.status(404).json({ message: 'Cliente no encontrado' });
 
-  /*Se comenta codigo deleteClient ya que quitamos la acción del front
+    client.status = 'Inactivo';
+    await client.save();
 
-  /*try {
-    const client = await Client.findByIdAndDelete(req.params.id);
-    if (!client) return res.status(404).json({ message: 'Client not found' });
-
-    await Person.findByIdAndDelete(client.person);
-
-    res.status(204).json();
+    res.status(200).json({ message: 'Cliente dado de baja correctamente', client });
   } catch (error) {
     res.status(500).json({ message: error.message });
-  }*/
+  }
 };

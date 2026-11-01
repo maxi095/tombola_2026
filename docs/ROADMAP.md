@@ -55,8 +55,16 @@ Este documento ordena de manera lógica y técnica todo lo necesario para llevar
 - [x] **2.3 Optimización de Consultas Pesadas y Filtro por Edición Server-Side:**
   - Optimizar `getBingoCardsWithSales`, `getBingoCards`, `getSales`, `getQuotasV2` y `getExpiredQuotas` usando proyecciones (`.select('-cardSets -numbers')` cuando no se necesiten los 100 números del cartón), `.lean()`, cruce en $O(N)$ con `Map` y filtrado directo por `edition` y `updatedDate` en MongoDB.
   - Eliminar las descargas masivas innecesarias al iniciar la app (`getQuotas` completo en `QuotaContext` y el contexto duplicado muerto `PersonContext`).
-- [ ] **2.4 Activación y Alineación de Schemas Zod (`src/schemas/`):**
-  - Actualizar `sale.schema.js`, `quota.schema.js`, `balance.schema.js` a los estados reales (`'Anulada'`, etc.) y conectarlos en las rutas correspondientes.
+- [x] **2.4 Auditoría Exhaustiva de Backend, Blindaje e Integridad Cloud:**
+  - Compresión HTTP Gzip/Brotli (`compression`) activada en Express (reducción de 75-85% en payloads de red).
+  - Sanitización y middleware global de excepciones en `app.js`.
+  - Conexión DB y secretos desacoplados con soporte de variables de entorno (`MONGODB_URI`, `TOKEN_SECRET`) y enmascaramiento en logs.
+  - Autenticación dual (Cookie + Header `Authorization: Bearer <token>`).
+  - Blindaje contra venta duplicada en `createSale` y protección contra borrado accidental en `deleteEdition`.
+  - Bajas lógicas controladas en `deleteSeller` y `deleteClient` (`status: 'Inactivo'`) eliminando cuelgues del servidor.
+  - Corrección de cálculo de estado de cartón en vivo (`quotaUpToDate`).
+  - Optimización en sorteo de TV (`getTopBingoCards`) en una sola consulta indexada con `.lean()`.
+  - Roles RBAC habilitados (`Directiva`, `Vendedor`) en endpoints de consulta clave.
 - [ ] **2.5 Suite Base de Tests Unitarios / Integración (Backend):**
   - Configurar Vitest en backend para testear: (a) cálculo y asiento doble de `SellerPayment` -> `Balance`, (b) cambio reactivo de estado de `Sale` al pagar `Quota`, y (c) reglas de ganador en sorteo (`cuota` vs `contado`).
 

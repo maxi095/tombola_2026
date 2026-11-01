@@ -34,14 +34,14 @@ router.delete('/bingoCard/:id', authRequired, checkRole(['Administrador']), dele
 // Listar todas las tarjetas de bingo con sus datos de venta
 router.get('/bingoCardsWithSales', authRequired, checkRole(['Administrador']), getBingoCardsWithSales);
 
-
-router.get('/bingoCardStatus', authRequired, checkRole(['Administrador']), getBingoCardStatus);
+// Consulta de estado de cartón (accesible para Administrador, Directiva y Vendedores)
+router.get('/bingoCardStatus', authRequired, checkRole(['Administrador', 'Directiva', 'Vendedor']), getBingoCardStatus);
 
 router.put('/bingoCard/assignSeller/:bingoCardId', authRequired, checkRole(['Administrador']), assignSellerToBingoCard);
 
 router.put('/bingoCard/removeSeller/:bingoCardId', authRequired, checkRole(['Administrador']), removeSellerFromBingoCard);
 
-router.get('/bingoCardsBySeller/:sellerId', authRequired, checkRole(['Administrador']), getBingoCardsBySeller);
-
+// Obtener cartones por vendedor (accesible para Administrador y Vendedor)
+router.get('/bingoCardsBySeller/:sellerId', authRequired, checkRole(['Administrador', 'Vendedor']), getBingoCardsBySeller);
 
 export default router;

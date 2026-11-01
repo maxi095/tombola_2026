@@ -75,7 +75,7 @@ export const createBalance = async (req, res) => {
     });
 
     const saved = await newBalance.save();
-    const populated = await fullPopulate(Balance.findById(saved._id));
+    const populated = await fullPopulate(Balance.findById(saved._id)).lean();
 
     return res.status(201).json(populated);
   } catch (error) {
@@ -84,12 +84,18 @@ export const createBalance = async (req, res) => {
   }
 };
 
-// ─── Obtener todos los movimientos ───────────────────────────────────────────
+// ─── Obtener todos los movimientos (soporta filtro opcional por edition) ─────
 export const getBalances = async (req, res) => {
   try {
+    const filter = {};
+    if (req.query.edition) {
+      filter.edition = req.query.edition;
+    }
+
     const balances = await fullPopulate(
-      Balance.find().sort({ transactionNumber: -1 })
-    );
+      Balance.find(filter).sort({ transactionNumber: -1 })
+    ).lean();
+
     return res.json(balances);
   } catch (error) {
     console.error('❌ Error en getBalances:', error.message);
@@ -103,7 +109,7 @@ export const getBalancesByEdition = async (req, res) => {
     const { editionId } = req.params;
     const balances = await fullPopulate(
       Balance.find({ edition: editionId }).sort({ transactionNumber: -1 })
-    );
+    ).lean();
     return res.json(balances);
   } catch (error) {
     console.error('❌ Error en getBalancesByEdition:', error.message);
@@ -114,7 +120,7 @@ export const getBalancesByEdition = async (req, res) => {
 // ─── Obtener un movimiento por ID ─────────────────────────────────────────────
 export const getBalanceById = async (req, res) => {
   try {
-    const balance = await fullPopulate(Balance.findById(req.params.id));
+    const balance = await fullPopulate(Balance.findById(req.params.id)).lean();
     if (!balance) {
       return res.status(404).json({ message: 'Movimiento no encontrado' });
     }
@@ -144,7 +150,7 @@ export const cancelBalance = async (req, res) => {
 
     await balance.save();
 
-    const updated = await fullPopulate(Balance.findById(balance._id));
+    const updated = await fullPopulate(Balance.findById(balance._id)).lean();
     return res.json(updated);
   } catch (error) {
     console.error('❌ Error en cancelBalance:', error.message);
@@ -160,7 +166,7 @@ export const getBalanceSummary = async (req, res) => {
     const filter = { status: 'Activo' };
     if (edition) filter.edition = edition;
 
-    const movements = await Balance.find(filter, 'type totalAmount');
+    const movements = await Balance.find(filter, 'type totalAmount').lean();
 
     const totalIngresos = movements
       .filter((m) => m.type === 'Ingreso')
@@ -180,7 +186,6 @@ export const getBalanceSummary = async (req, res) => {
 };
 
 // ─── Función interna: crear movimientos automáticos desde SellerPayment ──────
-// Usada internamente por sellerPayment.controllers.js (no es una ruta HTTP).
 export const createBalanceFromSellerPayment = async ({
   edition,
   sellerPaymentRef,

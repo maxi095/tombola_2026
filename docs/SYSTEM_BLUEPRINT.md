@@ -61,10 +61,10 @@ El sistema está evolucionando de un esquema monopuesto local a una arquitectura
 | **`SellerPayment`** | `sellerPayment.model.js` | `sellerPaymentNumber` (auto-inc), `edition`, `seller`, `cashAmount`, `transferAmount`, `tarjetaUnicaAmount`, `checks[{ checkNumber, bank, branch, date, amount }]`, `checkAmount` (pre-save), `commissionRate`, `commissionAmount`, `date`, `reference`, `observations`, `createdBy`, `canceledBy`, `canceledAt` | `commissionType`: `'Efectivo'` \| `'Transferencia'`<br>`status`: `'Activo'` \| `'Anulado'` |
 | **`Balance`** | `balance.model.js` | `transactionNumber` (auto-inc), `edition`, `date`, `counterpart`, `concept`, `cashAmount`, `transferAmount`, `tarjetaUnicaAmount`, `checks[]`, `checkAmount` (pre-save), `totalAmount` (pre-save), `sellerPaymentRef`, `taxPercentage`, `totalRenderedAmount`, `taxPaymentDate`, `declarationDate`, `createdBy`, `canceledBy`, `canceledAt` | `type`: `'Ingreso'` \| `'Egreso'`<br>`status`: `'Activo'` \| `'Anulado'`<br>`category` (ver §4.4 y §4.5) |
 | **`Draw`** | `draw.model.js` | `edition`, `drawDate`, `description`, `cardSetNumber` (1..5 si `Final`), `drawnNumbers: [Number]`, `prizes[{ position, description, bingoCard, sale, winnerRegisteredAt, notes }]`, `user` | `type`: `'Mensual'` \| `'Final'`<br>`status`: `'Programado'` \| `'En curso'` \| `'Finalizado'` |
-| **`User`** | `user.model.js` | `username` (unique), `email` (unique), `password` (hash bcrypt), `person` (unique) | `roles`: `'Administrador'` \| `'Vendedor'` *(próximo: `'Directiva'`)*<br>`status`: `'Activo'` \| `'Inactivo'` |
+| **`User`** | `user.model.js` | `username` (unique), `email` (unique), `password` (hash bcrypt), `person` (unique) | `roles`: `'Administrador'` \| `'Vendedor'` \| `'Directiva'`<br>`status`: `'Activo'` \| `'Inactivo'` |
 | **`Counter`** | `counter.model.js` | `model` (unique), `seq` (secuencias atómicas `$inc` para `saleNumber`, `sellerNumber`, `clientNumber`, `sellerPaymentNumber`, `transactionNumber`) | N/A |
 
-> ⚠️ **Nota de Deuda Técnica:** El archivo `src/models/installment.model.js` (`Installment`), su controlador y ruta son **código legacy obsoleto** (reemplazado por `Quota`). Está agendado para remoción limpia en `ROADMAP.md`.
+> ✅ **Saneamiento completado:** El modelo legacy `Installment` fue eliminado por completo, consolidando todas las cuotas en el modelo `Quota`.
 
 ---
 

@@ -233,7 +233,7 @@ export const getBingoCardStatus = async (req, res) => {
         sellerNumber: sale?.seller?.sellerNumber,
         upToDate: !!sale && !hasDebt,
         plan: plan,
-        quotaUpToDate: plan === 'CUOTA' && !hasDebt,
+        quotaUpToDate: plan === 'Pago en cuotas' && !hasDebt,
       };
   
       res.json(response);

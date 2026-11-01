@@ -115,6 +115,14 @@ export const createSale = async (req, res) => {
             return res.status(400).json({ message: "La edición no tiene cuotas definidas" });
         }
 
+        const card = await BingoCard.findById(bingoCard);
+        if (!card) {
+            return res.status(404).json({ message: "Cartón no encontrado" });
+        }
+        if (card.status === "Vendido") {
+            return res.status(400).json({ message: "El cartón seleccionado ya se encuentra vendido" });
+        }
+
         const newSale = new Sale({
             edition,
             seller,

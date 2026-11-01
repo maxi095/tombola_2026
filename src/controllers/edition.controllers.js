@@ -1,10 +1,11 @@
 import Edition from '../models/edition.model.js';
 import BingoCard from '../models/bingoCard.model.js';
 import Quota from '../models/quota.model.js';
+import Sale from '../models/sale.model.js';
 
 export const getEditions = async (req, res) => {
     try {
-        const editions = await Edition.find({}).populate('user'); // Populate para incluir detalles del usuario si es necesario
+        const editions = await Edition.find({}).populate('user').lean();
         res.json(editions);
     } catch (error) {
         return res.status(500).json({ message: error.message });
@@ -228,7 +229,7 @@ export const createEdition = async (req, res) => {
 
 export const getEdition = async (req, res) => {
     try {
-        const edition = await Edition.findById(req.params.id).populate('user');
+        const edition = await Edition.findById(req.params.id).populate('user').lean();
         if (!edition) return res.status(404).json({ message: 'Edition not found' });
         res.json(edition);
     } catch (error) {
@@ -238,9 +239,17 @@ export const getEdition = async (req, res) => {
 
 export const deleteEdition = async (req, res) => {
     try {
-        const edition = await Edition.findByIdAndDelete(req.params.id);
+        const { id } = req.params;
+        const hasSales = await Sale.exists({ edition: id });
+        if (hasSales) {
+            return res.status(400).json({
+                message: 'No se puede eliminar una edición que contiene ventas registradas'
+            });
+        }
+        await BingoCard.deleteMany({ edition: id });
+        const edition = await Edition.findByIdAndDelete(id);
         if (!edition) return res.status(404).json({ message: 'Edition not found' });
-        return res.status(204).json({ message: 'Edition deleted successfully' });
+        return res.status(200).json({ message: 'Edición eliminada correctamente' });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }

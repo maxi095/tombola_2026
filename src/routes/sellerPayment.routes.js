@@ -14,13 +14,12 @@ import { checkRole } from "../middlewares/role.middleware.js";
 
 const router = Router();
 
-// Solo Administrador puede ver y registrar pagos
 router.get("/sellerPayments", authRequired, checkRole(["Administrador"]), getSellerPayments);
-router.get("/sellerPayments/seller/:sellerId", authRequired, checkRole(["Administrador"]), getSellerPaymentsBySeller);
+router.get("/sellerPayments/seller/:sellerId", authRequired, checkRole(["Administrador", "Vendedor"]), getSellerPaymentsBySeller);
 router.post("/sellerPayments", authRequired, checkRole(["Administrador"]), createSellerPayment);
 router.delete("/sellerPayments/:id", authRequired, checkRole(["Administrador"]), deleteSellerPayment);
 
-// Anular un pagode vendedor
+// Anular un pago de vendedor
 router.put('/cancelSellerPayment/:id', authRequired, checkRole(['Administrador']), cancelSellerPayment);
 
 router.get("/sellerPaymentById/:id", authRequired, checkRole(["Administrador"]), getSellerPaymentById);

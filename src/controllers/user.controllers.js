@@ -6,8 +6,9 @@ import bcrypt from 'bcrypt';
 export const getUsers = async (req, res) => {
     try {
         const users = await User.find()
-            .select('email username roles person') // ya no incluimos datos personales
-            .populate('person') // traemos la persona vinculada         
+            .select('email username roles person status createdAt')
+            .populate('person')
+            .lean();
         res.json(users);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -18,8 +19,9 @@ export const getUsers = async (req, res) => {
 export const getUser = async (req, res) => {
     try {
         const user = await User.findById(req.params.id)
-            .select('email username roles person')
+            .select('email username roles person status createdAt')
             .populate('person')
+            .lean();
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -33,7 +35,7 @@ export const getUser = async (req, res) => {
 export const createUser = async (req, res) => {
     try {
         const {
-            username, email, password, roles,
+            username, email, password, roles, status,
             firstName, lastName, address, phone, document
         } = req.body;
 
@@ -56,7 +58,8 @@ export const createUser = async (req, res) => {
             username,
             email,
             password: hashedPassword,
-            roles,
+            roles: roles || 'Vendedor',
+            status: status || 'Activo',
             person: savedPerson._id
         });
 
@@ -71,34 +74,36 @@ export const createUser = async (req, res) => {
 // Actualizar usuario
 export const updateUser = async (req, res) => {
     try {
-        const { roles, person: personUpdates } = req.body;
+        const { roles, status, person: personUpdates } = req.body;
 
         const user = await User.findById(req.params.id);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
         if (roles) user.roles = roles;
+        if (status) user.status = status;
 
         await user.save();
 
-        // Si también se quiere actualizar la persona vinculada:
         if (personUpdates && user.person) {
             await Person.findByIdAndUpdate(user.person, personUpdates);
         }
 
-        res.json(user);
+        const updated = await User.findById(user._id).populate('person').lean();
+        res.json(updated);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
 };
 
-// Eliminar usuario y opcionalmente su persona
+// Eliminar usuario
 export const deleteUser = async (req, res) => {
     try {
+        if (req.user?.id === req.params.id) {
+            return res.status(400).json({ message: 'No puedes eliminar tu propia cuenta de usuario' });
+        }
+
         const user = await User.findByIdAndDelete(req.params.id);
         if (!user) return res.status(404).json({ message: 'User not found' });
-
-        // Si querés eliminar también la persona asociada (opcional y peligroso si hay cliente/vendedor usando esa persona)
-        // await Person.findByIdAndDelete(user.person);
 
         res.status(204).send();
     } catch (err) {

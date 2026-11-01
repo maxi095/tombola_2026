@@ -1,42 +1,16 @@
-{/*import mongoose from "mongoose";
-
-export const connectDB = async() => {
-    try {
-        await mongoose.connect('mongodb://mongo:fGpXlcAPtbQLQSZUomgxHvWKBDxzXkRT@mongodb.railway.internal:27017' || 'mongodb://localhost/odontodb');
-        console.log("DB is connected")
-    } catch (error) {
-        console.log(error);
-    }
-};
-*/}
-
 import mongoose from "mongoose";
-import dotenv from 'dotenv';
-
-// Cargar variables de entorno desde el archivo .env
-dotenv.config();
+import { MONGODB_URI } from "./config.js";
 
 export const connectDB = async () => {
     try {
-        // Usa la URI de MongoDB desde variables de entorno, o una URI local como fallback
+        await mongoose.connect(MONGODB_URI, {
+            serverSelectionTimeoutMS: 5000,
+        });
         
-        //const mongoURI = process.env.MONGO_PUBLIC_URL || 'mongodb://localhost/tomboladb';
-        //console.log("Conectando con URI:", process.env.MONGO_PUBLIC_URL);
-        
-        const mongoURI = 'mongodb://localhost/tomboladb';
-
-        //BD prueba 18/09/2024
-        //const mongoURI = 'mongodb://mongo:zuCHpzaGmDAisenVvriLNotBwtcqHInG@junction.proxy.rlwy.net:38862'
-        
-        // Conectar a MongoDB
-        await mongoose.connect(mongoURI);
-        
-        console.log("DB is connected");
-        console.log("URI = ", mongoURI)
+        // Enmascarar credenciales si la URI contiene usuario/password para evitar fugas en logs
+        const safeURI = MONGODB_URI.replace(/\/\/.*@/, '//<credentials>@');
+        console.log("DB is connected to:", safeURI);
     } catch (error) {
-        console.error("Error connecting to the database:", error);
+        console.error("Error connecting to the database:", error.message);
     }
-}; 
-
-
-
+};

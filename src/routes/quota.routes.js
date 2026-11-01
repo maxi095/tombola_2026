@@ -32,10 +32,9 @@ router.put('/quota/:id', authRequired, checkRole(['Administrador']), updateQuota
 // Eliminar una cuota
 router.delete('/quota/:id', authRequired, checkRole(['Administrador']), deleteQuota);
 
-// Listar todas las cuotas de un bingo
-router.get('/quotasBySale/:saleId', authRequired, checkRole(['Administrador']), getQuotasBySale);
+// Listar todas las cuotas de una venta (accesible para Administrador y Vendedor)
+router.get('/quotasBySale/:saleId', authRequired, checkRole(['Administrador', 'Vendedor']), getQuotasBySale);
 
 router.get('/expiredQuotas', authRequired, checkRole(['Administrador']), getExpiredQuotas);
-
 
 export default router;
