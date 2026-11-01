@@ -87,15 +87,18 @@ Este documento ordena de manera lógica y técnica todo lo necesario para llevar
 ### Fase 4: Arquitectura Multi-Rol (Admin, Vendedor, Directiva) + Mobile PWA
 *Objetivo: Habilitar el uso del sistema desde celulares para Vendedores y Directiva con seguridad de nivel Cloud.*
 
-- [ ] **4.1 RBAC Backend y Frontend (`Administrador`, `Vendedor`, `Directiva`):**
-  - Agregar el rol `'Directiva'` en `user.model.js`.
-  - Crear middlewares de autorización granular y aislamiento de datos por vendedor (`ownSellerOnly` para que un vendedor solo vea y opere sus propios cartones, ventas y cuotas).
-- [ ] **4.2 Portal Mobile para Vendedores (Diseño Touch-First):**
-  - Vistas móviles adaptadas con tarjetas compactas (sin tablas anchas) y barra de navegación inferior: *Mis Cartones Asignados*, *Registrar Venta Rápida*, *Estado de Cuotas de Mis Clientes* y *Mis Rendiciones*.
-- [ ] **4.3 Vista Ejecutiva para Directiva:**
-  - Acceso de solo lectura optimizado para celular/tablet al `DashboardPage`, estado de sorteos y avance de la edición.
-- [ ] **4.4 Configuración PWA (`vite-plugin-pwa`):**
-  - Agregar `manifest.webmanifest`, íconos del club y Service Worker para que Vendedores y Directiva puedan instalar la aplicación en la pantalla de inicio de sus celulares Android/iOS.
+- [x] **4.1 RBAC Backend y Frontend (`Administrador`, `Vendedor`, `Directiva`):**
+  - Rol `'Directiva'` y campo `User.seller` en `user.model.js` con índice sparse.
+  - Middlewares de RBAC granular (`checkRole`, `requireRoles`) y aislamiento de vendedor (`sellerScope` inyectando `req.sellerId`).
+  - Protección estricta anti-poaching de la base de asociados (`GET /clients/search?q=...` vs `403 Forbidden` en listado masivo).
+- [x] **4.2 Portal Mobile para Vendedores (Diseño Touch-First):**
+  - Arquitectura Touch-First con barra inferior fija (`BottomNav`) y tarjetas compactas (`MobileCard`): *Inicio / Balance por Rendir*, *Mis Cartones Asignados*, *Registrar Venta Rápida (<30s)* y *Cobranzas Presenciales*.
+  - Rutas móviles `/vendedor/*` completamente aisladas de la barra lateral de escritorio.
+- [x] **4.3 Vista Ejecutiva para Directiva:**
+  - Tablero ejecutivo de solo lectura en `/directiva` con KPIs de recaudación neta, avance de colocación de cartones, salud de cobranzas (al día vs morosas) y ranking de mejores vendedores.
+- [x] **4.4 Configuración PWA (`vite-plugin-pwa`):**
+  - Generación de Service Worker (`sw.js`), `manifest.webmanifest`, meta tags móviles y paquete de íconos del club para instalación standalone en Android e iOS.
+  - Enrutamiento inteligente post-login según el rol del usuario (Admin $\rightarrow$ `/dashboard`, Vendedor $\rightarrow$ `/vendedor`, Directiva $\rightarrow$ `/directiva`).
 
 ---
 
