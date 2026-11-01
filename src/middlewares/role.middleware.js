@@ -1,25 +1,30 @@
+/**
+ * role.middleware.js - Control de Acceso Basado en Roles (RBAC) 🛡️
+ * Valida que el usuario autenticado posea uno de los roles permitidos.
+ */
 export const checkRole = (requiredRoles) => {
     return (req, res, next) => {
-        const user = req.user; // Asegúrate de que el usuario esté en req.user
+        const user = req.user;
 
         if (!user || !user.roles) {
-            return res.status(403).json({ message: "Access denied. No roles provided." });
+            return res.status(403).json({ message: "Acceso denegado: sin roles autorizados." });
         }
 
-        if (!Array.isArray(requiredRoles)) {
-            requiredRoles = [requiredRoles]; // Asegúrate de que requiredRoles sea un array
+        const allowed = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
+
+        // Directiva: Solo lectura (RN-ROL-06)
+        if (user.roles === 'Directiva' && req.method !== 'GET') {
+            return res.status(403).json({ message: "Acceso denegado: el rol Directiva posee acceso de solo lectura." });
         }
 
-        // Verifica si el usuario tiene al menos uno de los roles requeridos
-        console.log("Roles autorizados: ", requiredRoles);
-        console.log("Rol del usuario: ", user.roles);
-
-        const hasRole = requiredRoles.some(role => user.roles === role);
+        const hasRole = allowed.includes(user.roles);
 
         if (!hasRole) {
-            return res.status(403).json({ message: "Access denied. You do not have the required role." });
+            return res.status(403).json({ message: "Acceso denegado: no posee el rol requerido para esta acción." });
         }
 
-        next(); // Continúa con la siguiente función middleware
+        next();
     };
 };
+
+export const requireRoles = (...roles) => checkRole(roles);

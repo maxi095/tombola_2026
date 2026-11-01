@@ -1,31 +1,35 @@
 import User from "../models/user.model.js";
 import Person from "../models/person.model.js";
-import bcrypt from 'bcrypt';
+import bcrypt from "bcrypt";
 import { createAccessToken } from "../libs/jwt.js";
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 import { TOKEN_SECRET } from "../config.js";
 
 const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
 };
 
 export const register = async (req, res) => {
-  const { email, password, username, firstName, lastName, address, phone } = req.body;
+  const { email, password, username, firstName, lastName, document, address, city, phone } = req.body;
 
   try {
     const userFound = await User.findOne({ email });
     if (userFound) return res.status(400).json(["El email ya está en uso"]);
 
-    const personExists = await Person.findOne({ email });
-    if (personExists) return res.status(400).json(["Ya existe una persona con ese email"]);
-
-    const newPerson = new Person({ firstName, lastName, address, phone, email });
+    const newPerson = new Person({
+      firstName,
+      lastName,
+      document,
+      address,
+      city,
+      phone,
+      email
+    });
     const savedPerson = await newPerson.save();
 
     const passwordHash = await bcrypt.hash(password, 10);
-
     const newUser = new User({
       username,
       email,
@@ -37,7 +41,8 @@ export const register = async (req, res) => {
     const userSaved = await newUser.save();
     const token = await createAccessToken({
       id: userSaved._id,
-      roles: userSaved.roles
+      roles: userSaved.roles,
+      seller: userSaved.seller
     });
 
     res.cookie("token", token, cookieOptions);
@@ -47,6 +52,7 @@ export const register = async (req, res) => {
       username: userSaved.username,
       email: userSaved.email,
       roles: userSaved.roles,
+      seller: userSaved.seller,
       createdAt: userSaved.createdAt,
       updatedAt: userSaved.updatedAt,
       person: savedPerson
@@ -60,7 +66,9 @@ export const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const userFound = await User.findOne({ email }).populate("person");
+    const userFound = await User.findOne({ email })
+      .populate("person")
+      .populate({ path: 'seller', populate: { path: 'person' } });
 
     if (!userFound) return res.status(400).json({ message: "Usuario no encontrado" });
 
@@ -71,9 +79,12 @@ export const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, userFound.password);
     if (!isMatch) return res.status(400).json({ message: "Contraseña incorrecta" });
 
+    const sellerId = userFound.seller?._id || userFound.seller || null;
+
     const token = await createAccessToken({
       id: userFound._id,
-      roles: userFound.roles
+      roles: userFound.roles,
+      seller: sellerId
     });
 
     res.cookie("token", token, cookieOptions);
@@ -83,6 +94,7 @@ export const login = async (req, res) => {
       username: userFound.username,
       email: userFound.email,
       roles: userFound.roles,
+      seller: userFound.seller,
       createdAt: userFound.createdAt,
       updatedAt: userFound.updatedAt,
       person: userFound.person
@@ -98,7 +110,9 @@ export const logout = (req, res) => {
 };
 
 export const profile = async (req, res) => {
-  const userFound = await User.findById(req.user.id).populate("person");
+  const userFound = await User.findById(req.user.id)
+    .populate("person")
+    .populate({ path: 'seller', populate: { path: 'person' } });
 
   if (!userFound) return res.status(400).json({ message: "Usuario no encontrado" });
 
@@ -107,6 +121,7 @@ export const profile = async (req, res) => {
     username: userFound.username,
     email: userFound.email,
     roles: userFound.roles,
+    seller: userFound.seller,
     createdAt: userFound.createdAt,
     updatedAt: userFound.updatedAt,
     person: userFound.person
@@ -124,7 +139,10 @@ export const verifyToken = async (req, res) => {
   jwt.verify(token, TOKEN_SECRET, async (err, user) => {
     if (err) return res.status(401).json({ message: "Token inválido" });
 
-    const userFound = await User.findById(user.id).populate("person");
+    const userFound = await User.findById(user.id)
+      .populate("person")
+      .populate({ path: 'seller', populate: { path: 'person' } });
+      
     if (!userFound) return res.status(401).json({ message: "Usuario no encontrado" });
 
     return res.json({
@@ -132,6 +150,7 @@ export const verifyToken = async (req, res) => {
       username: userFound.username,
       email: userFound.email,
       roles: userFound.roles,
+      seller: userFound.seller,
       person: userFound.person
     });
   });

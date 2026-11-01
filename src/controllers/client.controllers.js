@@ -1,6 +1,42 @@
 import Client from '../models/client.model.js';
 import Person from '../models/person.model.js';
 
+// Búsqueda puntual y limitada de asociados (para vendedores y administración) 🔍
+export const searchClients = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.trim().length < 3) {
+      return res.status(400).json({ message: "El término de búsqueda debe tener al menos 3 caracteres" });
+    }
+
+    const cleanTerm = q.trim();
+    const persons = await Person.find({
+      $or: [
+        { document: { $regex: cleanTerm, $options: "i" } },
+        { firstName: { $regex: cleanTerm, $options: "i" } },
+        { lastName: { $regex: cleanTerm, $options: "i" } }
+      ]
+    })
+    .select('_id')
+    .limit(10)
+    .lean();
+
+    const personIds = persons.map(p => p._id);
+
+    const clients = await Client.find({
+      person: { $in: personIds },
+      status: { $ne: 'Inactivo' }
+    })
+    .populate('person')
+    .limit(5)
+    .lean();
+
+    res.json(clients);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Obtener todos los clientes con datos de persona
 export const getClients = async (req, res) => {
   try {

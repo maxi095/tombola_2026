@@ -28,6 +28,11 @@ const userSchema = new mongoose.Schema({
     enum: ['Administrador', 'Vendedor', 'Directiva'],
     default: 'Vendedor'
   },
+  seller: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Seller',
+    default: null
+  },
   status: {
     type: String,
     enum: ['Activo', 'Inactivo'],
@@ -36,5 +41,8 @@ const userSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Índice seguro para consultas por vendedor (sparse para no indexar nulls de admins)
+userSchema.index({ seller: 1 }, { sparse: true });
 
 export default mongoose.model('User', userSchema);
