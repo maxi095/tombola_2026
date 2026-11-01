@@ -8,7 +8,7 @@
 ---
 
 ### Slice 1 — Backend RBAC, Enlace Usuario-Vendedor & Protección de Padrón
-- [ ] **Objetivo:** Blindar la seguridad en el backend vinculando `User.seller`, creando middlewares de roles/scoping y protegiendo la base de clientes.
+- [x] **Objetivo:** Blindar la seguridad en el backend vinculando `User.seller`, creando middlewares de roles/scoping y protegiendo la base de clientes.
 - **Valor observable:** Un usuario con rol `'Vendedor'` recibe `403 Forbidden` al intentar listar clientes masivamente (`GET /api/clients`), pero puede buscar puntualmente por DNI/Apellido en `GET /api/clients/search?q=...`.
 - **Archivos a crear/modificar:**
   - `src/models/user.model.js` (campo aditivo `seller`, índice).
