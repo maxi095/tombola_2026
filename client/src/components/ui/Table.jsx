@@ -6,9 +6,9 @@ import { formatCurrency } from "../../libs/formatters";
  * Unidades atómicas para la construcción de grillas de datos profesionales.
  */
 
-export const Table = ({ children, className = "" }) => (
+export const Table = ({ children, className = "", minWidth = "min-w-[800px]" }) => (
   <div className={`overflow-x-auto ${className}`}>
-    <table className="w-full text-left border-collapse min-w-[800px]">
+    <table className={`w-full text-left border-collapse ${minWidth}`}>
       {children}
     </table>
   </div>

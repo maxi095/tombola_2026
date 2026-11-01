@@ -1,72 +1,92 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-
-import HomePage from "./pages/HomePage";
-import ProfilePage from "./pages/ProfilePage";
-
 import ProtectedRoute from "./components/ProtectedRoute";
-
 import BarraTareas from "./components/BarraTareas";
 import Sidebar from "./components/Sidebar";
 
+// Providers
 import { EditionProvider } from "./context/EditionContext";
-import EditionPage from "./pages/edition/EditionPage";
-import EditionFormPage from "./pages/edition/EditionFormPage";
-
 import { EditionFilterProvider } from "./context/EditionFilterContext";
-
 import { SellerProvider } from "./context/SellerContext";
-import SellerPage from "./pages/seller/SellerPage";
-import SellerFormPage from "./pages/seller/SellerFormPage";
-import SellerViewPage from "./pages/seller/SellerViewPage";
-
 import { ClientProvider } from "./context/ClientContext";
-import ClientPage from "./pages/client/ClientPage";
-import ClientFormPage from "./pages/client/ClientFormPage";
-
 import { SalesProvider } from "./context/SaleContext";
-import SalePage from "./pages/sale/SalePage";
-import SaleFormPage from "./pages/sale/SaleFormPage";
-import SaleViewPage from "./pages/sale/SaleViewPage";
-import SaleTarjetaUnicaPage from "./pages/sale/SaleTarjetaUnicaPage";
-
 import { BingoCardProvider } from "./context/BingoCardContext";
-import BingoCardPage from "./pages/bingoCard/BingoCardPage";
-import BingoCardStatusPage from "./pages/bingoCard/BingoCardStatusPage";
-
 import { QuotaProvider } from "./context/QuotaContext";
-import ExpiredQuotasPage from "./pages/quota/ExpiredQuotasPage";
-import QuotasPage from "./pages/quota/QuotasPage";
-
 import { SellerPaymentProvider } from "./context/SellerPaymentContext";
-import SellerPaymentPage from "./pages/sellerPayment/SellerPaymentPage";
-import SellerPaymentFormPage from "./pages/sellerPayment/SellerPaymentFormPage";
-import SellerPaymentView from "./pages/sellerPayment/SellerPaymentView";
-
 import { BalanceProvider } from "./context/BalanceContext";
-import BalancePage from "./pages/balance/BalancePage";
-import BalanceFormPage from "./pages/balance/BalanceFormPage";
-import BalanceViewPage from "./pages/balance/BalanceViewPage";
-
 import { DashboardProvider } from "./context/DashboardContext";
-import DashboardPage from "./pages/dashboard/DashboardPage";
-
 import { DrawProvider } from "./context/DrawContext";
-import DrawPage from "./pages/draw/DrawPage";
-import DrawFormPage from "./pages/draw/DrawFormPage";
-import DrawViewPage from "./pages/draw/DrawViewPage";
-import DrawWinnersDisplayPage from "./pages/draw/DrawWinnersDisplayPage";
-
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import Unauthorized from "./pages/Unauthorized";
-
 import { UserProvider } from "./context/UserContext";
-import UserPage from "./pages/user/UserPage";
-import UserFormPage from "./pages/user/UserFormPage";
 import { FeedbackProvider } from "./context/FeedbackContext";
 import { LayoutProvider, useLayout } from "./context/LayoutContext";
 import Toast from "./components/ui/Toast";
+
+// Code Splitting Dinámico con React.lazy() 🚀⚡
+const HomePage = lazy(() => import("./pages/HomePage"));
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const RegisterPage = lazy(() => import("./pages/RegisterPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const Unauthorized = lazy(() => import("./pages/Unauthorized"));
+
+// Usuarios
+const UserPage = lazy(() => import("./pages/user/UserPage"));
+const UserFormPage = lazy(() => import("./pages/user/UserFormPage"));
+
+// Ediciones
+const EditionPage = lazy(() => import("./pages/edition/EditionPage"));
+const EditionFormPage = lazy(() => import("./pages/edition/EditionFormPage"));
+
+// Vendedores
+const SellerPage = lazy(() => import("./pages/seller/SellerPage"));
+const SellerFormPage = lazy(() => import("./pages/seller/SellerFormPage"));
+const SellerViewPage = lazy(() => import("./pages/seller/SellerViewPage"));
+
+// Asociados / Clientes
+const ClientPage = lazy(() => import("./pages/client/ClientPage"));
+const ClientFormPage = lazy(() => import("./pages/client/ClientFormPage"));
+
+// Ventas
+const SalePage = lazy(() => import("./pages/sale/SalePage"));
+const SaleFormPage = lazy(() => import("./pages/sale/SaleFormPage"));
+const SaleViewPage = lazy(() => import("./pages/sale/SaleViewPage"));
+const SaleTarjetaUnicaPage = lazy(() => import("./pages/sale/SaleTarjetaUnicaPage"));
+
+// Cuotas
+const ExpiredQuotasPage = lazy(() => import("./pages/quota/ExpiredQuotasPage"));
+const QuotasPage = lazy(() => import("./pages/quota/QuotasPage"));
+
+// Cartones
+const BingoCardPage = lazy(() => import("./pages/bingoCard/BingoCardPage"));
+const BingoCardStatusPage = lazy(() => import("./pages/bingoCard/BingoCardStatusPage"));
+
+// Rendiciones / Pagos de Vendedores
+const SellerPaymentPage = lazy(() => import("./pages/sellerPayment/SellerPaymentPage"));
+const SellerPaymentFormPage = lazy(() => import("./pages/sellerPayment/SellerPaymentFormPage"));
+const SellerPaymentView = lazy(() => import("./pages/sellerPayment/SellerPaymentView"));
+
+// Balance
+const BalancePage = lazy(() => import("./pages/balance/BalancePage"));
+const BalanceFormPage = lazy(() => import("./pages/balance/BalanceFormPage"));
+const BalanceViewPage = lazy(() => import("./pages/balance/BalanceViewPage"));
+
+// Dashboard
+const DashboardPage = lazy(() => import("./pages/dashboard/DashboardPage"));
+
+// Sorteos
+const DrawPage = lazy(() => import("./pages/draw/DrawPage"));
+const DrawFormPage = lazy(() => import("./pages/draw/DrawFormPage"));
+const DrawViewPage = lazy(() => import("./pages/draw/DrawViewPage"));
+const DrawWinnersDisplayPage = lazy(() => import("./pages/draw/DrawWinnersDisplayPage"));
+
+const PageLoader = () => (
+  <div className="py-40 flex flex-col items-center justify-center gap-3">
+    <div className="w-8 h-8 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
+    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 animate-pulse">
+      Cargando...
+    </span>
+  </div>
+);
 
 function App() {
   return (
@@ -142,59 +162,61 @@ function Layout() {
         )}
 
         <main className="content-area">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
 
-            <Route path="/profile" element={<ProtectedRoute allowedRoles={['Administrador']}><ProfilePage /></ProtectedRoute>} />
-            <Route path="/users" element={<ProtectedRoute allowedRoles={['Administrador']}><UserPage /></ProtectedRoute>} />
-            <Route path="/users/new" element={<ProtectedRoute allowedRoles={['Administrador']}><UserFormPage /></ProtectedRoute>} />
-            <Route path="/users/edit/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><UserFormPage /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute allowedRoles={['Administrador', 'Vendedor', 'Directiva']}><ProfilePage /></ProtectedRoute>} />
+              <Route path="/users" element={<ProtectedRoute allowedRoles={['Administrador']}><UserPage /></ProtectedRoute>} />
+              <Route path="/users/new" element={<ProtectedRoute allowedRoles={['Administrador']}><UserFormPage /></ProtectedRoute>} />
+              <Route path="/users/edit/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><UserFormPage /></ProtectedRoute>} />
 
-            <Route path="/editions" element={<ProtectedRoute allowedRoles={['Administrador']}><EditionPage /></ProtectedRoute>} />
-            <Route path="/edition/new" element={<ProtectedRoute allowedRoles={['Administrador']}><EditionFormPage /></ProtectedRoute>} />
-            <Route path="/edition/edit/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><EditionFormPage /></ProtectedRoute>} />
+              <Route path="/editions" element={<ProtectedRoute allowedRoles={['Administrador']}><EditionPage /></ProtectedRoute>} />
+              <Route path="/edition/new" element={<ProtectedRoute allowedRoles={['Administrador']}><EditionFormPage /></ProtectedRoute>} />
+              <Route path="/edition/edit/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><EditionFormPage /></ProtectedRoute>} />
 
-            <Route path="/sales" element={<ProtectedRoute allowedRoles={['Administrador']}><SalePage /></ProtectedRoute>} />
-            <Route path="/sale/new" element={<ProtectedRoute allowedRoles={['Administrador']}><SaleFormPage /></ProtectedRoute>} />
-            <Route path="/sale/edit/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><SaleFormPage /></ProtectedRoute>} />
-            <Route path="/sale/view/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><SaleViewPage /></ProtectedRoute>} />
-            <Route path="/salesTarjetaUnica" element={<ProtectedRoute allowedRoles={['Administrador']}><SaleTarjetaUnicaPage /></ProtectedRoute>} />
+              <Route path="/sales" element={<ProtectedRoute allowedRoles={['Administrador']}><SalePage /></ProtectedRoute>} />
+              <Route path="/sale/new" element={<ProtectedRoute allowedRoles={['Administrador']}><SaleFormPage /></ProtectedRoute>} />
+              <Route path="/sale/edit/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><SaleFormPage /></ProtectedRoute>} />
+              <Route path="/sale/view/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><SaleViewPage /></ProtectedRoute>} />
+              <Route path="/salesTarjetaUnica" element={<ProtectedRoute allowedRoles={['Administrador']}><SaleTarjetaUnicaPage /></ProtectedRoute>} />
 
-            <Route path="/quotas" element={<ProtectedRoute allowedRoles={['Administrador']}><ExpiredQuotasPage /></ProtectedRoute>} />
-            <Route path="/allQuotas" element={<ProtectedRoute allowedRoles={['Administrador']}><QuotasPage /></ProtectedRoute>} />
+              <Route path="/quotas" element={<ProtectedRoute allowedRoles={['Administrador']}><ExpiredQuotasPage /></ProtectedRoute>} />
+              <Route path="/allQuotas" element={<ProtectedRoute allowedRoles={['Administrador']}><QuotasPage /></ProtectedRoute>} />
 
-            <Route path="/bingoCards" element={<ProtectedRoute allowedRoles={['Administrador']}><BingoCardPage /></ProtectedRoute>} />
-            <Route path="/bingoCardStatus" element={<ProtectedRoute allowedRoles={['Administrador']}><BingoCardStatusPage /></ProtectedRoute>} />
+              <Route path="/bingoCards" element={<ProtectedRoute allowedRoles={['Administrador']}><BingoCardPage /></ProtectedRoute>} />
+              <Route path="/bingoCardStatus" element={<ProtectedRoute allowedRoles={['Administrador', 'Directiva', 'Vendedor']}><BingoCardStatusPage /></ProtectedRoute>} />
 
-            <Route path="/sellers" element={<ProtectedRoute allowedRoles={['Administrador']}><SellerPage /></ProtectedRoute>} />
-            <Route path="/seller/new" element={<ProtectedRoute allowedRoles={['Administrador']}><SellerFormPage /></ProtectedRoute>} />
-            <Route path="/seller/edit/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><SellerFormPage /></ProtectedRoute>} />
-            <Route path="/seller/view/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><SellerViewPage /></ProtectedRoute>} />
+              <Route path="/sellers" element={<ProtectedRoute allowedRoles={['Administrador']}><SellerPage /></ProtectedRoute>} />
+              <Route path="/seller/new" element={<ProtectedRoute allowedRoles={['Administrador']}><SellerFormPage /></ProtectedRoute>} />
+              <Route path="/seller/edit/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><SellerFormPage /></ProtectedRoute>} />
+              <Route path="/seller/view/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><SellerViewPage /></ProtectedRoute>} />
 
-            <Route path="/clients" element={<ProtectedRoute allowedRoles={['Administrador']}><ClientPage /></ProtectedRoute>} />
-            <Route path="/client/new" element={<ProtectedRoute allowedRoles={['Administrador']}><ClientFormPage /></ProtectedRoute>} />
-            <Route path="/client/edit/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><ClientFormPage /></ProtectedRoute>} />
+              <Route path="/clients" element={<ProtectedRoute allowedRoles={['Administrador']}><ClientPage /></ProtectedRoute>} />
+              <Route path="/client/new" element={<ProtectedRoute allowedRoles={['Administrador']}><ClientFormPage /></ProtectedRoute>} />
+              <Route path="/client/edit/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><ClientFormPage /></ProtectedRoute>} />
 
-            <Route path="/sellerPayments" element={<ProtectedRoute allowedRoles={['Administrador']}><SellerPaymentPage /></ProtectedRoute>} />
-            <Route path="/sellerPayment/new" element={<ProtectedRoute allowedRoles={['Administrador']}><SellerPaymentFormPage /></ProtectedRoute>} />
-            <Route path="/sellerPayment/view/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><SellerPaymentView /></ProtectedRoute>} />
+              <Route path="/sellerPayments" element={<ProtectedRoute allowedRoles={['Administrador']}><SellerPaymentPage /></ProtectedRoute>} />
+              <Route path="/sellerPayment/new" element={<ProtectedRoute allowedRoles={['Administrador']}><SellerPaymentFormPage /></ProtectedRoute>} />
+              <Route path="/sellerPayment/view/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><SellerPaymentView /></ProtectedRoute>} />
 
-            <Route path="/balance" element={<ProtectedRoute allowedRoles={['Administrador']}><BalancePage /></ProtectedRoute>} />
-            <Route path="/balance/new" element={<ProtectedRoute allowedRoles={['Administrador']}><BalanceFormPage /></ProtectedRoute>} />
-            <Route path="/balance/view/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><BalanceViewPage /></ProtectedRoute>} />
+              <Route path="/balance" element={<ProtectedRoute allowedRoles={['Administrador']}><BalancePage /></ProtectedRoute>} />
+              <Route path="/balance/new" element={<ProtectedRoute allowedRoles={['Administrador']}><BalanceFormPage /></ProtectedRoute>} />
+              <Route path="/balance/view/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><BalanceViewPage /></ProtectedRoute>} />
 
-            <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['Administrador']}><DashboardPage /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['Administrador', 'Directiva']}><DashboardPage /></ProtectedRoute>} />
 
-            <Route path="/draws" element={<ProtectedRoute allowedRoles={['Administrador']}><DrawPage /></ProtectedRoute>} />
-            <Route path="/draw/new" element={<ProtectedRoute allowedRoles={['Administrador']}><DrawFormPage /></ProtectedRoute>} />
-            <Route path="/draw/edit/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><DrawFormPage /></ProtectedRoute>} />
-            <Route path="/draw/view/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><DrawViewPage /></ProtectedRoute>} />
-            <Route path="/draw/display/:id" element={<DrawWinnersDisplayPage />} />
+              <Route path="/draws" element={<ProtectedRoute allowedRoles={['Administrador']}><DrawPage /></ProtectedRoute>} />
+              <Route path="/draw/new" element={<ProtectedRoute allowedRoles={['Administrador']}><DrawFormPage /></ProtectedRoute>} />
+              <Route path="/draw/edit/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><DrawFormPage /></ProtectedRoute>} />
+              <Route path="/draw/view/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><DrawViewPage /></ProtectedRoute>} />
+              <Route path="/draw/display/:id" element={<DrawWinnersDisplayPage />} />
 
-            <Route path="/unauthorized" element={<Unauthorized />} />
-          </Routes>
+              <Route path="/unauthorized" element={<Unauthorized />} />
+            </Routes>
+          </Suspense>
         </main>
       </div>
     </div>

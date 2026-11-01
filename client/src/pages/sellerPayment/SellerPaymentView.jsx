@@ -212,7 +212,7 @@ export default function SellerPaymentDetailPage() {
               </div>
             ) : (
               <div className="overflow-hidden border border-slate-100 rounded-2xl">
-                <Table>
+                <Table minWidth="min-w-full">
                   <THead>
                     <TH>N° Cheque</TH>
                     <TH>Banco Emisor</TH>

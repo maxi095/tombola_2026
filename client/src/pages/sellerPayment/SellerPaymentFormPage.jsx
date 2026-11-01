@@ -393,53 +393,60 @@ function SellerPaymentFormPage() {
           ) : (
             <div className="space-y-4">
               {checkFields.map((item, index) => (
-                <div key={item.id} className="p-5 bg-slate-50/50 rounded-2xl border border-slate-100 flex flex-col md:flex-row gap-4 items-end relative">
-                  <InputField
-                    label="N° Cheque"
-                    placeholder="Número..."
-                    bsize="compact"
-                    className="flex-1 w-full"
-                    {...register(`checks.${index}.checkNumber`, { required: "Obligatorio" })}
-                  />
-                  <InputField
-                    label="Banco Emisor"
-                    placeholder="Banco..."
-                    bsize="compact"
-                    className="flex-1 w-full"
-                    {...register(`checks.${index}.bank`, { required: "Obligatorio" })}
-                  />
-                  <InputField
-                    label="Plaza / Sucursal"
-                    placeholder="Plaza..."
-                    bsize="compact"
-                    className="flex-1 w-full"
-                    {...register(`checks.${index}.branch`, { required: "Obligatorio" })}
-                  />
-                  <InputField
-                    label="Fecha Cobro"
-                    type="date"
-                    bsize="compact"
-                    className="flex-1 w-full"
-                    {...register(`checks.${index}.date`, { required: "Obligatorio" })}
-                  />
-                  <InputField
-                    label="Importe"
-                    type="number"
-                    step="0.01"
-                    prefix="$"
-                    placeholder="Monto"
-                    bsize="compact"
-                    className="flex-1 w-full"
-                    {...register(`checks.${index}.amount`, { required: "Obligatorio" })}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeCheck(index)}
-                    className="text-red-400 hover:text-red-600 p-3 hover:bg-red-50 rounded-xl transition-all mb-0.5 shrink-0 self-center md:self-end"
-                    title="Eliminar Cheque"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                <div key={item.id} className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end relative">
+                  <div className="lg:col-span-2">
+                    <InputField
+                      label="N° Cheque"
+                      placeholder="Número..."
+                      bsize="compact"
+                      {...register(`checks.${index}.checkNumber`, { required: "Obligatorio" })}
+                    />
+                  </div>
+                  <div className="lg:col-span-3">
+                    <InputField
+                      label="Banco Emisor"
+                      placeholder="Banco..."
+                      bsize="compact"
+                      {...register(`checks.${index}.bank`, { required: "Obligatorio" })}
+                    />
+                  </div>
+                  <div className="lg:col-span-2">
+                    <InputField
+                      label="Plaza / Sucursal"
+                      placeholder="Plaza..."
+                      bsize="compact"
+                      {...register(`checks.${index}.branch`, { required: "Obligatorio" })}
+                    />
+                  </div>
+                  <div className="lg:col-span-2">
+                    <InputField
+                      label="Fecha Cobro"
+                      type="date"
+                      bsize="compact"
+                      {...register(`checks.${index}.date`, { required: "Obligatorio" })}
+                    />
+                  </div>
+                  <div className="lg:col-span-2">
+                    <InputField
+                      label="Importe"
+                      type="number"
+                      step="0.01"
+                      prefix="$"
+                      placeholder="Monto"
+                      bsize="compact"
+                      {...register(`checks.${index}.amount`, { required: "Obligatorio" })}
+                    />
+                  </div>
+                  <div className="lg:col-span-1 flex justify-center pb-1">
+                    <button
+                      type="button"
+                      onClick={() => removeCheck(index)}
+                      className="text-red-400 hover:text-red-600 p-2.5 hover:bg-red-50 rounded-xl transition-all shrink-0"
+                      title="Eliminar Cheque"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
