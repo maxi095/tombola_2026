@@ -18,7 +18,16 @@ import {
 } from 'lucide-react';
 
 export const VendedorVentaPage = () => {
-    const { summary, loadSummary, loadCards, cards, createSale, searchClients, createClient } = useVendedor();
+    const {
+        summary,
+        loadSummary,
+        loadCards,
+        cards,
+        createSale,
+        searchClients,
+        createClient,
+        selectedEditionId
+    } = useVendedor();
     const { showToast } = useFeedback();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -48,11 +57,9 @@ export const VendedorVentaPage = () => {
 
     // Cargar datos iniciales
     useEffect(() => {
-        if (!summary) {
-            loadSummary();
-        }
+        loadSummary();
         loadCards({ status: 'disponible' });
-    }, [loadSummary, loadCards, summary]);
+    }, [loadSummary, loadCards, selectedEditionId]);
 
     // Preseleccionar si venía por URL
     useEffect(() => {
@@ -118,14 +125,14 @@ export const VendedorVentaPage = () => {
             return;
         }
 
-        const editionId = summary?.edition?._id;
-        const price = summary?.edition?.price || 0;
+        const editionId = summary?.edition?._id || selectedEditionId;
+        const price = summary?.edition?.cost ?? summary?.edition?.price ?? 0;
 
         setSubmitting(true);
         try {
             await createSale({
                 cardNumber: Number(selectedCard),
-                clientId: selectedClient._id,
+                clientId: selectedClient._id || selectedClient.id,
                 paymentType,
                 price,
                 editionId,
@@ -141,9 +148,20 @@ export const VendedorVentaPage = () => {
     };
 
     const availableCards = (cards || []).filter((c) => c.status === 'Disponible' || !c.isSold);
-    const editionPrice = summary?.edition?.price || 0;
-    const quotasCount = summary?.edition?.quotasCount || 10;
+    const editionPrice = summary?.edition?.cost ?? summary?.edition?.price ?? 0;
+    const quotasCount = summary?.edition?.maxQuotas ?? summary?.edition?.quotasCount ?? 10;
     const quotaPrice = quotasCount > 0 ? editionPrice / quotasCount : 0;
+
+    const selectedClientName = selectedClient
+        ? selectedClient.fullName ||
+          `${selectedClient.lastName || selectedClient.person?.lastName || ''}, ${selectedClient.firstName || selectedClient.person?.firstName || ''}`.trim()
+        : '';
+    const selectedClientDoc = selectedClient
+        ? selectedClient.dni || selectedClient.document || selectedClient.person?.document || ''
+        : '';
+    const selectedClientPhone = selectedClient
+        ? selectedClient.phone || selectedClient.person?.phone || ''
+        : '';
 
     return (
         <div className="space-y-4">
@@ -160,7 +178,9 @@ export const VendedorVentaPage = () => {
                 </button>
                 <div>
                     <h2 className="text-xl font-black text-white">Registrar Venta</h2>
-                    <p className="text-xs text-slate-400">Venta rápida de cartón asignado</p>
+                    <p className="text-xs text-slate-400">
+                        {summary?.edition?.name || 'Edición Vigente'} • Venta rápida de cartón
+                    </p>
                 </div>
             </div>
 
@@ -188,11 +208,14 @@ export const VendedorVentaPage = () => {
                             className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-white text-sm font-bold focus:outline-none focus:border-red-500"
                         >
                             <option value="">-- Seleccionar cartón --</option>
-                            {availableCards.map((c) => (
-                                <option key={c._id || c.cardNumber} value={c.cardNumber}>
-                                    Cartón #{c.cardNumber}
-                                </option>
-                            ))}
+                            {availableCards.map((c) => {
+                                const num = c.number ?? c.cardNumber;
+                                return (
+                                    <option key={c._id || num} value={num}>
+                                        Cartón #{num}
+                                    </option>
+                                );
+                            })}
                         </select>
                     </div>
                 )}
@@ -219,12 +242,12 @@ export const VendedorVentaPage = () => {
                         <div>
                             <div className="flex items-center gap-2">
                                 <span className="text-sm font-bold text-white">
-                                    {selectedClient.lastName}, {selectedClient.firstName}
+                                    {selectedClientName || 'Asociado Seleccionado'}
                                 </span>
                                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                             </div>
                             <p className="text-xs text-slate-400 mt-0.5">
-                                DNI: {formatDocument(selectedClient.dni)} {selectedClient.phone ? `• Tel: ${selectedClient.phone}` : ''}
+                                DNI: {formatDocument(selectedClientDoc)} {selectedClientPhone ? `• Tel: ${selectedClientPhone}` : ''}
                             </p>
                         </div>
                         <button
@@ -254,29 +277,37 @@ export const VendedorVentaPage = () => {
 
                         {/* Resultados de búsqueda */}
                         {clientResults.length > 0 && (
-                            <div className="max-h-44 overflow-y-auto divide-y divide-slate-800 bg-slate-900 rounded-xl border border-slate-700">
-                                {clientResults.map((cli) => (
-                                    <button
-                                        key={cli._id}
-                                        type="button"
-                                        onClick={() => {
-                                            setSelectedClient(cli);
-                                            setClientQuery('');
-                                            setClientResults([]);
-                                        }}
-                                        className="w-full text-left p-2.5 hover:bg-slate-800 active:bg-slate-700 flex items-center justify-between transition-colors"
-                                    >
-                                        <div>
-                                            <p className="text-xs font-bold text-white">
-                                                {cli.lastName}, {cli.firstName}
-                                            </p>
-                                            <p className="text-[11px] text-slate-400">
-                                                DNI: {formatDocument(cli.dni)}
-                                            </p>
-                                        </div>
-                                        <span className="text-[11px] text-red-400 font-medium">Seleccionar</span>
-                                    </button>
-                                ))}
+                            <div className="max-h-48 overflow-y-auto divide-y divide-slate-800 bg-slate-900 rounded-xl border border-slate-700">
+                                {clientResults.map((cli) => {
+                                    const cliName =
+                                        cli.fullName ||
+                                        `${cli.lastName || cli.person?.lastName || ''}, ${cli.firstName || cli.person?.firstName || ''}`.trim() ||
+                                        `Cliente #${cli.clientNumber || ''}`;
+                                    const cliDoc = cli.dni || cli.document || cli.person?.document || '';
+
+                                    return (
+                                        <button
+                                            key={cli._id || cli.id}
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedClient(cli);
+                                                setClientQuery('');
+                                                setClientResults([]);
+                                            }}
+                                            className="w-full text-left p-2.5 hover:bg-slate-800 active:bg-slate-700 flex items-center justify-between transition-colors"
+                                        >
+                                            <div>
+                                                <p className="text-xs font-bold text-white">
+                                                    {cliName}
+                                                </p>
+                                                <p className="text-[11px] text-slate-400">
+                                                    DNI: {formatDocument(cliDoc)}
+                                                </p>
+                                            </div>
+                                            <span className="text-[11px] text-red-400 font-medium">Seleccionar</span>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         )}
 

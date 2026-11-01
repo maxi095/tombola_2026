@@ -12,12 +12,13 @@ import {
     Banknote,
     Building2,
     X,
-    Loader2
+    Loader2,
+    Share2
 } from 'lucide-react';
 import dayjs from 'dayjs';
 
 export const VendedorCuotasPage = () => {
-    const { quotas, loading, loadQuotas, payQuota } = useVendedor();
+    const { quotas, loading, loadQuotas, payQuota, selectedEditionId, summary } = useVendedor();
     const { showToast } = useFeedback();
 
     const [statusFilter, setStatusFilter] = useState('pending'); // 'pending' | 'paid' | 'all'
@@ -30,7 +31,7 @@ export const VendedorCuotasPage = () => {
 
     useEffect(() => {
         loadQuotas({ status: statusFilter });
-    }, [loadQuotas, statusFilter]);
+    }, [loadQuotas, statusFilter, selectedEditionId]);
 
     const filteredQuotas = useMemo(() => {
         if (!quotas) return [];
@@ -38,9 +39,12 @@ export const VendedorCuotasPage = () => {
         if (!term) return quotas;
 
         return quotas.filter((q) => {
-            const cardStr = String(q.cardNumber || '');
-            const clientName = `${q.client?.firstName || ''} ${q.client?.lastName || ''}`.toLowerCase();
-            const dniStr = String(q.client?.dni || '');
+            const cardStr = String(q.cardNumber ?? q.bingoCardNumber ?? '');
+            const clientName = (
+                q.client?.fullName ||
+                `${q.client?.lastName || ''} ${q.client?.firstName || ''}`
+            ).toLowerCase();
+            const dniStr = String(q.client?.dni || q.client?.document || '');
             return cardStr.includes(term) || clientName.includes(term) || dniStr.includes(term);
         });
     }, [quotas, searchTerm]);
@@ -50,17 +54,17 @@ export const VendedorCuotasPage = () => {
 
         setProcessingPayment(true);
         try {
+            const amount = selectedQuota.totalAmount ?? selectedQuota.amount ?? 0;
             await payQuota({
-                quotaId: selectedQuota._id,
+                quotaId: selectedQuota._id || selectedQuota.id,
                 paymentMethod,
             });
 
             showToast(
-                `Cuota #${selectedQuota.quotaNumber} cobrada ($ ${selectedQuota.totalAmount}). Recordá rendirla en secretaría.`,
+                `Cuota #${selectedQuota.quotaNumber} cobrada (${formatCurrency(amount)}). Recordá rendirla en secretaría.`,
                 'success'
             );
             setSelectedQuota(null);
-            // Recargar para sincronizar estado
             loadQuotas({ status: statusFilter });
         } catch (err) {
             showToast(err.message || 'Error al registrar cobro de cuota', 'error');
@@ -69,13 +73,30 @@ export const VendedorCuotasPage = () => {
         }
     };
 
+    const handleShareWhatsApp = (quota) => {
+        const clientName =
+            quota.client?.fullName ||
+            `${quota.client?.lastName || ''}, ${quota.client?.firstName || ''}`.trim() ||
+            'Asociado';
+        const cardNum = quota.cardNumber ?? quota.bingoCardNumber ?? '';
+        const amountStr = formatCurrency(quota.totalAmount ?? quota.amount ?? 0);
+        const editionName = summary?.edition?.name || '2026';
+
+        const message = `*Club Atlético Newell's Old Boys* 🔴⚫\n*Tómbola NOB - Edición ${editionName}*\n\n✅ *Comprobante de Cobro de Cuota*\n• *Asociado:* ${clientName}\n• *Cartón:* #${cardNum}\n• *Cuota:* #${quota.quotaNumber}\n• *Monto Cobrado:* ${amountStr}\n• *Medio:* ${quota.paymentMethod || 'Efectivo'}\n\n¡Muchas gracias por su apoyo al club!`;
+
+        const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+    };
+
     return (
         <div className="space-y-4">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-xl font-black text-white">Cobranzas</h2>
-                    <p className="text-xs text-slate-400">Cuotas de tus ventas activas</p>
+                    <p className="text-xs text-slate-400">
+                        {summary?.edition?.name || 'Edición Vigente'} • Cuotas de tus ventas
+                    </p>
                 </div>
                 <button
                     type="button"
@@ -94,7 +115,7 @@ export const VendedorCuotasPage = () => {
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                     type="text"
-                    placeholder="Buscar por asociado o cartón..."
+                    placeholder="Buscar por asociado, DNI o cartón..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500"
@@ -137,12 +158,19 @@ export const VendedorCuotasPage = () => {
                     </div>
                 ) : (
                     filteredQuotas.map((quota) => {
-                        const isPaid = quota.status === 'Pagado';
+                        const isPaid = quota.status === 'Pagado' || quota.isPaid;
                         const dueDate = quota.dueDate ? dayjs(quota.dueDate).format('DD/MM/YYYY') : '-';
+                        const cardNum = quota.cardNumber ?? quota.bingoCardNumber ?? '';
+                        const clientName =
+                            quota.client?.fullName ||
+                            `${quota.client?.lastName || ''}, ${quota.client?.firstName || ''}`.trim() ||
+                            'Asociado Registrado';
+                        const clientDoc = quota.client?.dni || quota.client?.document || '';
+                        const amount = quota.totalAmount ?? quota.amount ?? 0;
 
                         return (
                             <MobileCard
-                                key={quota._id}
+                                key={quota._id || quota.id}
                                 className={`p-3.5 transition-all ${
                                     isPaid ? 'border-slate-800/80 bg-slate-900/40' : 'border-slate-700'
                                 }`}
@@ -154,24 +182,26 @@ export const VendedorCuotasPage = () => {
                                                 Cuota #{quota.quotaNumber}
                                             </span>
                                             <span className="text-xs font-bold text-red-400">
-                                                Cartón #{quota.cardNumber}
+                                                Cartón #{cardNum}
                                             </span>
                                             <span
                                                 className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                                                     isPaid
                                                         ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/50'
+                                                        : quota.isExpired
+                                                        ? 'bg-rose-950 text-rose-300 border border-rose-800/50'
                                                         : 'bg-amber-950 text-amber-300 border border-amber-800/50'
                                                 }`}
                                             >
-                                                {isPaid ? 'Cobrada' : 'Pendiente'}
+                                                {isPaid ? 'Cobrada' : quota.isExpired ? 'Vencida' : 'Pendiente'}
                                             </span>
                                         </div>
 
                                         <p className="text-xs font-bold text-slate-100 mt-1.5">
-                                            {quota.client?.lastName}, {quota.client?.firstName}
+                                            {clientName}
                                         </p>
                                         <p className="text-[11px] text-slate-400 flex items-center gap-2 mt-0.5">
-                                            <span>DNI: {formatDocument(quota.client?.dni)}</span>
+                                            {clientDoc && <span>DNI: {formatDocument(clientDoc)}</span>}
                                             <span className="flex items-center gap-1">
                                                 <Calendar className="w-3 h-3" />
                                                 Vence: {dueDate}
@@ -181,12 +211,22 @@ export const VendedorCuotasPage = () => {
 
                                     <div className="text-right flex-shrink-0">
                                         <p className="text-sm font-black text-white">
-                                            {formatCurrency(quota.totalAmount)}
+                                            {formatCurrency(amount)}
                                         </p>
                                         {isPaid ? (
-                                            <div className="mt-1 flex items-center justify-end gap-1 text-[11px] text-emerald-400">
-                                                <CheckCircle2 className="w-3.5 h-3.5" />
-                                                <span>Cobrado</span>
+                                            <div className="mt-1 flex items-center justify-end gap-1.5">
+                                                <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-semibold">
+                                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                                    <span>Cobrado</span>
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleShareWhatsApp(quota)}
+                                                    className="p-1 rounded-lg text-emerald-400 hover:bg-emerald-950/60 active:scale-95 transition-colors"
+                                                    title="Enviar comprobante por WhatsApp"
+                                                >
+                                                    <Share2 className="w-3.5 h-3.5" />
+                                                </button>
                                             </div>
                                         ) : (
                                             <button
@@ -230,12 +270,16 @@ export const VendedorCuotasPage = () => {
                             <div className="flex justify-between text-xs">
                                 <span className="text-slate-400">Asociado:</span>
                                 <span className="font-bold text-white">
-                                    {selectedQuota.client?.lastName}, {selectedQuota.client?.firstName}
+                                    {selectedQuota.client?.fullName ||
+                                        `${selectedQuota.client?.lastName || ''}, ${selectedQuota.client?.firstName || ''}`.trim() ||
+                                        'Asociado'}
                                 </span>
                             </div>
                             <div className="flex justify-between text-xs">
                                 <span className="text-slate-400">Cartón:</span>
-                                <span className="font-bold text-red-400">#{selectedQuota.cardNumber}</span>
+                                <span className="font-bold text-red-400">
+                                    #{selectedQuota.cardNumber ?? selectedQuota.bingoCardNumber ?? ''}
+                                </span>
                             </div>
                             <div className="flex justify-between text-xs">
                                 <span className="text-slate-400">Cuota:</span>
@@ -244,7 +288,7 @@ export const VendedorCuotasPage = () => {
                             <div className="flex justify-between text-xs pt-1 border-t border-slate-700/60">
                                 <span className="text-slate-300 font-semibold">Total a cobrar:</span>
                                 <span className="font-black text-emerald-400 text-sm">
-                                    {formatCurrency(selectedQuota.totalAmount)}
+                                    {formatCurrency(selectedQuota.totalAmount ?? selectedQuota.amount ?? 0)}
                                 </span>
                             </div>
                         </div>

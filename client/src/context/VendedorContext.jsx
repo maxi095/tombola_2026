@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import {
     getVendedorSummaryRequest,
     getVendedorCardsRequest,
@@ -21,17 +21,27 @@ export const useVendedor = () => {
 
 export const VendedorProvider = ({ children }) => {
     const [summary, setSummary] = useState(null);
+    const [editions, setEditions] = useState([]);
+    const [selectedEditionId, setSelectedEditionId] = useState('');
     const [cards, setCards] = useState([]);
     const [quotas, setQuotas] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const loadSummary = useCallback(async (params = {}) => {
+    const loadSummary = useCallback(async (editionIdParam) => {
         setLoading(true);
         setError(null);
         try {
+            const editionId = editionIdParam || selectedEditionId;
+            const params = editionId ? { editionId } : {};
             const res = await getVendedorSummaryRequest(params);
             setSummary(res.data);
+            if (res.data.editions && res.data.editions.length > 0) {
+                setEditions(res.data.editions);
+            }
+            if (res.data.edition?._id && !selectedEditionId) {
+                setSelectedEditionId(res.data.edition._id);
+            }
             return res.data;
         } catch (err) {
             console.error('Error al cargar resumen de vendedor:', err);
@@ -40,13 +50,21 @@ export const VendedorProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
+    }, [selectedEditionId]);
+
+    const changeEdition = useCallback((newEditionId) => {
+        setSelectedEditionId(newEditionId);
     }, []);
 
     const loadCards = useCallback(async (params = {}) => {
         setLoading(true);
         setError(null);
         try {
-            const res = await getVendedorCardsRequest(params);
+            const queryParams = {
+                ...params,
+                editionId: params.editionId || selectedEditionId
+            };
+            const res = await getVendedorCardsRequest(queryParams);
             setCards(res.data);
             return res.data;
         } catch (err) {
@@ -56,13 +74,17 @@ export const VendedorProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [selectedEditionId]);
 
     const loadQuotas = useCallback(async (params = {}) => {
         setLoading(true);
         setError(null);
         try {
-            const res = await getVendedorQuotasRequest(params);
+            const queryParams = {
+                ...params,
+                editionId: params.editionId || selectedEditionId
+            };
+            const res = await getVendedorQuotasRequest(queryParams);
             setQuotas(res.data);
             return res.data;
         } catch (err) {
@@ -72,14 +94,17 @@ export const VendedorProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [selectedEditionId]);
 
     const createSale = useCallback(async (saleData) => {
         setLoading(true);
         setError(null);
         try {
-            const res = await createVendedorSaleRequest(saleData);
-            // Actualizar resumen y cartones si estaban cargados
+            const payload = {
+                ...saleData,
+                editionId: saleData.editionId || selectedEditionId
+            };
+            const res = await createVendedorSaleRequest(payload);
             return res.data;
         } catch (err) {
             console.error('Error al registrar venta rápida:', err);
@@ -89,7 +114,7 @@ export const VendedorProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [selectedEditionId]);
 
     const payQuota = useCallback(async (paymentData) => {
         setLoading(true);
@@ -98,7 +123,11 @@ export const VendedorProvider = ({ children }) => {
             const res = await payVendedorQuotaRequest(paymentData);
             // Actualizar localmente el estado de la cuota pagada
             setQuotas((prev) =>
-                prev.map((q) => (q._id === res.data.quota?._id ? { ...q, ...res.data.quota, status: 'Pagado' } : q))
+                prev.map((q) =>
+                    q._id === res.data.quota?._id
+                        ? { ...q, ...res.data.quota, status: 'Pagado', isPaid: true }
+                        : q
+                )
             );
             return res.data;
         } catch (err) {
@@ -137,6 +166,9 @@ export const VendedorProvider = ({ children }) => {
         <VendedorContext.Provider
             value={{
                 summary,
+                editions,
+                selectedEditionId,
+                changeEdition,
                 cards,
                 quotas,
                 loading,

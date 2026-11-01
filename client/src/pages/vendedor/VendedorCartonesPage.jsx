@@ -5,7 +5,7 @@ import { MobileCard } from '../../components/mobile/MobileCard';
 import { Ticket, Search, PlusCircle, RotateCw, CheckCircle2 } from 'lucide-react';
 
 export const VendedorCartonesPage = () => {
-    const { cards, loading, loadCards } = useVendedor();
+    const { cards, loading, loadCards, selectedEditionId, summary } = useVendedor();
     const navigate = useNavigate();
 
     const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'disponible' | 'vendido'
@@ -13,12 +13,13 @@ export const VendedorCartonesPage = () => {
 
     useEffect(() => {
         loadCards({ status: statusFilter });
-    }, [loadCards, statusFilter]);
+    }, [loadCards, statusFilter, selectedEditionId]);
 
     const filteredCards = useMemo(() => {
         if (!cards) return [];
         return cards.filter((card) => {
-            const numStr = String(card.cardNumber || '');
+            const num = card.number ?? card.cardNumber ?? '';
+            const numStr = String(num);
             if (searchTerm.trim() && !numStr.includes(searchTerm.trim())) {
                 return false;
             }
@@ -32,7 +33,9 @@ export const VendedorCartonesPage = () => {
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-xl font-black text-white">Mis Cartones</h2>
-                    <p className="text-xs text-slate-400">Cartones asignados para esta edición</p>
+                    <p className="text-xs text-slate-400">
+                        {summary?.edition?.name || 'Edición Vigente'} • Cartones asignados
+                    </p>
                 </div>
                 <button
                     type="button"
@@ -95,10 +98,17 @@ export const VendedorCartonesPage = () => {
                     </div>
                 ) : (
                     filteredCards.map((card) => {
+                        const num = card.number ?? card.cardNumber;
                         const isSold = card.status === 'Vendido' || card.isSold;
+                        const clientName =
+                            card.sale?.client?.fullName ||
+                            (card.sale?.client?.lastName
+                                ? `${card.sale.client.lastName}, ${card.sale.client.firstName}`.trim()
+                                : '');
+
                         return (
                             <MobileCard
-                                key={card._id}
+                                key={card._id || num}
                                 className="flex items-center justify-between gap-3 p-3.5"
                             >
                                 <div className="flex items-center gap-3">
@@ -109,7 +119,7 @@ export const VendedorCartonesPage = () => {
                                                 : 'bg-red-950/40 border-red-800/40 text-red-400'
                                         }`}
                                     >
-                                        #{card.cardNumber}
+                                        #{num}
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-2">
@@ -129,9 +139,9 @@ export const VendedorCartonesPage = () => {
                                             )}
                                         </div>
 
-                                        {isSold && card.sale?.client ? (
+                                        {isSold ? (
                                             <p className="text-xs text-slate-200 mt-1 font-medium truncate max-w-[170px]">
-                                                {card.sale.client.lastName}, {card.sale.client.firstName}
+                                                {clientName || 'Asociado Registrado'}
                                             </p>
                                         ) : (
                                             <p className="text-[11px] text-slate-400 mt-1">
@@ -144,7 +154,7 @@ export const VendedorCartonesPage = () => {
                                 {!isSold ? (
                                     <button
                                         type="button"
-                                        onClick={() => navigate(`/vendedor/vender?cardNumber=${card.cardNumber}`)}
+                                        onClick={() => navigate(`/vendedor/vender?cardNumber=${num}`)}
                                         className="px-3 py-2 bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm transition-all flex-shrink-0 min-h-[40px]"
                                     >
                                         <PlusCircle className="w-4 h-4" />

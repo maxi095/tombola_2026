@@ -8,7 +8,7 @@ import SellerPayment from '../models/sellerPayment.model.js';
 
 /**
  * 1. Resumen Ejecutivo del Vendedor (Métricas de Bolsillo / Home Mobile) 📊
- * Retorna estado de inventario, dinero cobrado pendiente de rendir y comisión.
+ * Retorna estado de inventario, dinero cobrado pendiente de rendir, comisión y listado de ediciones.
  */
 export const getVendedorSummary = async (req, res) => {
     try {
@@ -22,12 +22,21 @@ export const getVendedorSummary = async (req, res) => {
             return res.status(404).json({ message: "Ficha de vendedor no encontrada" });
         }
 
-        // Buscar edición activa
+        // Obtener todas las ediciones para el selector de filtro global
+        const editions = await Edition.find({}, '_id name cost status maxQuotas installments')
+            .sort({ createdAt: -1 })
+            .lean();
+
+        // Buscar edición activa o solicitada
         let edition = null;
         if (req.query.editionId) {
-            edition = await Edition.findById(req.query.editionId).lean();
-        } else {
-            edition = await Edition.findOne().sort({ createdAt: -1 }).lean();
+            edition = editions.find(e => e._id.toString() === req.query.editionId.toString()) || null;
+            if (!edition) {
+                edition = await Edition.findById(req.query.editionId).lean();
+            }
+        }
+        if (!edition) {
+            edition = editions.find(e => e.status === 'Activa') || editions[0] || null;
         }
 
         const editionFilter = edition ? { edition: edition._id } : {};
@@ -70,22 +79,46 @@ export const getVendedorSummary = async (req, res) => {
         const commissionRate = seller.commissionRate || 0;
         const commissionEarned = Math.round((totalRendered * commissionRate) / 100);
 
+        const sellerFullName = `${seller.person?.firstName || ''} ${seller.person?.lastName || ''}`.trim() || 'Vendedor';
+
         res.json({
             seller: {
+                _id: seller._id,
                 id: seller._id,
                 sellerNumber: seller.sellerNumber,
-                name: `${seller.person?.firstName || ''} ${seller.person?.lastName || ''}`.trim(),
-                commissionRate
+                name: sellerFullName,
+                commissionRate,
+                commission: commissionRate
             },
-            edition: edition ? { id: edition._id, name: edition.name } : null,
+            edition: edition ? {
+                _id: edition._id,
+                id: edition._id,
+                name: edition.name,
+                cost: edition.cost || 0,
+                price: edition.cost || 0,
+                maxQuotas: edition.maxQuotas || (edition.installments ? edition.installments.length : 10),
+                quotasCount: edition.maxQuotas || (edition.installments ? edition.installments.length : 10)
+            } : null,
+            editions: editions.map(e => ({
+                _id: e._id,
+                id: e._id,
+                name: e.name,
+                status: e.status
+            })),
             metrics: {
                 totalCards,
+                totalAssigned: totalCards,
                 soldCards,
+                totalSold: soldCards,
                 availableCards,
+                totalAvailable: availableCards,
                 totalCollected,
                 totalRendered,
+                totalRendido: totalRendered,
                 pendingToRender,
-                commissionEarned
+                cobradoSinRendir: pendingToRender,
+                commissionEarned,
+                comisionAcumulada: commissionEarned
             }
         });
     } catch (error) {
@@ -96,7 +129,7 @@ export const getVendedorSummary = async (req, res) => {
 
 /**
  * 2. Cartones Asignados al Vendedor 🎟️
- * Permite filtrar por estado (Disponibles / Vendidos).
+ * Permite filtrar por estado (Disponibles / Vendidos) y enriquece con datos del comprador si está vendido.
  */
 export const getVendedorCards = async (req, res) => {
     try {
@@ -105,7 +138,14 @@ export const getVendedorCards = async (req, res) => {
 
         const query = { seller: sellerId };
         if (status && status !== 'all') {
-            query.status = status;
+            const normalizedStatus = status.toLowerCase();
+            if (normalizedStatus === 'disponible') {
+                query.status = 'Disponible';
+            } else if (normalizedStatus === 'vendido') {
+                query.status = 'Vendido';
+            } else {
+                query.status = status;
+            }
         }
         if (editionId) {
             query.edition = editionId;
@@ -117,7 +157,56 @@ export const getVendedorCards = async (req, res) => {
             .sort({ number: 1 })
             .lean();
 
-        res.json(cards);
+        // Enriquecer con datos de ventas para mostrar el comprador real
+        const cardIds = cards.map(c => c._id);
+        const sales = await Sale.find({
+            bingoCard: { $in: cardIds },
+            status: { $ne: 'Anulada' }
+        })
+            .populate({
+                path: 'client',
+                populate: { path: 'person', select: 'firstName lastName document phone city address' }
+            })
+            .select('bingoCard client paymentType saleDate status')
+            .lean();
+
+        const saleByCardId = new Map(sales.map(s => [s.bingoCard?.toString(), s]));
+
+        const enrichedCards = cards.map(c => {
+            const sale = saleByCardId.get(c._id.toString());
+            const clientPerson = sale?.client?.person;
+            const clientName = clientPerson
+                ? `${clientPerson.lastName}, ${clientPerson.firstName}`.trim()
+                : (sale?.client ? `Cliente #${sale.client.clientNumber || ''}` : '');
+
+            return {
+                _id: c._id,
+                id: c._id,
+                number: c.number,
+                cardNumber: c.number,
+                status: c.status,
+                isSold: c.status === 'Vendido',
+                edition: c.edition,
+                sale: sale ? {
+                    _id: sale._id,
+                    paymentType: sale.paymentType,
+                    saleDate: sale.saleDate,
+                    status: sale.status,
+                    client: sale.client ? {
+                        _id: sale.client._id,
+                        clientNumber: sale.client.clientNumber,
+                        fullName: clientName,
+                        firstName: clientPerson?.firstName || '',
+                        lastName: clientPerson?.lastName || '',
+                        document: clientPerson?.document || '',
+                        dni: clientPerson?.document || '',
+                        phone: clientPerson?.phone || ''
+                    } : null
+                } : null
+            };
+        });
+
+        res.json(enrichedCards);
     } catch (error) {
         console.error("Error en getVendedorCards:", error);
         res.status(500).json({ message: "Error al listar cartones", error: error.message });
@@ -126,7 +215,7 @@ export const getVendedorCards = async (req, res) => {
 
 /**
  * 3. Cuotas de Ventas del Vendedor 💳
- * Lista cuotas pendientes y cobradas con datos mínimos del asociado para la calle.
+ * Lista cuotas pendientes y cobradas con datos enriquecidos del asociado y número de cartón.
  */
 export const getVendedorQuotas = async (req, res) => {
     try {
@@ -168,27 +257,41 @@ export const getVendedorQuotas = async (req, res) => {
             const sale = saleMap.get(q.sale?.toString());
             const isPaid = !!q.paymentDate;
             const isExpired = !isPaid && new Date(q.dueDate) < today;
+            const person = sale?.client?.person;
+            const clientName = person
+                ? `${person.lastName}, ${person.firstName}`.trim()
+                : (sale?.client ? `Cliente #${sale.client.clientNumber || ''}` : '');
+
+            const cardNum = sale?.bingoCard?.number;
 
             return {
                 _id: q._id,
+                id: q._id,
                 saleId: q.sale,
                 saleNumber: sale?.saleNumber,
                 quotaNumber: q.quotaNumber,
-                amount: q.amount,
+                amount: q.amount || 0,
+                totalAmount: q.amount || 0,
                 dueDate: q.dueDate,
                 paymentDate: q.paymentDate,
                 paymentMethod: q.paymentMethod,
+                status: isPaid ? 'Pagado' : 'Pendiente',
                 isPaid,
                 isExpired,
-                bingoCardNumber: sale?.bingoCard?.number,
+                cardNumber: cardNum,
+                bingoCardNumber: cardNum,
                 client: sale?.client ? {
+                    _id: sale.client._id,
                     id: sale.client._id,
                     clientNumber: sale.client.clientNumber,
-                    fullName: `${sale.client.person?.lastName || ''}, ${sale.client.person?.firstName || ''}`.trim(),
-                    phone: sale.client.person?.phone,
-                    city: sale.client.person?.city,
-                    address: sale.client.person?.address,
-                    document: sale.client.person?.document
+                    fullName: clientName,
+                    firstName: person?.firstName || '',
+                    lastName: person?.lastName || '',
+                    phone: person?.phone || '',
+                    city: person?.city || '',
+                    address: person?.address || '',
+                    document: person?.document || '',
+                    dni: person?.document || ''
                 } : null
             };
         });
@@ -202,21 +305,29 @@ export const getVendedorQuotas = async (req, res) => {
 
 /**
  * 4. Venta Rápida de Campo (Mobile Wizard) ✍️
- * Valida que el cartón pertenezca al vendedor y esté disponible.
+ * Acepta tanto bingoCardId como cardNumber, validando asignación a la cartera del vendedor.
  */
 export const createVendedorSale = async (req, res) => {
     try {
         const sellerId = req.sellerId;
-        const { bingoCardId, clientId, paymentType = 'Cuotas', saleDate = new Date() } = req.body;
+        const { bingoCardId, cardNumber, editionId, clientId, paymentType = 'Cuotas', saleDate = new Date() } = req.body;
 
-        if (!bingoCardId || !clientId) {
+        if ((!bingoCardId && cardNumber === undefined) || !clientId) {
             return res.status(400).json({ message: "Cartón y Asociado son obligatorios" });
         }
 
-        // 1. Validar que el cartón pertenezca al vendedor y esté disponible (RN-ROL-01)
-        const card = await BingoCard.findById(bingoCardId);
+        // 1. Buscar el cartón por ID o por número + vendedor + edición
+        let card = null;
+        if (bingoCardId) {
+            card = await BingoCard.findById(bingoCardId);
+        } else if (cardNumber !== undefined) {
+            const cardQuery = { number: Number(cardNumber), seller: sellerId };
+            if (editionId) cardQuery.edition = editionId;
+            card = await BingoCard.findOne(cardQuery);
+        }
+
         if (!card) {
-            return res.status(404).json({ message: "Cartón no encontrado" });
+            return res.status(404).json({ message: "Cartón no encontrado o no asignado a su cartera" });
         }
 
         if (card.seller?.toString() !== sellerId) {
@@ -247,6 +358,7 @@ export const createVendedorSale = async (req, res) => {
             client: clientId,
             bingoCard: card._id,
             saleDate,
+            paymentType,
             status: isContado ? 'Pagado' : 'Pendiente de pago',
             fullPaymentMethod: isContado ? 'Efectivo' : undefined,
             lastFullPayment: isContado ? new Date() : undefined,
@@ -326,8 +438,11 @@ export const payVendedorQuota = async (req, res) => {
             message: "Cuota cobrada exitosamente",
             quota: {
                 _id: quota._id,
+                id: quota._id,
                 quotaNumber: quota.quotaNumber,
                 amount: quota.amount,
+                totalAmount: quota.amount,
+                status: 'Pagado',
                 paymentDate: quota.paymentDate,
                 paymentMethod: quota.paymentMethod,
                 isSaleFullyPaid: allPaid

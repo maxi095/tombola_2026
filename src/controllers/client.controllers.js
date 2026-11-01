@@ -18,7 +18,7 @@ export const searchClients = async (req, res) => {
       ]
     })
     .select('_id')
-    .limit(10)
+    .limit(15)
     .lean();
 
     const personIds = persons.map(p => p._id);
@@ -28,10 +28,26 @@ export const searchClients = async (req, res) => {
       status: { $ne: 'Inactivo' }
     })
     .populate('person')
-    .limit(5)
+    .limit(8)
     .lean();
 
-    res.json(clients);
+    // Mapeo amigable con propiedades planas y anidadas para retrocompatibilidad total
+    const formatted = clients.map(c => ({
+      _id: c._id,
+      id: c._id,
+      clientNumber: c.clientNumber,
+      person: c.person,
+      firstName: c.person?.firstName || '',
+      lastName: c.person?.lastName || '',
+      fullName: `${c.person?.lastName || ''}, ${c.person?.firstName || ''}`.trim(),
+      document: c.person?.document || '',
+      dni: c.person?.document || '',
+      phone: c.person?.phone || '',
+      address: c.person?.address || '',
+      city: c.person?.city || ''
+    }));
+
+    res.json(formatted);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -66,8 +82,44 @@ export const getClient = async (req, res) => {
 // Crear un nuevo cliente con su persona asociada
 export const createClient = async (req, res) => {
   try {
-    const {
-      person: {
+    const personData = req.body.person || req.body || {};
+    const firstName = personData.firstName?.trim();
+    const lastName = personData.lastName?.trim();
+    const document = (personData.document || personData.dni || '')?.toString().trim();
+    const address = personData.address?.trim();
+    const city = personData.city?.trim();
+    const phone = personData.phone?.trim();
+    const email = personData.email?.trim();
+    const notes = req.body.notes || '';
+
+    // Validar campos obligatorios
+    if (!firstName || !lastName || !document) {
+      return res.status(400).json({ message: "Nombre, Apellido y Documento/DNI son obligatorios" });
+    }
+
+    let person = await Person.findOne({ document });
+    if (person) {
+      // Si la persona ya existe, verificar si ya tiene cliente
+      const existingClient = await Client.findOne({ person: person._id }).populate('person').lean();
+      if (existingClient) {
+        return res.status(200).json({
+          _id: existingClient._id,
+          id: existingClient._id,
+          clientNumber: existingClient.clientNumber,
+          person: existingClient.person,
+          firstName: existingClient.person?.firstName || firstName,
+          lastName: existingClient.person?.lastName || lastName,
+          fullName: `${existingClient.person?.lastName || lastName}, ${existingClient.person?.firstName || firstName}`.trim(),
+          document: existingClient.person?.document || document,
+          dni: existingClient.person?.document || document,
+          phone: existingClient.person?.phone || phone,
+          address: existingClient.person?.address || address,
+          city: existingClient.person?.city || city
+        });
+      }
+    } else {
+      // Crear nueva persona
+      person = new Person({
         firstName,
         lastName,
         document,
@@ -75,43 +127,34 @@ export const createClient = async (req, res) => {
         city,
         phone,
         email
-      },
-      notes
-    } = req.body;
-
-    // Validar campos obligatorios
-    if (!firstName || !lastName || !document) {
-      return res.status(400).json({ message: "Faltan campos obligatorios" });
+      });
+      await person.save();
     }
-
-    const existingPerson = await Person.findOne({ document });
-    if (existingPerson) {
-      return res.status(400).json({ message: 'El documento ya fué registrado para otra persona' });
-    }
-
-    // Crear nueva persona
-    const newPerson = new Person({
-      firstName,
-      lastName,
-      document,
-      address,
-      city,
-      phone,
-      email
-    });
-    const savedPerson = await newPerson.save();
 
     // Crear cliente asociado
     const newClient = new Client({
-      person: savedPerson._id,
+      person: person._id,
       notes
     });
     const savedClient = await newClient.save();
 
     // Popular datos para devolver con info completa
-    const populatedClient = await Client.findById(savedClient._id).populate('person');
+    const populatedClient = await Client.findById(savedClient._id).populate('person').lean();
 
-    res.status(201).json(populatedClient);
+    res.status(201).json({
+      _id: populatedClient._id,
+      id: populatedClient._id,
+      clientNumber: populatedClient.clientNumber,
+      person: populatedClient.person,
+      firstName: populatedClient.person?.firstName || firstName,
+      lastName: populatedClient.person?.lastName || lastName,
+      fullName: `${populatedClient.person?.lastName || lastName}, ${populatedClient.person?.firstName || firstName}`.trim(),
+      document: populatedClient.person?.document || document,
+      dni: populatedClient.person?.document || document,
+      phone: populatedClient.person?.phone || phone,
+      address: populatedClient.person?.address || address,
+      city: populatedClient.person?.city || city
+    });
   } catch (error) {
     console.error("Error al crear cliente:", error);
     res.status(500).json({ message: "Error al crear cliente", error });
