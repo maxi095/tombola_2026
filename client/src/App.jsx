@@ -18,6 +18,7 @@ import { BalanceProvider } from "./context/BalanceContext";
 import { DashboardProvider } from "./context/DashboardContext";
 import { DrawProvider } from "./context/DrawContext";
 import { UserProvider } from "./context/UserContext";
+import { VendedorProvider } from "./context/VendedorContext";
 import { FeedbackProvider } from "./context/FeedbackContext";
 import { LayoutProvider, useLayout } from "./context/LayoutContext";
 import Toast from "./components/ui/Toast";
@@ -79,6 +80,23 @@ const DrawFormPage = lazy(() => import("./pages/draw/DrawFormPage"));
 const DrawViewPage = lazy(() => import("./pages/draw/DrawViewPage"));
 const DrawWinnersDisplayPage = lazy(() => import("./pages/draw/DrawWinnersDisplayPage"));
 
+// Portal Vendedor Mobile PWA 📱🚀
+const VendedorLayout = lazy(() =>
+  import("./components/mobile/VendedorLayout").then((m) => ({ default: m.VendedorLayout }))
+);
+const VendedorHomePage = lazy(() =>
+  import("./pages/vendedor/VendedorHomePage").then((m) => ({ default: m.VendedorHomePage }))
+);
+const VendedorCartonesPage = lazy(() =>
+  import("./pages/vendedor/VendedorCartonesPage").then((m) => ({ default: m.VendedorCartonesPage }))
+);
+const VendedorVentaPage = lazy(() =>
+  import("./pages/vendedor/VendedorVentaPage").then((m) => ({ default: m.VendedorVentaPage }))
+);
+const VendedorCuotasPage = lazy(() =>
+  import("./pages/vendedor/VendedorCuotasPage").then((m) => ({ default: m.VendedorCuotasPage }))
+);
+
 const PageLoader = () => (
   <div className="py-40 flex flex-col items-center justify-center gap-3">
     <div className="w-8 h-8 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
@@ -130,12 +148,14 @@ function Layout() {
   const location = useLocation();
   const { isSidebarCollapsed, isSidebarHovered } = useLayout();
   const isDrawDisplay = location.pathname.startsWith("/draw/display/");
+  const isVendedorRoute = location.pathname.startsWith("/vendedor");
+  const isDirectivaRoute = location.pathname.startsWith("/directiva");
   const hideNavbar = ["/bingoCardStatus", "/login", "/"]
-    .includes(location.pathname) || isDrawDisplay;
+    .includes(location.pathname) || isDrawDisplay || isVendedorRoute || isDirectivaRoute;
   const hideSidebar = ["/bingoCardStatus", "/login", "/register", "/"]
     .includes(location.pathname) ||
     location.pathname.startsWith("/sellerPayment/") && location.pathname.endsWith("/print") ||
-    isDrawDisplay;
+    isDrawDisplay || isVendedorRoute || isDirectivaRoute;
 
   const structuralWidth = isSidebarCollapsed ? '70px' : '220px';
   const visualWidth = (isSidebarCollapsed && !isSidebarHovered) ? '70px' : '220px';
@@ -213,6 +233,23 @@ function Layout() {
               <Route path="/draw/edit/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><DrawFormPage /></ProtectedRoute>} />
               <Route path="/draw/view/:id" element={<ProtectedRoute allowedRoles={['Administrador']}><DrawViewPage /></ProtectedRoute>} />
               <Route path="/draw/display/:id" element={<DrawWinnersDisplayPage />} />
+
+              {/* Portal Móvil Vendedor PWA 📱 */}
+              <Route
+                path="/vendedor"
+                element={
+                  <ProtectedRoute allowedRoles={['Vendedor', 'Administrador']}>
+                    <VendedorProvider>
+                      <VendedorLayout />
+                    </VendedorProvider>
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<VendedorHomePage />} />
+                <Route path="cartones" element={<VendedorCartonesPage />} />
+                <Route path="vender" element={<VendedorVentaPage />} />
+                <Route path="cuotas" element={<VendedorCuotasPage />} />
+              </Route>
 
               <Route path="/unauthorized" element={<Unauthorized />} />
             </Routes>

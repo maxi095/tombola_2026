@@ -50,7 +50,7 @@
 ---
 
 ### Slice 4 — Portal Mobile PWA para Vendedores (`/vendedor/*`)
-- [ ] **Objetivo:** Construir la experiencia Touch-First para smartphones con barra inferior (`BottomNav`) y pantallas de venta/cobranza sin scroll horizontal.
+- [x] **Objetivo:** Construir la experiencia Touch-First para smartphones con barra inferior (`BottomNav`) y pantallas de venta/cobranza sin scroll horizontal.
 - **Valor observable:** Al ingresar con usuario Vendedor, se accede al portal móvil `/vendedor` con sus cartones asignados, wizard de venta rápida en 30 segundos y cobro de cuotas táctil.
 - **Archivos a crear/modificar:**
   - `client/src/components/mobile/BottomNav.jsx` (nuevo).
