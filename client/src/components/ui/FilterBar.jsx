@@ -18,66 +18,25 @@ const FilterBar = ({
 }) => {
   const { isFilterExpanded, setIsFilterExpanded, toggleFilters } = useLayout();
   const containerRef = useRef(null);
-  const timerRef = useRef(null);
-  const fadeTimerRef = useRef(null);
-  const [isFading, setIsFading] = useState(false);
-
-  const clearTimers = () => {
-    if (fadeTimerRef.current) {
-      clearTimeout(fadeTimerRef.current);
-      fadeTimerRef.current = null;
-    }
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  };
-  
   const hasActiveFilters = activeFilters.length > 0;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // No cerrar si el click ocurre dentro de un portal de react-select
+      if (event.target.closest?.('[class*="-menu"]')) return;
       if (isFilterExpanded && containerRef.current && !containerRef.current.contains(event.target)) {
-        clearTimers();
         setIsFilterExpanded(false);
-        setIsFading(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isFilterExpanded, setIsFilterExpanded]);
 
-  const handleMouseEnter = () => {
-    clearTimers();
-    setIsFading(false);
-  };
-
-  const handleMouseLeave = () => {
-    if (isFilterExpanded) {
-      clearTimers();
-      fadeTimerRef.current = setTimeout(() => {
-        setIsFading(true);
-      }, 500);
-
-      timerRef.current = setTimeout(() => {
-        setIsFilterExpanded(false);
-        setIsFading(false);
-        clearTimers();
-      }, 1500);
-    }
-  };
-
-  useEffect(() => {
-    return () => clearTimers();
-  }, []);
-
   if (variant === "slim") {
     return (
       <div 
         ref={containerRef}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        className={`relative z-20 transition-all duration-500 ease-in-out group ${!isFilterExpanded ? 'min-h-[32px] cursor-default' : 'min-h-[72px]'} ${isFading ? 'opacity-50' : 'opacity-100'}`}
+        className={`relative z-20 transition-all duration-300 ease-in-out group ${!isFilterExpanded ? 'min-h-[32px] cursor-default' : 'min-h-[72px]'} ${className}`}
       >
         
         {!isFilterExpanded && (

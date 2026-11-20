@@ -1,44 +1,57 @@
 import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "../../libs/cn";
 
 /**
- * Pagination Component - Premium 2026 v3 (Navy Alignment)
- * Control de navegación estandarizado para listados de datos.
+ * Pagination - Componente de Paginación Real Standard 2026
  */
-const Pagination = ({ 
-  currentPage = 1, 
-  totalItems = 0, 
+export default function Pagination({
+  currentPage = 1,
+  totalPages = 1,
+  totalItems = 0,
   onPageChange = () => {},
-  className = "" 
-}) => {
-  return (
-    <div className={`px-10 py-8 bg-slate-50/30 border-t border-slate-50 flex justify-between items-center ${className}`}>
-      <p className="text-[11px] font-black text-muted uppercase tracking-[0.3em]">
-        Mostrando <span className="text-primary">{totalItems}</span> registros encontrados
-      </p>
-      <div className="flex items-center gap-3">
-        <button 
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-300 hover:text-primary transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white hover:shadow-sm"
-          disabled={currentPage === 1}
-        >
-          <ChevronLeft size={20} />
-        </button>
-        
-        <div className="flex items-center gap-2">
-          <button className="w-10 h-10 rounded-xl bg-primary text-white font-black text-[12px] shadow-lg shadow-primary/20 scale-110">
-            {currentPage}
-          </button>
-        </div>
+  className = "",
+}) {
+  const safeTotalPages = Math.max(1, totalPages);
+  const canGoPrev = currentPage > 1;
+  const canGoNext = currentPage < safeTotalPages;
 
-        <button 
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-300 hover:text-primary transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white hover:shadow-sm" 
-          disabled={true} // Por ahora estático hasta implementar lógica real de páginas
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-between px-6 py-4 bg-white border-t border-slate-100",
+        className
+      )}
+    >
+      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest tabular-nums">
+        Página <span className="text-primary">{currentPage}</span> de{" "}
+        <span className="text-primary">{safeTotalPages}</span>
+        {totalItems > 0 && (
+          <span className="ml-2 text-slate-400">({totalItems} registros)</span>
+        )}
+      </p>
+
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          disabled={!canGoPrev}
+          onClick={() => canGoPrev && onPageChange(currentPage - 1)}
+          aria-label="Página anterior"
+          className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-primary disabled:opacity-40 disabled:pointer-events-none transition-all"
         >
-          <ChevronRight size={20} />
+          <ChevronLeft size={16} />
+        </button>
+
+        <button
+          type="button"
+          disabled={!canGoNext}
+          onClick={() => canGoNext && onPageChange(currentPage + 1)}
+          aria-label="Página siguiente"
+          className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-primary disabled:opacity-40 disabled:pointer-events-none transition-all"
+        >
+          <ChevronRight size={16} />
         </button>
       </div>
     </div>
   );
-};
-
-export default Pagination;
+}

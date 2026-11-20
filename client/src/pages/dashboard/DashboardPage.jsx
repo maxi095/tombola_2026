@@ -796,13 +796,80 @@ export default function DashboardPage() {
         )}
 
         {activeTab === 'balance' && (
-          <div className="animate-in fade-in zoom-in-95 duration-500">
-            <EmptyState
-              icon={Scale}
-              title="Módulo de Balance Operativo"
-              message="Este espacio está reservado para las estadísticas detalladas de arqueos, cajas y movimientos financieros de la edición."
-              className="py-20"
-            />
+          <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <KPICard
+                title="Total Ingresos"
+                value={formatCurrency(balanceStats.totalIncome || 0)}
+                icon={TrendingUp}
+                variant="success"
+                subtitle="Ingresos activos registrados en caja"
+              />
+              <KPICard
+                title="Total Egresos"
+                value={formatCurrency(balanceStats.totalExpense || 0)}
+                icon={AlertTriangle}
+                variant="danger"
+                subtitle="Gastos, comisiones e impuestos"
+              />
+              <KPICard
+                title="Saldo Neto"
+                value={formatCurrency(balanceStats.netBalance || 0)}
+                icon={Scale}
+                variant={(balanceStats.netBalance || 0) >= 0 ? "primary" : "danger"}
+                subtitle="Resultado financiero de la edición"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card title="Desglose de Ingresos por Categoría" icon={TrendingUp} size="slim">
+                {(balanceStats.income || []).length === 0 ? (
+                  <EmptyState
+                    icon={TrendingUp}
+                    title="Sin Ingresos Registrados"
+                    message="Aún no hay movimientos de ingreso activos en esta edición."
+                    className="py-10 border-0 bg-transparent"
+                  />
+                ) : (
+                  <div className="space-y-2.5">
+                    {balanceStats.income.map((item, idx) => (
+                      <div key={item.category || item.name || idx} className="flex items-center justify-between p-3 rounded-xl bg-emerald-50/40 border border-emerald-100">
+                        <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                          {item.category || item.name || "Sin categoría"}
+                        </span>
+                        <span className="text-sm font-black text-emerald-700 tabular-nums">
+                          {formatCurrency(item.total ?? item.value ?? 0)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+
+              <Card title="Desglose de Egresos por Categoría" icon={Scale} size="slim">
+                {(balanceStats.expense || []).length === 0 ? (
+                  <EmptyState
+                    icon={Scale}
+                    title="Sin Egresos Registrados"
+                    message="Aún no hay movimientos de egreso activos en esta edición."
+                    className="py-10 border-0 bg-transparent"
+                  />
+                ) : (
+                  <div className="space-y-2.5">
+                    {balanceStats.expense.map((item, idx) => (
+                      <div key={item.category || item.name || idx} className="flex items-center justify-between p-3 rounded-xl bg-rose-50/40 border border-rose-100">
+                        <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                          {item.category || item.name || "Sin categoría"}
+                        </span>
+                        <span className="text-sm font-black text-rose-700 tabular-nums">
+                          {formatCurrency(item.total ?? item.value ?? 0)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            </div>
           </div>
         )}
 

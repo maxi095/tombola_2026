@@ -111,41 +111,62 @@ const PageLoader = () => (
   </div>
 );
 
+function AdminProviders({ children }) {
+  return (
+    <EditionProvider>
+      <EditionFilterProvider>
+        <BingoCardProvider>
+          <QuotaProvider>
+            <SellerProvider>
+              <SellerPaymentProvider>
+                <BalanceProvider>
+                  <ClientProvider>
+                    <SalesProvider>
+                      <DashboardProvider>
+                        <DrawProvider>
+                          <UserProvider>{children}</UserProvider>
+                        </DrawProvider>
+                      </DashboardProvider>
+                    </SalesProvider>
+                  </ClientProvider>
+                </BalanceProvider>
+              </SellerPaymentProvider>
+            </SellerProvider>
+          </QuotaProvider>
+        </BingoCardProvider>
+      </EditionFilterProvider>
+    </EditionProvider>
+  );
+}
+
 function App() {
   return (
     <FeedbackProvider>
       <LayoutProvider>
         <AuthProvider>
-          <EditionProvider>
-            <EditionFilterProvider>
-              <BingoCardProvider>
-                <QuotaProvider>
-                  <SellerProvider>
-                    <SellerPaymentProvider>
-                      <BalanceProvider>
-                        <ClientProvider>
-                          <SalesProvider>
-                            <DashboardProvider>
-                              <DrawProvider>
-                                <UserProvider>
-                                  <BrowserRouter>
-                                    <Layout />
-                                  </BrowserRouter>
-                                </UserProvider>
-                              </DrawProvider>
-                            </DashboardProvider>
-                          </SalesProvider>
-                        </ClientProvider>
-                      </BalanceProvider>
-                    </SellerPaymentProvider>
-                  </SellerProvider>
-                </QuotaProvider>
-              </BingoCardProvider>
-            </EditionFilterProvider>
-          </EditionProvider>
+          <BrowserRouter>
+            <AppShell />
+          </BrowserRouter>
         </AuthProvider>
       </LayoutProvider>
     </FeedbackProvider>
+  );
+}
+
+function AppShell() {
+  const location = useLocation();
+  const isLightweightRoute =
+    ["/", "/login", "/register", "/unauthorized"].includes(location.pathname) ||
+    location.pathname.startsWith("/vendedor");
+
+  if (isLightweightRoute) {
+    return <Layout />;
+  }
+
+  return (
+    <AdminProviders>
+      <Layout />
+    </AdminProviders>
   );
 }
 

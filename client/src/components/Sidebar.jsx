@@ -1,7 +1,8 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useLayout } from "../context/LayoutContext";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import ConfirmModal from "./ui/ConfirmModal";
 import {
   Layout,
   Package,
@@ -43,7 +44,15 @@ const Sidebar = () => {
   const { user, logout } = useAuth();
   const { isSidebarCollapsed, isSidebarHovered, setSidebarHovered } = useLayout();
   const location = useLocation();
+  const navigate = useNavigate();
   const hoverTimeout = useRef(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const handleConfirmLogout = async () => {
+    await logout();
+    setShowLogoutConfirm(false);
+    navigate("/login");
+  };
 
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(`${path}/`);
 
@@ -133,7 +142,7 @@ const Sidebar = () => {
         )}
         <button
           type="button"
-          onClick={logout}
+          onClick={() => setShowLogoutConfirm(true)}
           title={!isVisuallyExpanded ? "Cerrar Sesión" : ""}
           className={`flex items-center gap-2.5 py-2 rounded-xl text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all group w-full text-left ${!isVisuallyExpanded ? 'px-2 items-center justify-center' : 'px-4'}`}
         >
@@ -145,6 +154,17 @@ const Sidebar = () => {
           )}
         </button>
       </div>
+
+      <ConfirmModal
+        isOpen={showLogoutConfirm}
+        title="Cerrar sesión"
+        message="¿Estás seguro de que deseas salir del panel administrativo?"
+        confirmText="Cerrar sesión"
+        cancelText="Volver"
+        variant="danger"
+        onConfirm={handleConfirmLogout}
+        onClose={() => setShowLogoutConfirm(false)}
+      />
     </div>
   );
 };
