@@ -510,10 +510,10 @@ function BingoCardStatusPage() {
                 <div>
                   <div className="text-4xl md:text-5xl mb-3">⚠️</div>
                   <h2 className="text-2xl md:text-3xl font-black text-orange-400 mb-3 uppercase tracking-wider">
-                    No participa
+                    No participa – Pago de contado incompleto
                   </h2>
                   <p className="text-base md:text-lg text-gray-200 mb-4 leading-relaxed">
-                    La solicitud N° <strong className="text-white text-lg md:text-xl font-black">{result.bingoCardNumber}</strong> está al día con sus cuotas, pero no ha sido cancelada en su totalidad.
+                    La solicitud N° <strong className="text-white text-lg md:text-xl font-black">{result.bingoCardNumber}</strong> está al día con sus cuotas, pero no ha sido saldada en su totalidad.
                   </p>
                 </div>
 

@@ -9,6 +9,7 @@ import { useEditions } from "../../context/EditionContext";
 import { useFeedback } from "../../context/FeedbackContext";
 
 import { customSelectStyles } from "../../styles/reactSelectStyles";
+import { formatCurrencyInput, cleanCurrencyInput } from "../../libs/formatters";
 import dayjs from "dayjs";
 
 // Infraestructura Premium 2026 🔱
@@ -171,7 +172,7 @@ function SellerPaymentFormPage() {
             onClick: () => navigate("/sellerPayments")
           },
           {
-            label: isSubmitting ? "Creando..." : "Crear Pago",
+            label: isSubmitting ? "Guardando..." : "Guardar Pago",
             icon: Save,
             onClick: onSubmit,
             disabled: isSubmitting
@@ -270,36 +271,57 @@ function SellerPaymentFormPage() {
         >
           <FormGrid>
             {/* Efectivo */}
-            <InputField
-              label="Monto Efectivo"
-              type="number"
-              step="0.01"
-              prefix="$"
-              placeholder="0.00"
-              error={errors.cashAmount?.message}
-              {...register("cashAmount")}
+            <Controller
+              name="cashAmount"
+              control={control}
+              render={({ field }) => (
+                <InputField
+                  label="Monto Efectivo"
+                  type="text"
+                  inputMode="decimal"
+                  prefix="$"
+                  placeholder="0,00"
+                  error={errors.cashAmount?.message}
+                  value={formatCurrencyInput(field.value)}
+                  onChange={(e) => field.onChange(cleanCurrencyInput(e.target.value))}
+                />
+              )}
             />
 
             {/* Transferencia */}
-            <InputField
-              label="Monto Transferencia"
-              type="number"
-              step="0.01"
-              prefix="$"
-              placeholder="0.00"
-              error={errors.transferAmount?.message}
-              {...register("transferAmount")}
+            <Controller
+              name="transferAmount"
+              control={control}
+              render={({ field }) => (
+                <InputField
+                  label="Monto Transferencia"
+                  type="text"
+                  inputMode="decimal"
+                  prefix="$"
+                  placeholder="0,00"
+                  error={errors.transferAmount?.message}
+                  value={formatCurrencyInput(field.value)}
+                  onChange={(e) => field.onChange(cleanCurrencyInput(e.target.value))}
+                />
+              )}
             />
 
             {/* Tarjeta Única */}
-            <InputField
-              label="Monto Tarjeta Única"
-              type="number"
-              step="0.01"
-              prefix="$"
-              placeholder="0.00"
-              error={errors.tarjetaUnicaAmount?.message}
-              {...register("tarjetaUnicaAmount")}
+            <Controller
+              name="tarjetaUnicaAmount"
+              control={control}
+              render={({ field }) => (
+                <InputField
+                  label="Monto Tarjeta Única"
+                  type="text"
+                  inputMode="decimal"
+                  prefix="$"
+                  placeholder="0,00"
+                  error={errors.tarjetaUnicaAmount?.message}
+                  value={formatCurrencyInput(field.value)}
+                  onChange={(e) => field.onChange(cleanCurrencyInput(e.target.value))}
+                />
+              )}
             />
 
             {/* Subtotal Calculado */}
@@ -427,14 +449,22 @@ function SellerPaymentFormPage() {
                     />
                   </div>
                   <div className="lg:col-span-2">
-                    <InputField
-                      label="Importe"
-                      type="number"
-                      step="0.01"
-                      prefix="$"
-                      placeholder="Monto"
-                      bsize="compact"
-                      {...register(`checks.${index}.amount`, { required: "Obligatorio" })}
+                    <Controller
+                      name={`checks.${index}.amount`}
+                      control={control}
+                      rules={{ required: "Obligatorio" }}
+                      render={({ field }) => (
+                        <InputField
+                          label="Importe"
+                          type="text"
+                          inputMode="decimal"
+                          prefix="$"
+                          placeholder="0,00"
+                          bsize="compact"
+                          value={formatCurrencyInput(field.value)}
+                          onChange={(e) => field.onChange(cleanCurrencyInput(e.target.value))}
+                        />
+                      )}
                     />
                   </div>
                   <div className="lg:col-span-1 flex justify-center pb-1">

@@ -160,7 +160,7 @@ function SaleFormPage() {
         navigate("/sales");
       }
     } catch (error) {
-      showToast("Error al procesar la operación", "danger");
+      showToast(error.response?.data?.message || "Error al procesar la operación", "error");
     } finally {
       setSaving(false);
     }

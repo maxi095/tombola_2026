@@ -205,7 +205,7 @@ export const VendedorVentaPage = () => {
                         <select
                             value={selectedCard}
                             onChange={(e) => setSelectedCard(e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-white text-sm font-bold focus:outline-none focus:border-red-500"
+                            className="w-full min-h-[44px] bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-white text-base font-bold focus:outline-none focus:border-red-500"
                         >
                             <option value="">-- Seleccionar cartón --</option>
                             {availableCards.map((c) => {
@@ -225,15 +225,15 @@ export const VendedorVentaPage = () => {
             <MobileCard>
                 <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-bold text-red-400 uppercase tracking-wider flex items-center gap-1.5">
-                        <UserCheck className="w-4 h-4" /> Paso 2: Asociado / Comprador
+                        <UserCheck className="w-4 h-4" /> Paso 2: Asociado
                     </span>
                     <button
                         type="button"
                         onClick={() => setShowNewClientModal(true)}
-                        className="text-xs font-semibold text-red-400 hover:text-red-300 flex items-center gap-1 active:scale-95"
+                        className="min-h-[44px] px-3 py-1.5 rounded-xl bg-red-950/50 border border-red-800/40 text-xs font-semibold text-red-300 hover:text-white flex items-center gap-1.5 active:scale-95 transition-all"
                     >
-                        <UserPlus className="w-3.5 h-3.5" />
-                        <span>+ Nuevo</span>
+                        <UserPlus className="w-4 h-4" />
+                        <span>Crear Asociado</span>
                     </button>
                 </div>
 
@@ -268,7 +268,7 @@ export const VendedorVentaPage = () => {
                                 placeholder="Buscar por DNI o Apellido (mín. 3 letras)..."
                                 value={clientQuery}
                                 onChange={(e) => setClientQuery(e.target.value)}
-                                className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-8 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500"
+                                className="w-full min-h-[44px] bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-8 py-2.5 text-base text-white placeholder-slate-500 focus:outline-none focus:border-red-500"
                             />
                             {searchingClient && (
                                 <Loader2 className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-red-500 animate-spin" />
@@ -391,18 +391,26 @@ export const VendedorVentaPage = () => {
                     {submitting ? (
                         <>
                             <Loader2 className="w-5 h-5 animate-spin" />
-                            <span>Confirmando venta...</span>
+                            <span>Guardando venta...</span>
                         </>
                     ) : (
-                        <span>Confirmar Venta</span>
+                        <span>Guardar Venta</span>
                     )}
                 </button>
             </div>
 
             {/* Modal Rápido de Nuevo Asociado */}
             {showNewClientModal && (
-                <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-                    <div className="bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-2xl w-full max-w-md p-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+                    onClick={() => !creatingClient && setShowNewClientModal(false)}
+                >
+                    <div
+                        className="bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-2xl w-full max-w-md p-5 pb-safe shadow-2xl max-h-[90vh] overflow-y-auto"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                             <div>
                                 <h3 className="text-base font-bold text-white">Registrar Asociado</h3>
@@ -411,13 +419,14 @@ export const VendedorVentaPage = () => {
                             <button
                                 type="button"
                                 onClick={() => setShowNewClientModal(false)}
-                                className="p-1 rounded-lg text-slate-400 hover:text-white"
+                                aria-label="Cerrar"
+                                className="p-2 rounded-lg text-slate-400 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <form onSubmit={handleCreateClient} className="space-y-3 mt-4">
+                        <form onSubmit={handleCreateClient} className="space-y-3 mt-4 pb-2">
                             <div>
                                 <label className="text-xs text-slate-300 font-medium block mb-1">
                                     DNI / CUIT *
@@ -431,7 +440,7 @@ export const VendedorVentaPage = () => {
                                     onChange={(e) =>
                                         setNewClientData({ ...newClientData, dni: e.target.value })
                                     }
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500"
+                                    className="w-full min-h-[44px] bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-base text-white focus:outline-none focus:border-red-500"
                                 />
                             </div>
 
@@ -448,7 +457,7 @@ export const VendedorVentaPage = () => {
                                         onChange={(e) =>
                                             setNewClientData({ ...newClientData, firstName: e.target.value })
                                         }
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500"
+                                        className="w-full min-h-[44px] bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-base text-white focus:outline-none focus:border-red-500"
                                     />
                                 </div>
                                 <div>
@@ -463,7 +472,7 @@ export const VendedorVentaPage = () => {
                                         onChange={(e) =>
                                             setNewClientData({ ...newClientData, lastName: e.target.value })
                                         }
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500"
+                                        className="w-full min-h-[44px] bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-base text-white focus:outline-none focus:border-red-500"
                                     />
                                 </div>
                             </div>
@@ -474,12 +483,13 @@ export const VendedorVentaPage = () => {
                                 </label>
                                 <input
                                     type="tel"
+                                    inputMode="tel"
                                     placeholder="Ej: 341 5123456"
                                     value={newClientData.phone}
                                     onChange={(e) =>
                                         setNewClientData({ ...newClientData, phone: e.target.value })
                                     }
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500"
+                                    className="w-full min-h-[44px] bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-base text-white focus:outline-none focus:border-red-500"
                                 />
                             </div>
 
@@ -494,7 +504,7 @@ export const VendedorVentaPage = () => {
                                     onChange={(e) =>
                                         setNewClientData({ ...newClientData, address: e.target.value })
                                     }
-                                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500"
+                                    className="w-full min-h-[44px] bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-base text-white focus:outline-none focus:border-red-500"
                                 />
                             </div>
 
@@ -502,14 +512,14 @@ export const VendedorVentaPage = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowNewClientModal(false)}
-                                    className="flex-1 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
+                                    className="flex-1 min-h-[44px] py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
                                 >
                                     Volver
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={creatingClient}
-                                    className="flex-1 py-2.5 px-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"
+                                    className="flex-1 min-h-[44px] py-2.5 px-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"
                                 >
                                     {creatingClient ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />

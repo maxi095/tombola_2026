@@ -485,12 +485,12 @@ export default function DashboardPage() {
                 )}
               </Card>
 
-              {/* Nuevos Compradores por Localidad */}
-              <Card title="Nuevos Compradores por Localidad" icon={UserPlus} size="slim">
+              {/* Nuevos Asociados por Localidad */}
+              <Card title="Nuevos Asociados por Localidad" icon={UserPlus} size="slim">
                 {newClientsByCity.length === 0 ? (
                   <EmptyState
                     icon={UserPlus}
-                    title="Sin Nuevos Compradores"
+                    title="Sin Nuevos Asociados"
                     message="No se registran asociados cuya primera compra pertenezca a esta edición."
                     className="py-12 border-0 bg-transparent"
                   />
@@ -519,7 +519,7 @@ export default function DashboardPage() {
                                 </span>
                               </div>
                               <span className="text-[11px] font-black text-slate-800">
-                                {item.value} {item.value === 1 ? 'comprador' : 'compradores'}
+                                {item.value} {item.value === 1 ? 'asociado' : 'asociados'}
                               </span>
                             </div>
                             {/* Barra de Proporción */}

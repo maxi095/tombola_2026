@@ -49,7 +49,8 @@ export const VendedorLayout = () => {
                             <select
                                 value={selectedEditionId}
                                 onChange={(e) => changeEdition(e.target.value)}
-                                className="bg-slate-800/90 border border-slate-700 text-[11px] font-bold text-red-400 rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-red-500 shadow-sm cursor-pointer"
+                                aria-label="Seleccionar edición"
+                                className="max-w-[115px] truncate bg-slate-800/90 border border-slate-700 text-xs font-bold text-red-400 rounded-xl px-2.5 py-2 focus:outline-none focus:border-red-500 shadow-sm cursor-pointer min-h-[40px]"
                                 title="Cambiar edición de consulta"
                             >
                                 {editions.map((ed) => (

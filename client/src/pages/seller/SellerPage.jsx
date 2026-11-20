@@ -199,10 +199,10 @@ function SellerPage() {
                 <button onClick={handleClearFilters} className="text-primary text-xs mt-2 hover:underline">Limpiar búsqueda</button>
               </div>
             ) : (
-              <Table className="overflow-hidden">
+              <Table minWidth="min-w-full">
                 <THead>
                   {visibleColumns.map(col => (
-                    <TH key={col.id} className={col.id === 'actions' ? 'text-right px-10' : ''}>{col.label}</TH>
+                    <TH key={col.id} className={col.id === 'actions' ? 'text-right px-6' : ''}>{col.label}</TH>
                   ))}
                 </THead>
                 <TBody>

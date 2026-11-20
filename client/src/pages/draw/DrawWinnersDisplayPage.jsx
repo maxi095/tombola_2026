@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useDraws } from '../../context/DrawContext';
+import auspiciantesImg from '../../assets/images/auspiciantes.png';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import 'dayjs/locale/es';
@@ -96,27 +97,28 @@ function DrawWinnersDisplayPage() {
     }
   };
 
-  // Lógica de Colores (Violetas)
+  const isDense = winners.length >= 5;
+
+  // Escala adaptable a la cantidad de premios (evita recortes en 100vh con 5+ ganadores)
   const getStyles = (position) => {
     if (position === 1) {
-      // Violeta oscuro, borde dorado, más grande
       return {
-        container: 'bg-violet-900 border-2 border-yellow-400 z-10 scale-105 shadow-2xl py-4', // py-4 para dar aire
-        textTitle: 'text-yellow-400',
-        textNumber: 'text-6xl',
-        textName: 'text-5xl',
-        emoji: 'text-6xl'
-      };
-    } else {
-      // Violeta un poco más claro, tamaño estándar
-      return {
-        container: 'bg-violet-600/90 border border-violet-500 scale-100 shadow-lg py-3', // py-3 un poco más compacto
-        textTitle: 'text-white',
-        textNumber: 'text-5xl',
-        textName: 'text-3xl',
-        emoji: 'text-5xl'
+        container: `bg-violet-900/95 border-2 border-[#FFD700] z-10 shadow-2xl ${isDense ? 'py-2.5' : 'py-4'}`,
+        textTitle: 'text-[#FFD700]',
+        textNumber: isDense ? 'text-4xl md:text-5xl' : 'text-5xl md:text-6xl',
+        textName: isDense ? 'text-3xl md:text-4xl' : 'text-4xl md:text-5xl',
+        textPrize: isDense ? 'text-4xl md:text-5xl' : 'text-5xl md:text-7xl',
+        emoji: isDense ? 'text-4xl' : 'text-6xl'
       };
     }
+    return {
+      container: `bg-violet-700/90 border border-violet-400/50 shadow-lg ${isDense ? 'py-1.5' : 'py-3'}`,
+      textTitle: 'text-white',
+      textNumber: isDense ? 'text-3xl md:text-4xl' : 'text-4xl md:text-5xl',
+      textName: isDense ? 'text-2xl md:text-3xl' : 'text-3xl md:text-4xl',
+      textPrize: isDense ? 'text-3xl md:text-4xl' : 'text-4xl md:text-6xl',
+      emoji: isDense ? 'text-3xl' : 'text-5xl'
+    };
   };
 
   return (
@@ -198,12 +200,9 @@ function DrawWinnersDisplayPage() {
                   {/* Premio (Derecha) */}
                   <div className="col-span-3 text-right">
                      {prize.description && (
-                      <>
-                        
-                        <div className={`${prize.position === 1 ? 'text-7xl' : 'text-6xl'} font-bold text-yellow-400 leading-none`}>
+                        <div className={`${styles.textPrize} font-bold text-[#FFD700] leading-none truncate`}>
                           {prize.description}
                         </div>
-                      </>
                      )}
                   </div>
                 </div>
@@ -213,10 +212,17 @@ function DrawWinnersDisplayPage() {
         </div>
       )}
 
-      {/* Footer minimalista */}
-      <div className="text-center py-2 border-t border-gray-800 text-gray-500 text-xs flex-shrink-0 bg-gray-900">
-        Club Atlético y Biblioteca Newell's Old Boys - Laguna Larga
-      </div>
+      {/* Barra fija de auspiciantes (Estándar TV 12vh) */}
+      <footer className="relative h-[12vh] bg-white flex items-center justify-center px-6 flex-shrink-0 border-t-4 border-[#FFD700]">
+        <div className="absolute -top-7 left-6 bg-orange-500 text-white text-xs font-black tracking-widest uppercase px-4 py-1 rounded-t-lg shadow-md">
+          AUSPICIAN:
+        </div>
+        <img
+          src={auspiciantesImg}
+          alt="Auspiciantes Oficiales"
+          className="max-h-[9.5vh] w-auto object-contain"
+        />
+      </footer>
     </div>
   );
 }

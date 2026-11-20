@@ -281,10 +281,10 @@ export default function SalePage() {
                 <p className="text-[11px] font-black text-muted tracking-widest uppercase animate-pulse">Analizando Registros...</p>
               </div>
             ) : (
-              <Table className="overflow-hidden">
+              <Table minWidth="min-w-full">
                 <THead>
                   {visibleColumns.map(col => (
-                    <TH key={col.id} className={col.id === 'actions' ? 'text-right px-10 font-black' : ''}>{col.label}</TH>
+                    <TH key={col.id} className={col.id === 'actions' ? 'text-right px-6 font-black' : ''}>{col.label}</TH>
                   ))}
                 </THead>
                 <TBody>
@@ -392,7 +392,7 @@ export default function SalePage() {
           </>
         }
         confirmText="Confirmar Anulación"
-        cancelText="Desistir"
+        cancelText="Volver"
         variant="danger"
         loading={isVoiding}
       />
