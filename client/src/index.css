@@ -154,3 +154,12 @@ h1, h2, h3, h4 {
   filter: brightness(1.2);
   transform: translateY(-1px);
 }
+
+/* Utilidades PWA Safe Area reales (iOS Notch / Android Gesture Bar) */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-inset-top {
+  padding-top: max(0.625rem, env(safe-area-inset-top, 0px));
+}

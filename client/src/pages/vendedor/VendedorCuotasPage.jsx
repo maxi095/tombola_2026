@@ -13,12 +13,13 @@ import {
     Building2,
     X,
     Loader2,
-    Share2
+    Share2,
+    AlertTriangle
 } from 'lucide-react';
 import dayjs from 'dayjs';
 
 export const VendedorCuotasPage = () => {
-    const { quotas, loading, loadQuotas, payQuota, selectedEditionId, summary } = useVendedor();
+    const { quotas, loading, error, loadQuotas, payQuota, selectedEditionId, summary } = useVendedor();
     const { showToast } = useFeedback();
 
     const [statusFilter, setStatusFilter] = useState('pending'); // 'pending' | 'paid' | 'all'
@@ -30,7 +31,7 @@ export const VendedorCuotasPage = () => {
     const [processingPayment, setProcessingPayment] = useState(false);
 
     useEffect(() => {
-        loadQuotas({ status: statusFilter });
+        loadQuotas({ status: statusFilter }).catch(() => {});
     }, [loadQuotas, statusFilter, selectedEditionId]);
 
     const filteredQuotas = useMemo(() => {
@@ -65,7 +66,7 @@ export const VendedorCuotasPage = () => {
                 'success'
             );
             setSelectedQuota(null);
-            loadQuotas({ status: statusFilter });
+            loadQuotas({ status: statusFilter }).catch(() => {});
         } catch (err) {
             showToast(err.message || 'Error al registrar cobro de cuota', 'error');
         } finally {
@@ -100,15 +101,34 @@ export const VendedorCuotasPage = () => {
                 </div>
                 <button
                     type="button"
-                    onClick={() => loadQuotas({ status: statusFilter })}
+                    onClick={() => loadQuotas({ status: statusFilter }).catch(() => {})}
                     disabled={loading}
-                    className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white active:scale-95 transition-all"
+                    className="p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white active:scale-95 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
                     title="Actualizar cuotas"
                     aria-label="Actualizar cuotas"
                 >
                     <RotateCw className={`w-5 h-5 ${loading ? 'animate-spin text-red-500' : ''}`} />
                 </button>
             </div>
+
+            {error && (
+                <div
+                    role="alert"
+                    className="p-3.5 rounded-2xl bg-rose-950/60 border border-rose-800/60 flex items-center justify-between gap-3"
+                >
+                    <div className="flex items-center gap-2.5 text-xs text-rose-200">
+                        <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                        <span>{error}</span>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => loadQuotas({ status: statusFilter }).catch(() => {})}
+                        className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shrink-0 min-h-[36px]"
+                    >
+                        Reintentar
+                    </button>
+                </div>
+            )}
 
             {/* Búsqueda */}
             <div className="relative">
@@ -118,7 +138,7 @@ export const VendedorCuotasPage = () => {
                     placeholder="Buscar por asociado, DNI o cartón..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-base text-white placeholder-slate-500 focus:outline-none focus:border-red-500 min-h-[44px]"
                 />
             </div>
 
@@ -133,7 +153,7 @@ export const VendedorCuotasPage = () => {
                         key={chip.id}
                         type="button"
                         onClick={() => setStatusFilter(chip.id)}
-                        className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-semibold transition-all ${
+                        className={`flex-1 min-h-[44px] py-2 px-3 rounded-xl text-xs font-semibold transition-all ${
                             statusFilter === chip.id
                                 ? 'bg-red-600 text-white shadow-sm shadow-red-950/40'
                                 : 'bg-slate-800 text-slate-400 hover:text-slate-200'
@@ -146,7 +166,13 @@ export const VendedorCuotasPage = () => {
 
             {/* Listado de cuotas */}
             <div className="space-y-2.5">
-                {filteredQuotas.length === 0 ? (
+                {loading && quotas.length === 0 ? (
+                    <div className="space-y-2.5 animate-pulse" aria-busy="true" aria-label="Cargando cuotas">
+                        {[1, 2, 3, 4].map((i) => (
+                            <div key={i} className="h-[88px] rounded-2xl bg-slate-800/80 border border-slate-700/60" />
+                        ))}
+                    </div>
+                ) : filteredQuotas.length === 0 ? (
                     <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-slate-800 bg-slate-900/50">
                         <CreditCard className="w-10 h-10 text-slate-600 mx-auto mb-2" />
                         <p className="text-sm font-semibold text-slate-300">No hay cuotas encontradas</p>
@@ -176,12 +202,12 @@ export const VendedorCuotasPage = () => {
                                 }`}
                             >
                                 <div className="flex items-start justify-between gap-2">
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs font-black text-white bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                            <span className="text-xs font-black text-white bg-slate-950 px-2 py-0.5 rounded border border-slate-800 tabular-nums">
                                                 Cuota #{quota.quotaNumber}
                                             </span>
-                                            <span className="text-xs font-bold text-red-400">
+                                            <span className="text-xs font-bold text-red-400 tabular-nums">
                                                 Cartón #{cardNum}
                                             </span>
                                             <span
@@ -197,12 +223,12 @@ export const VendedorCuotasPage = () => {
                                             </span>
                                         </div>
 
-                                        <p className="text-xs font-bold text-slate-100 mt-1.5">
+                                        <p className="text-xs font-bold text-slate-100 mt-1.5 truncate">
                                             {clientName}
                                         </p>
-                                        <p className="text-[11px] text-slate-400 flex items-center gap-2 mt-0.5">
-                                            {clientDoc && <span>DNI: {formatDocument(clientDoc)}</span>}
-                                            <span className="flex items-center gap-1">
+                                        <p className="text-[11px] text-slate-400 flex items-center gap-2 flex-wrap mt-0.5">
+                                            {clientDoc && <span className="tabular-nums">DNI: {formatDocument(clientDoc)}</span>}
+                                            <span className="flex items-center gap-1 tabular-nums">
                                                 <Calendar className="w-3 h-3" />
                                                 Vence: {dueDate}
                                             </span>
@@ -210,7 +236,7 @@ export const VendedorCuotasPage = () => {
                                     </div>
 
                                     <div className="text-right flex-shrink-0">
-                                        <p className="text-sm font-black text-white">
+                                        <p className="text-sm font-black text-white tabular-nums">
                                             {formatCurrency(amount)}
                                         </p>
                                         {isPaid ? (
@@ -222,10 +248,11 @@ export const VendedorCuotasPage = () => {
                                                 <button
                                                     type="button"
                                                     onClick={() => handleShareWhatsApp(quota)}
-                                                    className="p-1 rounded-lg text-emerald-400 hover:bg-emerald-950/60 active:scale-95 transition-colors"
+                                                    className="p-2 rounded-xl text-emerald-400 hover:bg-emerald-950/60 active:scale-95 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
                                                     title="Enviar comprobante por WhatsApp"
+                                                    aria-label="Enviar comprobante por WhatsApp"
                                                 >
-                                                    <Share2 className="w-3.5 h-3.5" />
+                                                    <Share2 className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         ) : (
@@ -235,7 +262,7 @@ export const VendedorCuotasPage = () => {
                                                     setSelectedQuota(quota);
                                                     setPaymentMethod('Efectivo');
                                                 }}
-                                                className="mt-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all"
+                                                className="mt-1.5 px-3.5 py-2 bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all min-h-[44px]"
                                             >
                                                 Cobrar
                                             </button>
@@ -250,8 +277,16 @@ export const VendedorCuotasPage = () => {
 
             {/* Modal de cobro de cuota */}
             {selectedQuota && (
-                <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-                    <div className="bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-2xl w-full max-w-md p-5 shadow-2xl">
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+                    onClick={() => !processingPayment && setSelectedQuota(null)}
+                >
+                    <div
+                        className="bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-2xl w-full max-w-md p-5 pb-safe shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                             <div>
                                 <h3 className="text-base font-bold text-white">Registrar Cobranza</h3>
@@ -260,7 +295,8 @@ export const VendedorCuotasPage = () => {
                             <button
                                 type="button"
                                 onClick={() => setSelectedQuota(null)}
-                                className="p-1 rounded-lg text-slate-400 hover:text-white"
+                                aria-label="Cerrar"
+                                className="p-2 rounded-lg text-slate-400 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -277,17 +313,17 @@ export const VendedorCuotasPage = () => {
                             </div>
                             <div className="flex justify-between text-xs">
                                 <span className="text-slate-400">Cartón:</span>
-                                <span className="font-bold text-red-400">
+                                <span className="font-bold text-red-400 tabular-nums">
                                     #{selectedQuota.cardNumber ?? selectedQuota.bingoCardNumber ?? ''}
                                 </span>
                             </div>
                             <div className="flex justify-between text-xs">
                                 <span className="text-slate-400">Cuota:</span>
-                                <span className="font-bold text-white">#{selectedQuota.quotaNumber}</span>
+                                <span className="font-bold text-white tabular-nums">#{selectedQuota.quotaNumber}</span>
                             </div>
                             <div className="flex justify-between text-xs pt-1 border-t border-slate-700/60">
                                 <span className="text-slate-300 font-semibold">Total a cobrar:</span>
-                                <span className="font-black text-emerald-400 text-sm">
+                                <span className="font-black text-emerald-400 text-sm tabular-nums">
                                     {formatCurrency(selectedQuota.totalAmount ?? selectedQuota.amount ?? 0)}
                                 </span>
                             </div>
@@ -301,7 +337,7 @@ export const VendedorCuotasPage = () => {
                                 <button
                                     type="button"
                                     onClick={() => setPaymentMethod('Efectivo')}
-                                    className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                                    className={`min-h-[44px] p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                                         paymentMethod === 'Efectivo'
                                             ? 'bg-red-600 border-red-500 text-white'
                                             : 'bg-slate-800 border-slate-700 text-slate-300'
@@ -313,7 +349,7 @@ export const VendedorCuotasPage = () => {
                                 <button
                                     type="button"
                                     onClick={() => setPaymentMethod('Transferencia')}
-                                    className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                                    className={`min-h-[44px] p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                                         paymentMethod === 'Transferencia'
                                             ? 'bg-red-600 border-red-500 text-white'
                                             : 'bg-slate-800 border-slate-700 text-slate-300'
@@ -325,11 +361,11 @@ export const VendedorCuotasPage = () => {
                             </div>
                         </div>
 
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 pb-2">
                             <button
                                 type="button"
                                 onClick={() => setSelectedQuota(null)}
-                                className="flex-1 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
+                                className="flex-1 min-h-[44px] py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
                             >
                                 Volver
                             </button>
@@ -337,12 +373,12 @@ export const VendedorCuotasPage = () => {
                                 type="button"
                                 onClick={handleConfirmPayment}
                                 disabled={processingPayment}
-                                className="flex-1 py-2.5 px-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-red-950/40"
+                                className="flex-1 min-h-[44px] py-2.5 px-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-red-950/40"
                             >
                                 {processingPayment ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
                                 ) : (
-                                    <span>Confirmar Cobro</span>
+                                    <span>Guardar Cobro</span>
                                 )}
                             </button>
                         </div>

@@ -19,13 +19,26 @@ const FilterBar = ({
   const { isFilterExpanded, setIsFilterExpanded, toggleFilters } = useLayout();
   const containerRef = useRef(null);
   const timerRef = useRef(null);
+  const fadeTimerRef = useRef(null);
   const [isFading, setIsFading] = useState(false);
+
+  const clearTimers = () => {
+    if (fadeTimerRef.current) {
+      clearTimeout(fadeTimerRef.current);
+      fadeTimerRef.current = null;
+    }
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
   
   const hasActiveFilters = activeFilters.length > 0;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (isFilterExpanded && containerRef.current && !containerRef.current.contains(event.target)) {
+        clearTimers();
         setIsFilterExpanded(false);
         setIsFading(false);
       }
@@ -35,30 +48,27 @@ const FilterBar = ({
   }, [isFilterExpanded, setIsFilterExpanded]);
 
   const handleMouseEnter = () => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
+    clearTimers();
     setIsFading(false);
   };
 
   const handleMouseLeave = () => {
     if (isFilterExpanded) {
-      setTimeout(() => {
-        if (timerRef.current) setIsFading(true);
+      clearTimers();
+      fadeTimerRef.current = setTimeout(() => {
+        setIsFading(true);
       }, 500);
 
       timerRef.current = setTimeout(() => {
         setIsFilterExpanded(false);
         setIsFading(false);
+        clearTimers();
       }, 1500);
     }
   };
 
   useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
+    return () => clearTimers();
   }, []);
 
   if (variant === "slim") {

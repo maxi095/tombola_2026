@@ -109,7 +109,7 @@ Queda prohibido recrear con HTML/Tailwind manual lo que ya resuelven estos compo
 | `FilterBar.jsx` | Barra de filtros colapsable (`variant="slim"`, `activeFilters`, `onRemoveFilter`, `onClearFilters`). |
 | `ColumnPicker.jsx` + `useTableColumns.js` | Selector de visibilidad/orden de columnas con persistencia en `localStorage`. |
 | `Table.jsx` | `Table`, `THead`, `TBody`, `TR`, `TH`, `TD` + `OperationCell`, `StockCell`, `UserCell`, `AmountCell`. |
-| `card.jsx` (`Card`) | Contenedor de secciones (`padding="p-0"` en tablas, `size="slim"` en formularios). |
+| `Card.jsx` (`Card`) | Contenedor de secciones (`padding="p-0"` en tablas, `size="slim"` en formularios, variantes `default`, `elevated`, `outline`, `glass`). |
 | `FormGrid.jsx` | Grilla responsiva de formularios (`grid-cols-1 md:grid-cols-2 lg:grid-cols-4`). |
 | `InputField.jsx` | Inputs de texto/fecha/número con label, icono, prefijo y mensaje de error integrado. |
 | `Select.jsx` / `MultiSelect.jsx` | Selectores basados en `react-select` con `menuPortalTarget={document.body}` (evita recortes por `overflow: hidden`). |

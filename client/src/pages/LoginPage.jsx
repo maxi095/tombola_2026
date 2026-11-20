@@ -2,13 +2,13 @@ import { useForm } from "react-hook-form";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Mail } from "lucide-react";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import InputField from "../components/ui/InputField";
 
 /**
- * LoginPage - Premium 2026 v3 (Navy Alignment & Smart Role Redirection)
+ * LoginPage - Standard 2026 (Smart Role Redirection & Safe Submit)
  */
 function LoginPage() {
   const {
@@ -17,12 +17,18 @@ function LoginPage() {
     formState: { errors },
   } = useForm();
   const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const { signin, errors: signinErrors, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
-  const onSubmit = handleSubmit((data) => {
-    signin(data);
+  const onSubmit = handleSubmit(async (data) => {
+    setSubmitting(true);
+    try {
+      await signin(data);
+    } finally {
+      setSubmitting(false);
+    }
   });
 
   useEffect(() => {
@@ -50,7 +56,11 @@ function LoginPage() {
         </div>
 
         {signinErrors.map((error, i) => (
-          <div key={i} className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-bold animate-in fade-in slide-in-from-top-2 duration-300">
+          <div
+            key={i}
+            role="alert"
+            className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-bold"
+          >
             {error}
           </div>
         ))}
@@ -59,6 +69,7 @@ function LoginPage() {
           <InputField
             label="Email"
             type="email"
+            autoComplete="email"
             placeholder="ejemplo@mail.com"
             {...register("email", { required: "Email es requerido" })}
             error={errors.email?.message}
@@ -68,19 +79,22 @@ function LoginPage() {
           <InputField
             label="Contraseña"
             type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
             placeholder="••••••••"
             {...register("password", { required: "Contraseña es requerida" })}
             error={errors.password?.message}
             icon={showPassword ? EyeOff : Eye}
-            onClick={() => setShowPassword(!showPassword)}
+            onIconClick={() => setShowPassword((prev) => !prev)}
+            iconAriaLabel={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
           />
 
           <Button
             type="submit"
+            loading={submitting}
             className="w-full mt-2"
             size="lg"
           >
-            Ingresar
+            {submitting ? "Ingresando..." : "Ingresar"}
           </Button>
         </form>
       </Card>

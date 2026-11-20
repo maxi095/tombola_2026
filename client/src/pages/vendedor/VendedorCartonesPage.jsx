@@ -2,17 +2,17 @@ import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVendedor } from '../../context/VendedorContext';
 import { MobileCard } from '../../components/mobile/MobileCard';
-import { Ticket, Search, PlusCircle, RotateCw, CheckCircle2 } from 'lucide-react';
+import { Ticket, Search, PlusCircle, RotateCw, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 export const VendedorCartonesPage = () => {
-    const { cards, loading, loadCards, selectedEditionId, summary } = useVendedor();
+    const { cards, loading, error, loadCards, selectedEditionId, summary } = useVendedor();
     const navigate = useNavigate();
 
     const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'disponible' | 'vendido'
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
-        loadCards({ status: statusFilter });
+        loadCards({ status: statusFilter }).catch(() => {});
     }, [loadCards, statusFilter, selectedEditionId]);
 
     const filteredCards = useMemo(() => {
@@ -39,15 +39,34 @@ export const VendedorCartonesPage = () => {
                 </div>
                 <button
                     type="button"
-                    onClick={() => loadCards({ status: statusFilter })}
+                    onClick={() => loadCards({ status: statusFilter }).catch(() => {})}
                     disabled={loading}
-                    className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white active:scale-95 transition-all"
+                    className="p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white active:scale-95 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
                     title="Actualizar cartones"
                     aria-label="Actualizar cartones"
                 >
                     <RotateCw className={`w-5 h-5 ${loading ? 'animate-spin text-red-500' : ''}`} />
                 </button>
             </div>
+
+            {error && (
+                <div
+                    role="alert"
+                    className="p-3.5 rounded-2xl bg-rose-950/60 border border-rose-800/60 flex items-center justify-between gap-3"
+                >
+                    <div className="flex items-center gap-2.5 text-xs text-rose-200">
+                        <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                        <span>{error}</span>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => loadCards({ status: statusFilter }).catch(() => {})}
+                        className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shrink-0 min-h-[36px]"
+                    >
+                        Reintentar
+                    </button>
+                </div>
+            )}
 
             {/* Barra de búsqueda */}
             <div className="relative">
@@ -58,7 +77,7 @@ export const VendedorCartonesPage = () => {
                     placeholder="Buscar por número de cartón..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-red-500"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-base text-white placeholder-slate-500 focus:outline-none focus:border-red-500 min-h-[44px]"
                 />
             </div>
 
@@ -73,7 +92,7 @@ export const VendedorCartonesPage = () => {
                         key={chip.id}
                         type="button"
                         onClick={() => setStatusFilter(chip.id)}
-                        className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-semibold transition-all ${
+                        className={`flex-1 min-h-[44px] py-2 px-3 rounded-xl text-xs font-semibold transition-all ${
                             statusFilter === chip.id
                                 ? 'bg-red-600 text-white shadow-sm shadow-red-950/40'
                                 : 'bg-slate-800 text-slate-400 hover:text-slate-200'
@@ -86,7 +105,13 @@ export const VendedorCartonesPage = () => {
 
             {/* Listado de cartones */}
             <div className="space-y-2.5">
-                {filteredCards.length === 0 ? (
+                {loading && cards.length === 0 ? (
+                    <div className="space-y-2.5 animate-pulse" aria-busy="true" aria-label="Cargando cartones">
+                        {[1, 2, 3, 4].map((i) => (
+                            <div key={i} className="h-[74px] rounded-2xl bg-slate-800/80 border border-slate-700/60" />
+                        ))}
+                    </div>
+                ) : filteredCards.length === 0 ? (
                     <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-slate-800 bg-slate-900/50">
                         <Ticket className="w-10 h-10 text-slate-600 mx-auto mb-2" />
                         <p className="text-sm font-semibold text-slate-300">No se encontraron cartones</p>
@@ -111,9 +136,9 @@ export const VendedorCartonesPage = () => {
                                 key={card._id || num}
                                 className="flex items-center justify-between gap-3 p-3.5"
                             >
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 min-w-0">
                                     <div
-                                        className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-base border ${
+                                        className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-base border shrink-0 tabular-nums ${
                                             isSold
                                                 ? 'bg-slate-900 border-slate-700 text-slate-400'
                                                 : 'bg-red-950/40 border-red-800/40 text-red-400'
@@ -121,8 +146,8 @@ export const VendedorCartonesPage = () => {
                                     >
                                         #{num}
                                     </div>
-                                    <div>
-                                        <div className="flex items-center gap-2">
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
                                             <span
                                                 className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
                                                     isSold
@@ -155,7 +180,7 @@ export const VendedorCartonesPage = () => {
                                     <button
                                         type="button"
                                         onClick={() => navigate(`/vendedor/vender?cardNumber=${num}`)}
-                                        className="px-3 py-2 bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm transition-all flex-shrink-0 min-h-[40px]"
+                                        className="px-3.5 py-2 bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm transition-all flex-shrink-0 min-h-[44px]"
                                     >
                                         <PlusCircle className="w-4 h-4" />
                                         <span>Vender</span>

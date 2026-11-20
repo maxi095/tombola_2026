@@ -7,20 +7,43 @@ import {
     Ticket,
     CreditCard,
     PlusCircle,
-    TrendingUp,
     AlertCircle,
     RotateCw,
     Building2,
-    Award
+    Award,
+    AlertTriangle
 } from 'lucide-react';
 
+const HomeSkeleton = () => (
+    <div className="space-y-4 animate-pulse" aria-busy="true" aria-label="Cargando resumen">
+        <div className="flex items-center justify-between">
+            <div className="space-y-2">
+                <div className="h-3 w-20 bg-slate-800 rounded" />
+                <div className="h-6 w-44 bg-slate-800 rounded" />
+            </div>
+            <div className="w-9 h-9 bg-slate-800 rounded-xl" />
+        </div>
+        <div className="h-28 bg-slate-800/80 rounded-2xl border border-slate-700/60" />
+        <div className="grid grid-cols-3 gap-2">
+            <div className="h-20 bg-slate-800/80 rounded-2xl" />
+            <div className="h-20 bg-slate-800/80 rounded-2xl" />
+            <div className="h-20 bg-slate-800/80 rounded-2xl" />
+        </div>
+        <div className="h-16 bg-slate-800/80 rounded-2xl" />
+    </div>
+);
+
 export const VendedorHomePage = () => {
-    const { summary, loading, loadSummary, selectedEditionId, changeEdition, editions } = useVendedor();
+    const { summary, loading, error, loadSummary, selectedEditionId } = useVendedor();
     const navigate = useNavigate();
 
     useEffect(() => {
-        loadSummary();
+        loadSummary().catch(() => {});
     }, [loadSummary, selectedEditionId]);
+
+    if (loading && !summary) {
+        return <HomeSkeleton />;
+    }
 
     const metrics = summary?.metrics || {};
     const totalAssigned = metrics.totalAssigned ?? metrics.totalCards ?? 0;
@@ -32,6 +55,25 @@ export const VendedorHomePage = () => {
 
     return (
         <div className="space-y-4">
+            {error && (
+                <div
+                    role="alert"
+                    className="p-3.5 rounded-2xl bg-rose-950/60 border border-rose-800/60 flex items-center justify-between gap-3"
+                >
+                    <div className="flex items-center gap-2.5 text-xs text-rose-200">
+                        <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                        <span>{error}</span>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => loadSummary().catch(() => {})}
+                        className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shrink-0 min-h-[36px]"
+                    >
+                        Reintentar
+                    </button>
+                </div>
+            )}
+
             {/* Header / Resumen del vendedor */}
             <div className="flex items-center justify-between">
                 <div>
@@ -46,9 +88,9 @@ export const VendedorHomePage = () => {
                 </div>
                 <button
                     type="button"
-                    onClick={() => loadSummary()}
+                    onClick={() => loadSummary().catch(() => {})}
                     disabled={loading}
-                    className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white active:scale-95 transition-all"
+                    className="p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white active:scale-95 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
                     title="Actualizar datos"
                     aria-label="Actualizar datos"
                 >
@@ -63,7 +105,7 @@ export const VendedorHomePage = () => {
                         <p className="text-xs font-medium text-slate-300">
                             Por Rendir en Secretaría
                         </p>
-                        <h3 className="text-2xl font-black text-white mt-1 tracking-tight">
+                        <h3 className="text-2xl font-black text-white mt-1 tracking-tight tabular-nums">
                             {formatCurrency(cobradoSinRendir)}
                         </h3>
                     </div>
@@ -88,15 +130,15 @@ export const VendedorHomePage = () => {
             <div className="grid grid-cols-3 gap-2">
                 <MobileCard className="text-center p-3">
                     <p className="text-[11px] font-semibold text-slate-400 uppercase">Asignados</p>
-                    <p className="text-xl font-black text-white mt-0.5">{totalAssigned}</p>
+                    <p className="text-xl font-black text-white mt-0.5 tabular-nums">{totalAssigned}</p>
                 </MobileCard>
                 <MobileCard className="text-center p-3">
                     <p className="text-[11px] font-semibold text-emerald-400 uppercase">Vendidos</p>
-                    <p className="text-xl font-black text-emerald-400 mt-0.5">{totalSold}</p>
+                    <p className="text-xl font-black text-emerald-400 mt-0.5 tabular-nums">{totalSold}</p>
                 </MobileCard>
                 <MobileCard className="text-center p-3">
                     <p className="text-[11px] font-semibold text-amber-400 uppercase">Disponibles</p>
-                    <p className="text-xl font-black text-amber-400 mt-0.5">{totalAvailable}</p>
+                    <p className="text-xl font-black text-amber-400 mt-0.5 tabular-nums">{totalAvailable}</p>
                 </MobileCard>
             </div>
 
@@ -109,7 +151,7 @@ export const VendedorHomePage = () => {
                         </div>
                         <div>
                             <p className="text-xs text-slate-400">Comisión estimada ({commissionRate}%)</p>
-                            <p className="text-sm font-bold text-white">
+                            <p className="text-sm font-bold text-white tabular-nums">
                                 {formatCurrency(comisionAcumulada)}
                             </p>
                         </div>
@@ -140,7 +182,7 @@ export const VendedorHomePage = () => {
                             </p>
                         </div>
                     </div>
-                    <span className="text-xs bg-red-700/60 px-2.5 py-1 rounded-lg">
+                    <span className="text-xs bg-red-700/60 px-2.5 py-1 rounded-lg tabular-nums">
                         {totalAvailable} disp.
                     </span>
                 </button>

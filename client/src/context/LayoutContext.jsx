@@ -1,47 +1,64 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 
 const LayoutContext = createContext();
 
+const readStoredBoolean = (key, fallback) => {
+  try {
+    const saved = localStorage.getItem(key);
+    if (saved === null) return fallback;
+    const parsed = JSON.parse(saved);
+    return typeof parsed === 'boolean' ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 export const LayoutProvider = ({ children }) => {
-  // Estado persistente del Sidebar
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
-    const saved = localStorage.getItem('isSidebarCollapsed');
-    return saved ? JSON.parse(saved) : false;
-  });
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
+    readStoredBoolean('isSidebarCollapsed', false)
+  );
 
-  // Estado persistente de los filtros
-  const [isFilterExpanded, setIsFilterExpanded] = useState(() => {
-    const saved = localStorage.getItem('isFilterExpanded');
-    return saved ? JSON.parse(saved) : true;
-  });
+  const [isFilterExpanded, setIsFilterExpanded] = useState(() =>
+    readStoredBoolean('isFilterExpanded', true)
+  );
 
-  // Nuevo estado volátil para el efecto Fly-out (Hover Expansion)
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('isSidebarCollapsed', JSON.stringify(isSidebarCollapsed));
+    try {
+      localStorage.setItem('isSidebarCollapsed', JSON.stringify(isSidebarCollapsed));
+    } catch {
+      // Ignorar errores de cuota o modo privado
+    }
   }, [isSidebarCollapsed]);
 
   useEffect(() => {
-    localStorage.setItem('isFilterExpanded', JSON.stringify(isFilterExpanded));
+    try {
+      localStorage.setItem('isFilterExpanded', JSON.stringify(isFilterExpanded));
+    } catch {
+      // Ignorar errores de cuota o modo privado
+    }
   }, [isFilterExpanded]);
 
-  const toggleSidebar = () => setIsSidebarCollapsed(!isSidebarCollapsed);
-  const toggleFilters = () => setIsFilterExpanded(!isFilterExpanded);
-  
-  // Setter para el hover fly-out
-  const setSidebarHovered = (value) => setIsSidebarHovered(value);
+  const toggleSidebar = useCallback(() => setIsSidebarCollapsed((prev) => !prev), []);
+  const toggleFilters = useCallback(() => setIsFilterExpanded((prev) => !prev), []);
+  const setSidebarHovered = useCallback((value) => setIsSidebarHovered(value), []);
 
-  return (
-    <LayoutContext.Provider value={{ 
-      isSidebarCollapsed, 
-      toggleSidebar, 
-      isFilterExpanded, 
-      setIsFilterExpanded, // Setter directo para Auto-Collapse 🏹⚖️
+  const value = useMemo(
+    () => ({
+      isSidebarCollapsed,
+      toggleSidebar,
+      isFilterExpanded,
+      setIsFilterExpanded,
       toggleFilters,
       isSidebarHovered,
-      setSidebarHovered
-    }}>
+      setSidebarHovered,
+    }),
+    [isSidebarCollapsed, toggleSidebar, isFilterExpanded, toggleFilters, isSidebarHovered, setSidebarHovered]
+  );
+
+  return (
+    <LayoutContext.Provider value={value}>
       {children}
     </LayoutContext.Provider>
   );

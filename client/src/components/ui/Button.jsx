@@ -1,31 +1,26 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 
 /**
- * Button Component - Premium 2026 v4 (High Contrast Edition) ✨💎🚀
- * Diseñado para visibilidad máxima en áreas de alta densidad operativa.
+ * Button Component - Standard 2026
+ * Soporta forwardRef, protección contra doble envío y variantes seguras.
  */
-export default function Button({ 
+const Button = forwardRef(({ 
   children, 
   variant = 'primary', 
   size = 'md', 
   loading = false, 
+  disabled = false,
+  type = 'button',
   className = '',
   icon: Icon,
   ...props 
-}) {
+}, ref) => {
   const baseStyles = "inline-flex items-center justify-center gap-2 font-black transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none uppercase tracking-widest leading-none";
   
   const variants = {
-    // Énfasis total: Navy Solid
     primary: "bg-primary text-white shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 hover:bg-primary-dark hover:-translate-y-px",
-    
-    // Contraste Técnico: Gris Profundo -> Navy en Hover
     ghost: "text-slate-700 bg-transparent hover:text-primary hover:bg-primary/5 hover:border-primary/20 border border-transparent rounded-xl",
-    
-    // Definición Estructural: Borde Navy suave -> Navy Intenso
     outline: "border-2 border-slate-200 text-slate-800 hover:border-primary hover:text-primary bg-white shadow-sm",
-    
-    // Alerta de Negocio: Rojo corporativo
     danger: "bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white"
   };
 
@@ -36,12 +31,18 @@ export default function Button({
     lg: "px-12 py-5 text-[12px] rounded-premium-btn"
   };
 
+  const variantClasses = variants[variant] || variants.primary;
+  const sizeClasses = sizes[size] || sizes.md;
   const iconSize = size === 'icon' ? 15 : size === 'sm' ? 13 : 18;
+  const isDisabled = Boolean(loading || disabled);
 
   return (
     <button 
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
-      disabled={loading}
+      ref={ref}
+      type={type}
+      className={`${baseStyles} ${variantClasses} ${sizeClasses} ${className}`}
+      disabled={isDisabled}
+      aria-busy={loading || undefined}
       {...props}
     >
       {loading ? (
@@ -50,4 +51,8 @@ export default function Button({
       {children}
     </button>
   );
-}
+});
+
+Button.displayName = "Button";
+
+export default Button;

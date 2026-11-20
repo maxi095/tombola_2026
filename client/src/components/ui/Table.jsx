@@ -2,57 +2,68 @@ import { Ticket, User as UserIcon, MapPin } from "lucide-react";
 import { formatCurrency } from "../../libs/formatters";
 
 /**
- * Table Components - Premium 2026 v3.5 (Atomic Framework)
- * Unidades atómicas para la construcción de grillas de datos profesionales.
+ * Table Components - Standard 2026 (Atomic Framework)
+ * Unidades atómicas para grillas de datos con soporte JIT-safe y propagación de props.
  */
 
-export const Table = ({ children, className = "", minWidth = "min-w-[800px]" }) => (
-  <div className={`overflow-x-auto ${className}`}>
+const ALIGN_CLASSES = {
+  left: "text-left",
+  center: "text-center",
+  right: "text-right",
+};
+
+export const Table = ({ children, className = "", minWidth = "min-w-[800px]", ...props }) => (
+  <div className={`overflow-x-auto ${className}`} {...props}>
     <table className={`w-full text-left border-collapse ${minWidth}`}>
       {children}
     </table>
   </div>
 );
 
-export const THead = ({ children }) => (
-  <thead>
+export const THead = ({ children, ...props }) => (
+  <thead {...props}>
     <tr className="bg-slate-50/50 border-b border-slate-100">
       {children}
     </tr>
   </thead>
 );
 
-export const TBody = ({ children, striped = true }) => (
-  <tbody className={`divide-y divide-slate-50 ${striped ? "[&_tr:nth-child(even)]:bg-slate-50/30" : ""}`}>
+export const TBody = ({ children, striped = true, ...props }) => (
+  <tbody className={`divide-y divide-slate-50 ${striped ? "[&_tr:nth-child(even)]:bg-slate-50/30" : ""}`} {...props}>
     {children}
   </tbody>
 );
 
-export const TR = ({ children, className = "" }) => (
-  <tr className={`hover:bg-slate-50/50 transition-colors duration-200 group/row ${className}`}>
+export const TR = ({ children, className = "", ...props }) => (
+  <tr className={`hover:bg-slate-50/50 transition-colors duration-200 group/row ${className}`} {...props}>
     {children}
   </tr>
 );
 
-export const TH = ({ children, className = "", align = "left" }) => (
-  <th className={`px-4 py-4 text-[11px] font-black text-muted uppercase tracking-[0.15em] bg-slate-50/50 text-${align} ${className}`}>
+export const TH = ({ children, className = "", align = "left", ...props }) => (
+  <th
+    className={`px-4 py-4 text-[11px] font-black text-muted uppercase tracking-[0.15em] bg-slate-50/50 ${ALIGN_CLASSES[align] || ALIGN_CLASSES.left} ${className}`}
+    {...props}
+  >
     {children}
   </th>
 );
 
-export const TD = ({ children, className = "", align = "left" }) => (
-  <td className={`px-4 py-4 text-sm text-${align} ${className}`}>
+export const TD = ({ children, className = "", align = "left", ...props }) => (
+  <td
+    className={`px-4 py-4 text-sm ${ALIGN_CLASSES[align] || ALIGN_CLASSES.left} ${className}`}
+    {...props}
+  >
     {children}
   </td>
 );
 
 /**
- * ÁTOMOS DE CELDA ESPECIALIZADOS ✨💎
+ * ÁTOMOS DE CELDA ESPECIALIZADOS
  */
 
-// 📋 Celda de Operación (Nro de Venta, Balance, etc.) ✨
-export const OperationCell = ({ number, main, sub, icon: Icon }) => (
-  <TD>
+export const OperationCell = ({ number, main, sub, icon: Icon, className = "", ...props }) => (
+  <TD className={className} {...props}>
     <div className="flex items-center gap-3">
       {Icon && (
         <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 shrink-0">
@@ -60,7 +71,7 @@ export const OperationCell = ({ number, main, sub, icon: Icon }) => (
         </div>
       )}
       <div className="flex flex-col">
-        <span className="text-sm font-black text-slate-700 leading-none mb-0.5">
+        <span className="text-sm font-black text-slate-700 leading-none mb-0.5 tabular-nums">
           {main || (number ? `#${number}` : "S/N")}
         </span>
         {sub && (
@@ -73,24 +84,22 @@ export const OperationCell = ({ number, main, sub, icon: Icon }) => (
   </TD>
 );
 
-// 🎫 Celda de Stock/Cartón (Indigo Style)
-export const StockCell = ({ main, sub }) => (
-  <TD>
+export const StockCell = ({ main, sub, className = "", ...props }) => (
+  <TD className={className} {...props}>
     <div className="flex items-center gap-3">
       <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-500 shrink-0">
         <Ticket size={14} />
       </div>
       <div className="flex flex-col">
-        <span className="text-sm font-black text-slate-700 leading-none mb-0.5">{main}</span>
+        <span className="text-sm font-black text-slate-700 leading-none mb-0.5 tabular-nums">{main}</span>
         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{sub}</span>
       </div>
     </div>
   </TD>
 );
 
-// 👤 Celda de Usuario (Vendedor / Asociado)
-export const UserCell = ({ name, sub, variant = "primary" }) => (
-  <TD>
+export const UserCell = ({ name, sub, variant = "primary", className = "", ...props }) => (
+  <TD className={className} {...props}>
     <div className="flex flex-col gap-0.5 max-w-[200px]">
       <div className="flex items-start gap-2">
         <UserIcon size={12} className={`${variant === 'primary' ? 'text-primary' : 'text-slate-300'} mt-0.5 shrink-0 opacity-40`} />
@@ -108,8 +117,7 @@ export const UserCell = ({ name, sub, variant = "primary" }) => (
   </TD>
 );
 
-// 💸 Celda de Dinero v19.5 (Premium Audit) ✨🏹
-export const AmountCell = ({ amount, value, status = "success", bold = false }) => {
+export const AmountCell = ({ amount, value, status = "success", bold = false, className = "", ...props }) => {
   const amountValue = amount !== undefined ? amount : value;
   
   const variants = {
@@ -122,7 +130,11 @@ export const AmountCell = ({ amount, value, status = "success", bold = false }) 
   };
 
   return (
-    <TD className={`text-right ${bold ? 'font-black' : 'font-bold'} text-xs ${variants[status] || variants.success}`}>
+    <TD
+      align="right"
+      className={`${bold ? 'font-black' : 'font-bold'} text-xs tabular-nums ${variants[status] || variants.success} ${className}`}
+      {...props}
+    >
       {formatCurrency(amountValue)}
     </TD>
   );

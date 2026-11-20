@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 
 /**
- * Card Component - Premium 2026 v3.2 (High Fidelity)
- * Ahora soporta cabeceras institucionales automáticas (Title, Icon, Description).
+ * Card Component - Standard 2026
+ * Soporta cabeceras institucionales automáticas (Title, Icon, Description) y variantes seguras.
  */
-export default function Card({ 
+const Card = forwardRef(({ 
   children, 
   title,
   icon: Icon,
@@ -15,22 +15,25 @@ export default function Card({
   className = '', 
   padding,
   ...props 
-}) {
+}, ref) => {
   const isSlim = size === 'slim';
-  const baseStyles = "bg-white rounded-premium-card transition-all duration-700 overflow-hidden";
+  const baseStyles = "bg-white rounded-premium-card transition-all duration-300 overflow-hidden";
   
   const variants = {
     default: "border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.012)]",
     elevated: "shadow-premium border-b border-r border-slate-200/40",
-    outline: "border-2 border-slate-50 bg-transparent"
+    outline: "border-2 border-slate-100 bg-transparent",
+    glass: "bg-white/80 backdrop-blur-md border border-slate-200/60 shadow-sm"
   };
 
-  const hoverStyles = hover ? "hover:border-primary/5 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1" : "";
+  const variantClasses = variants[variant] || variants.default;
+  const hoverStyles = hover ? "hover:border-primary/10 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-0.5" : "";
   const finalPadding = padding || (isSlim ? 'p-5 md:p-6' : 'p-8 md:p-10');
 
   return (
     <div 
-      className={`${baseStyles} ${variants[variant]} ${hoverStyles} ${finalPadding} ${className}`}
+      ref={ref}
+      className={`${baseStyles} ${variantClasses} ${hoverStyles} ${finalPadding} ${className}`}
       {...props}
     >
       {(title || Icon) && (
@@ -50,4 +53,8 @@ export default function Card({
       {children}
     </div>
   );
-}
+});
+
+Card.displayName = "Card";
+
+export default Card;

@@ -1,29 +1,47 @@
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo } from "react";
 
 const FeedbackContext = createContext();
 
 /**
- * FeedbackProvider - Motor de notificaciones Premium 2026
- * Gestiona estados de Toasts y Diálogos de forma centralizada.
+ * FeedbackProvider - Motor de notificaciones centralizado
+ * Gestiona Toasts con control seguro de timers (sin race conditions ni memory leaks).
  */
 export const FeedbackProvider = ({ children }) => {
   const [toast, setToast] = useState(null);
+  const timerRef = useRef(null);
 
-  /**
-   * showToast - Lanza una notificación flotante
-   * @param {string} message - Texto a mostrar
-   * @param {'success' | 'error' | 'info'} type - Estética del mensaje
-   */
-  const showToast = useCallback((message, type = "success") => {
-    setToast({ message, type });
-    // Auto-cierre tras 4 segundos
-    setTimeout(() => setToast(null), 4000);
+  const clearPendingTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
   }, []);
 
-  const hideToast = () => setToast(null);
+  const hideToast = useCallback(() => {
+    clearPendingTimer();
+    setToast(null);
+  }, [clearPendingTimer]);
+
+  const showToast = useCallback((message, type = "success") => {
+    clearPendingTimer();
+    setToast({ message, type });
+    timerRef.current = setTimeout(() => {
+      setToast(null);
+      timerRef.current = null;
+    }, 4000);
+  }, [clearPendingTimer]);
+
+  useEffect(() => {
+    return () => clearPendingTimer();
+  }, [clearPendingTimer]);
+
+  const value = useMemo(
+    () => ({ showToast, hideToast, toast }),
+    [showToast, hideToast, toast]
+  );
 
   return (
-    <FeedbackContext.Provider value={{ showToast, hideToast, toast }}>
+    <FeedbackContext.Provider value={value}>
       {children}
     </FeedbackContext.Provider>
   );
