@@ -20,15 +20,16 @@ export const AuthProvider = ({children}) => {
     const [loading, setLoading] = useState(true);
 
     const signup = async (user) => {
-    try {
-        
-            const res = await registerRequest(user)
-            //console.log(res.data);
+        try {
+            const res = await registerRequest(user);
             setUser(res.data);
             setIsAuthenticated(true);
         } catch (error) {
-            // console.log(error.response);
-            setErrors(error.response.data);
+            const data = error.response?.data;
+            if (Array.isArray(data)) {
+                return setErrors(data);
+            }
+            setErrors([data?.message || error.message || "Error al registrarse"]);
         }
     };
     
@@ -39,10 +40,11 @@ export const AuthProvider = ({children}) => {
             setUser(res.data);
             localStorage.setItem("user", JSON.stringify(res.data)); // 👈 Guardar user
         } catch (error) {
-            if (Array.isArray(error.response.data)) {
-                return setErrors(error.response.data)
-            }  
-            setErrors([error.response.data.message])
+            const data = error.response?.data;
+            if (Array.isArray(data)) {
+                return setErrors(data);
+            }
+            setErrors([data?.message || error.message || "Error al iniciar sesión"]);
         }
     };
 

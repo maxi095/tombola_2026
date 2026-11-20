@@ -23,8 +23,20 @@ import vendedorRoutes from './routes/vendedor.routes.js';
 
 const app = express();
 
+const isOriginAllowed = (origin) => {
+    if (!origin) return true;
+    if (origin === FRONTEND_URL) return true;
+    if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
+    return false;
+};
+
 app.use(cors({
-    origin: FRONTEND_URL,
+    origin: (origin, callback) => {
+        if (isOriginAllowed(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error(`Bloqueado por CORS: ${origin}`));
+    },
     credentials: true
 }));
 app.use(compression());
