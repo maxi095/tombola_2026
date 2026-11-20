@@ -1,8 +1,11 @@
+import { cn } from '../../libs/cn';
+
 export const MobileCard = ({
     children,
     className = '',
     onClick,
     variant = 'default', // 'default' | 'highlight' | 'danger'
+    ...props
 }) => {
     const variantStyles = {
         default: 'bg-slate-800/90 border-slate-700/70 text-slate-100',
@@ -10,12 +13,30 @@ export const MobileCard = ({
         danger: 'bg-red-950/30 border-red-800/40 text-slate-100',
     };
 
+    const interactiveProps = onClick
+        ? {
+              role: 'button',
+              tabIndex: 0,
+              onKeyDown: (e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onClick(e);
+                  }
+              },
+          }
+        : {};
+
     return (
         <div
             onClick={onClick}
-            className={`rounded-2xl border p-4 shadow-sm backdrop-blur-sm transition-all ${
-                onClick ? 'cursor-pointer active:scale-[0.98]' : ''
-            } ${variantStyles[variant] || variantStyles.default} ${className}`}
+            className={cn(
+                'rounded-2xl border p-4 shadow-sm backdrop-blur-sm transition-all',
+                onClick && 'cursor-pointer active:scale-[0.98]',
+                variantStyles[variant] || variantStyles.default,
+                className
+            )}
+            {...interactiveProps}
+            {...props}
         >
             {children}
         </div>

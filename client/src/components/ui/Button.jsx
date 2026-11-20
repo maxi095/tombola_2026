@@ -1,8 +1,9 @@
 import React, { forwardRef } from 'react';
+import { cn } from '../../libs/cn';
 
 /**
  * Button Component - Standard 2026
- * Soporta forwardRef, protección contra doble envío y variantes seguras.
+ * Soporta forwardRef, tailwind-merge (cn), protección contra doble envío y variantes seguras.
  */
 const Button = forwardRef(({ 
   children, 
@@ -31,8 +32,6 @@ const Button = forwardRef(({
     lg: "px-12 py-5 text-[12px] rounded-premium-btn"
   };
 
-  const variantClasses = variants[variant] || variants.primary;
-  const sizeClasses = sizes[size] || sizes.md;
   const iconSize = size === 'icon' ? 15 : size === 'sm' ? 13 : 18;
   const isDisabled = Boolean(loading || disabled);
 
@@ -40,7 +39,7 @@ const Button = forwardRef(({
     <button 
       ref={ref}
       type={type}
-      className={`${baseStyles} ${variantClasses} ${sizeClasses} ${className}`}
+      className={cn(baseStyles, variants[variant] || variants.primary, sizes[size] || sizes.md, className)}
       disabled={isDisabled}
       aria-busy={loading || undefined}
       {...props}

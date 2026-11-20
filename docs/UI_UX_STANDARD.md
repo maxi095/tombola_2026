@@ -43,8 +43,9 @@ El operador administrativo trabaja en pantallas de **1366px de ancho**. El espac
   * `z-30`: `FilterBar` y barras de herramientas locales.
   * `z-[48]`: `PageHeader` sticky (`top-0`).
   * `z-50`: `BarraTareas` superior.
-  * `z-[60]`: `Sidebar` elástico.
-  * `z-[100]`: `Modal`, `ConfirmModal`, portales de `Select` y `Toast`.
+  * `z-[60]`: `Sidebar` elástico, `ColumnPicker` y `MultiSelect`.
+  * `z-[100]`: `Modal` y `ConfirmModal` (soporta `theme="light" | "dark"`).
+  * `z-[150]`: `Toast` (siempre visible por encima de modales abiertos).
   * `z-[200]`: `Tooltip`.
 
 ### 2.2 Reglas para Evitar el Scroll Horizontal (Anti-Overflow)

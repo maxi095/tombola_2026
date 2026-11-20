@@ -1,8 +1,9 @@
 import React, { forwardRef, useId } from 'react';
+import { cn } from '../../libs/cn';
 
 /**
  * InputField Component - Standard 2026
- * ForwardRef, accesibilidad (useId + aria-invalid) y soporte seguro para ícono interactivo (onIconClick).
+ * ForwardRef, accesibilidad (useId + aria-invalid), tailwind-merge (cn) y soporte para ícono interactivo.
  */
 const InputField = forwardRef(({ 
   label, 
@@ -14,7 +15,7 @@ const InputField = forwardRef(({
   onIconClick,
   iconAriaLabel = 'Acción de campo',
   prefix,
-  bsize = 'md', // md o compact
+  bsize = 'md',
   id,
   ...props 
 }, ref) => {
@@ -22,12 +23,8 @@ const InputField = forwardRef(({
   const inputId = id || generatedId;
   const errorId = `${inputId}-error`;
 
-  const baseInput = `w-full bg-white border border-slate-200/60 shadow-sm rounded-premium-input font-semibold text-primary focus:ring-8 focus:ring-primary/5 focus:border-primary/20 placeholder:text-slate-400 transition-all outline-none duration-300 ${
-    bsize === 'compact' ? 'px-4 py-2 text-xs' : 'px-6 py-4 text-sm'
-  }`;
-  
   return (
-    <div className={`space-y-2.5 ${className}`}>
+    <div className={cn("space-y-2.5", className)}>
       {label && (
         <label
           htmlFor={inputId}
@@ -48,7 +45,13 @@ const InputField = forwardRef(({
           type={type}
           aria-invalid={error ? 'true' : undefined}
           aria-describedby={error ? errorId : undefined}
-          className={`${baseInput} ${error ? 'border-red-300 bg-red-50/20' : ''} ${prefix ? 'pl-11' : ''} ${Icon ? 'pr-12' : ''}`}
+          className={cn(
+            "w-full bg-white border border-slate-200/60 shadow-sm rounded-premium-input font-semibold text-primary focus:ring-8 focus:ring-primary/5 focus:border-primary/20 placeholder:text-slate-400 transition-all outline-none duration-300",
+            bsize === 'compact' ? 'px-4 py-2 text-xs' : 'px-6 py-4 text-sm',
+            error && 'border-red-300 bg-red-50/20',
+            prefix && 'pl-11',
+            Icon && 'pr-12'
+          )}
           placeholder={placeholder}
           {...props}
         />
@@ -63,16 +66,14 @@ const InputField = forwardRef(({
               <Icon size={bsize === 'compact' ? 16 : 20} />
             </button>
           ) : (
-            <div
-              className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-slate-400"
-            >
+            <div className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-slate-400">
               <Icon size={bsize === 'compact' ? 16 : 20} />
             </div>
           )
         )}
       </div>
       {error && (
-        <p id={errorId} role="alert" className="text-[10px] font-bold text-red-500 ml-2">
+        <p id={errorId} role="alert" className="text-[10px] font-bold text-red-500 ml-2 animate-in fade-in slide-in-from-top-1 duration-300">
           {error}
         </p>
       )}

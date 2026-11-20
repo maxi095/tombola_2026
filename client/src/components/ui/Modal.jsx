@@ -1,23 +1,14 @@
 import { X } from "lucide-react";
 import ReactModal from "react-modal";
+import { cn } from "../../libs/cn";
 
-// Sincronizar AppElement con el root de React
 if (typeof window !== "undefined") {
   ReactModal.setAppElement("#root");
 }
 
 /**
- * Modal - Componente Maestro de Diálogos Elite 2026
- * Soporta variantes semánticas y arquitectura de alta densidad.
- * 
- * @param {Object} props
- * @param {boolean} props.isOpen - Control de visibilidad
- * @param {Function} props.onClose - Handler de cierre
- * @param {string} props.title - Título principal
- * @param {string} props.subtitle - Subtítulo de contexto (opcional)
- * @param {React.ElementType} props.icon - Icono Lucide
- * @param {string} props.variant - 'primary' | 'warning' | 'default'
- * @param {string} props.maxWidth - Clase Tailwind para el ancho (default: max-w-lg)
+ * Modal - Componente Maestro de Diálogos Standard 2026
+ * Soporta variantes semánticas y temas claro/oscuro ('light' | 'dark').
  */
 export default function Modal({ 
   isOpen, 
@@ -26,67 +17,87 @@ export default function Modal({
   subtitle,
   icon: Icon,
   variant = "default",
+  theme = "light",
   children, 
   footer,
   maxWidth = "max-w-lg" 
 }) {
+  const isDark = theme === "dark";
 
   const getHeaderStyles = () => {
+    if (isDark) {
+      if (variant === "primary") return "bg-red-600 text-white";
+      if (variant === "warning") return "bg-amber-600 text-white";
+      return "bg-slate-900 text-white border-b border-slate-800";
+    }
     switch (variant) {
-      case 'primary': return 'bg-primary text-white';
-      case 'warning': return 'bg-amber-500 text-white shadow-lg shadow-amber-500/10';
-      case 'default': return 'bg-slate-50/50 text-slate-800 border-b border-slate-100';
-      default: return 'bg-white text-slate-800 border-b border-slate-100';
+      case "primary": return "bg-primary text-white";
+      case "warning": return "bg-amber-500 text-white shadow-lg shadow-amber-500/10";
+      case "default": return "bg-slate-50/50 text-slate-800 border-b border-slate-100";
+      default: return "bg-white text-slate-800 border-b border-slate-100";
     }
   };
 
   const getIconStyles = () => {
+    if (isDark) {
+      return variant === "default"
+        ? "bg-red-600/20 text-red-400 border border-red-500/30"
+        : "bg-white/10 text-white";
+    }
     switch (variant) {
-      case 'primary': return 'bg-white/10';
-      case 'warning': return 'bg-white/10';
-      case 'default': return 'bg-primary text-white shadow-lg shadow-primary/10';
-      default: return 'bg-slate-100 text-slate-500';
+      case "primary": return "bg-white/10";
+      case "warning": return "bg-white/10";
+      case "default": return "bg-primary text-white shadow-lg shadow-primary/10";
+      default: return "bg-slate-100 text-slate-500";
     }
   };
 
   const getCloseBtnStyles = () => {
-    return variant === 'default' 
-      ? 'bg-white border border-slate-100 text-slate-400 hover:text-red-500 hover:border-red-100'
-      : 'bg-white/10 hover:bg-white/20 text-white';
+    if (isDark) {
+      return "bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700";
+    }
+    return variant === "default"
+      ? "bg-white border border-slate-100 text-slate-400 hover:text-red-500 hover:border-red-100"
+      : "bg-white/10 hover:bg-white/20 text-white";
   };
 
   return (
     <ReactModal
       isOpen={isOpen}
       onRequestClose={onClose}
-      closeTimeoutMS={300}
-      className={`
-        relative w-full ${maxWidth} bg-white rounded-[32px] shadow-2xl overflow-hidden 
-        outline-none animate-in zoom-in-95 duration-300
-      `}
-      overlayClassName="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md"
+      closeTimeoutMS={200}
+      className={cn(
+        "relative w-full rounded-[32px] shadow-2xl overflow-hidden outline-none animate-in zoom-in-95 duration-200",
+        maxWidth,
+        isDark ? "bg-slate-900 border border-slate-800 text-slate-100" : "bg-white text-slate-800"
+      )}
+      overlayClassName={cn(
+        "fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 backdrop-blur-md",
+        isDark ? "bg-slate-950/80" : "bg-slate-900/40"
+      )}
     >
-      {/* CABECERA DINÁMICA ✨🚀 */}
-      <div className={`relative px-8 py-7 ${getHeaderStyles()}`}>
-        <button 
+      <div className={cn("relative px-6 sm:px-8 py-6 sm:py-7", getHeaderStyles())}>
+        <button
+          type="button"
           onClick={onClose}
-          className={`absolute top-6 right-6 p-2 rounded-xl transition-all ${getCloseBtnStyles()}`}
+          aria-label="Cerrar"
+          className={cn("absolute top-5 right-5 p-2 rounded-xl transition-all", getCloseBtnStyles())}
         >
           <X size={20} />
         </button>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 pr-10">
           {Icon && (
-            <div className={`p-3 rounded-2xl ${getIconStyles()}`}>
+            <div className={cn("p-3 rounded-2xl", getIconStyles())}>
               <Icon size={24} />
             </div>
           )}
           <div>
-            <h2 className={`text-xl font-black tracking-tight font-manrope leading-none ${variant === 'default' ? 'text-primary' : 'text-white'}`}>
+            <h2 className={cn("text-xl font-black tracking-tight font-manrope leading-none", !isDark && variant === "default" ? "text-primary" : "text-white")}>
               {title}
             </h2>
             {subtitle && (
-              <p className={`text-[10px] font-black uppercase tracking-[0.2em] mt-1.5 ${variant === 'default' ? 'text-slate-400' : 'text-white/70'}`}>
+              <p className={cn("text-[10px] font-black uppercase tracking-[0.2em] mt-1.5", isDark ? "text-slate-400" : variant === "default" ? "text-slate-400" : "text-white/70")}>
                 {subtitle}
               </p>
             )}
@@ -94,14 +105,12 @@ export default function Modal({
         </div>
       </div>
 
-      {/* CUERPO OPERATIVO 🏹⚖️ */}
-      <div className="px-8 py-8 overflow-y-auto max-h-[70vh] scrollbar-thin scrollbar-thumb-slate-200">
+      <div className="px-6 sm:px-8 py-6 sm:py-8 overflow-y-auto max-h-[70vh] custom-scrollbar">
         {children}
       </div>
 
-      {/* PIE (FOOTER) ✨💎 */}
       {footer && (
-        <div className="px-8 py-6 bg-slate-50/50 border-t border-slate-50 flex items-center justify-end gap-3">
+        <div className={cn("px-6 sm:px-8 py-5 flex items-center justify-end gap-3 border-t", isDark ? "bg-slate-950/60 border-slate-800" : "bg-slate-50/50 border-slate-100")}>
           {footer}
         </div>
       )}

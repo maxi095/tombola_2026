@@ -1,9 +1,10 @@
 import { Ticket, User as UserIcon, MapPin } from "lucide-react";
 import { formatCurrency } from "../../libs/formatters";
+import { cn } from "../../libs/cn";
 
 /**
  * Table Components - Standard 2026 (Atomic Framework)
- * Unidades atómicas para grillas de datos con soporte JIT-safe y propagación de props.
+ * Unidades atómicas para grillas de datos con soporte JIT-safe, tailwind-merge (cn) y propagación de props.
  */
 
 const ALIGN_CLASSES = {
@@ -13,8 +14,8 @@ const ALIGN_CLASSES = {
 };
 
 export const Table = ({ children, className = "", minWidth = "min-w-[800px]", ...props }) => (
-  <div className={`overflow-x-auto ${className}`} {...props}>
-    <table className={`w-full text-left border-collapse ${minWidth}`}>
+  <div className={cn("overflow-x-auto", className)} {...props}>
+    <table className={cn("w-full text-left border-collapse", minWidth)}>
       {children}
     </table>
   </div>
@@ -29,20 +30,24 @@ export const THead = ({ children, ...props }) => (
 );
 
 export const TBody = ({ children, striped = true, ...props }) => (
-  <tbody className={`divide-y divide-slate-50 ${striped ? "[&_tr:nth-child(even)]:bg-slate-50/30" : ""}`} {...props}>
+  <tbody className={cn("divide-y divide-slate-50", striped && "[&_tr:nth-child(even)]:bg-slate-50/30")} {...props}>
     {children}
   </tbody>
 );
 
 export const TR = ({ children, className = "", ...props }) => (
-  <tr className={`hover:bg-slate-50/50 transition-colors duration-200 group/row ${className}`} {...props}>
+  <tr className={cn("hover:bg-slate-50/50 transition-colors duration-200 group/row", className)} {...props}>
     {children}
   </tr>
 );
 
 export const TH = ({ children, className = "", align = "left", ...props }) => (
   <th
-    className={`px-4 py-4 text-[11px] font-black text-muted uppercase tracking-[0.15em] bg-slate-50/50 ${ALIGN_CLASSES[align] || ALIGN_CLASSES.left} ${className}`}
+    className={cn(
+      "px-4 py-4 text-[11px] font-black text-muted uppercase tracking-[0.15em] bg-slate-50/50",
+      ALIGN_CLASSES[align] || ALIGN_CLASSES.left,
+      className
+    )}
     {...props}
   >
     {children}
@@ -51,16 +56,12 @@ export const TH = ({ children, className = "", align = "left", ...props }) => (
 
 export const TD = ({ children, className = "", align = "left", ...props }) => (
   <td
-    className={`px-4 py-4 text-sm ${ALIGN_CLASSES[align] || ALIGN_CLASSES.left} ${className}`}
+    className={cn("px-4 py-4 text-sm", ALIGN_CLASSES[align] || ALIGN_CLASSES.left, className)}
     {...props}
   >
     {children}
   </td>
 );
-
-/**
- * ÁTOMOS DE CELDA ESPECIALIZADOS
- */
 
 export const OperationCell = ({ number, main, sub, icon: Icon, className = "", ...props }) => (
   <TD className={className} {...props}>
@@ -102,8 +103,8 @@ export const UserCell = ({ name, sub, variant = "primary", className = "", ...pr
   <TD className={className} {...props}>
     <div className="flex flex-col gap-0.5 max-w-[200px]">
       <div className="flex items-start gap-2">
-        <UserIcon size={12} className={`${variant === 'primary' ? 'text-primary' : 'text-slate-300'} mt-0.5 shrink-0 opacity-40`} />
-        <span className={`text-xs font-black leading-tight uppercase ${variant === 'primary' ? 'text-primary' : 'text-slate-600'}`}>
+        <UserIcon size={12} className={cn("mt-0.5 shrink-0 opacity-40", variant === "primary" ? "text-primary" : "text-slate-300")} />
+        <span className={cn("text-xs font-black leading-tight uppercase", variant === "primary" ? "text-primary" : "text-slate-600")}>
           {name}
         </span>
       </div>
@@ -132,7 +133,12 @@ export const AmountCell = ({ amount, value, status = "success", bold = false, cl
   return (
     <TD
       align="right"
-      className={`${bold ? 'font-black' : 'font-bold'} text-xs tabular-nums ${variants[status] || variants.success} ${className}`}
+      className={cn(
+        bold ? "font-black" : "font-bold",
+        "text-xs tabular-nums",
+        variants[status] || variants.success,
+        className
+      )}
       {...props}
     >
       {formatCurrency(amountValue)}

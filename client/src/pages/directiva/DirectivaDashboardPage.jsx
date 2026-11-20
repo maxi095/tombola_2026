@@ -350,6 +350,7 @@ export const DirectivaDashboardPage = () => {
                 confirmText="Cerrar sesión"
                 cancelText="Volver"
                 variant="danger"
+                theme="dark"
                 onConfirm={handleConfirmLogout}
                 onClose={() => setShowLogoutConfirm(false)}
             />

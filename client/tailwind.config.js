@@ -1,3 +1,5 @@
+import tailwindcssAnimate from "tailwindcss-animate";
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -35,8 +37,17 @@ export default {
       spacing: {
         'page-x': "var(--page-px)",
         'page-y': "var(--page-pt)",
-      }
+      },
+      keyframes: {
+        progress: {
+          '0%': { transform: 'scaleX(1)' },
+          '100%': { transform: 'scaleX(0)' },
+        },
+      },
+      animation: {
+        progress: 'progress 4s linear forwards',
+      },
     },
   },
-  plugins: [],
-}
+  plugins: [tailwindcssAnimate],
+};

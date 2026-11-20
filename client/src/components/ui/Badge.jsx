@@ -1,4 +1,5 @@
-import React from "react";
+import React, { forwardRef } from "react";
+import { cn } from "../../libs/cn";
 
 const variants = {
   primary: "bg-primary/5 text-primary border-primary/10",
@@ -11,23 +12,25 @@ const variants = {
 };
 
 /**
- * Badge - Premium 2026 Component
+ * Badge - Standard 2026 Component
  * Utilizado para etiquetas de estado, roles y categorías.
  */
-const Badge = ({ children, variant = "primary", className = "" }) => {
+const Badge = forwardRef(({ children, variant = "primary", className = "", ...props }, ref) => {
   return (
     <span
-      className={`
-        inline-flex items-center px-3 py-1 
-        rounded-full text-[11px] font-black uppercase tracking-widest 
-        border transition-all duration-300
-        ${variants[variant] || variants.primary}
-        ${className}
-      `}
+      ref={ref}
+      className={cn(
+        "inline-flex items-center px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest border transition-all duration-300",
+        variants[variant] || variants.primary,
+        className
+      )}
+      {...props}
     >
       {children}
     </span>
   );
-};
+});
+
+Badge.displayName = "Badge";
 
 export default Badge;
