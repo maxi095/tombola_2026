@@ -105,8 +105,8 @@ Este documento ordena de manera lógica y técnica todo lo necesario para llevar
 ### Fase 5: Landing Pública Moderna + Despliegue en la Nube (Staging & Producción)
 *Objetivo: Independencia total de la terminal local del cliente y presencia pública profesional del club.*
 
-- [ ] **5.1 Landing Page Pública Moderna (`/`):**
-  - Diseño institucional de alto impacto con información de la edición vigente, grilla de premios, fechas de sorteos, consulta pública de cartón / estado de sorteos y acceso directo al login de asociados/vendedores.
+- [x] **5.1 Landing Page Pública Moderna (`/`):**
+  - Diseño institucional de alto impacto con identidad Newell's Old Boys (Laguna Larga), pilares de la tómbola, flujo de participación en 3 pasos, bloque de auspiciantes oficiales y acceso inteligente al portal según rol (100% libre de exposición de datos privados y sin montar providers administrativos).
 - [ ] **5.2 Preparación Cloud y Despliegue (`Staging` y `Producción`):**
   - Configurar variables de entorno de producción (`.env.example`, CORS dinámico, cookies `secure`/`sameSite` para HTTPS, conexión a **MongoDB Atlas**).
   - Migrar la base de datos local actual del cliente a MongoDB Atlas con backups automáticos.
