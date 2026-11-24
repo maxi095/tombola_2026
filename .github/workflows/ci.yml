@@ -23,6 +23,8 @@ jobs:
           node --check src/app.js
           node --check src/config.js
           node --check src/middlewares/rateLimit.middleware.js
+      - name: Run Critical Backend Tests (Vitest)
+        run: npm test
 
   frontend-build:
     name: Frontend Production Build (Linux Case-Sensitive)

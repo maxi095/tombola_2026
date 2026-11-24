@@ -63,6 +63,7 @@ El sistema está evolucionando de un esquema monopuesto local a una arquitectura
 | **`Draw`** | `draw.model.js` | `edition`, `drawDate`, `description`, `cardSetNumber` (1..5 si `Final`), `drawnNumbers: [Number]`, `prizes[{ position, description, bingoCard, sale, winnerRegisteredAt, notes }]`, `user` | `type`: `'Mensual'` \| `'Final'`<br>`status`: `'Programado'` \| `'En curso'` \| `'Finalizado'` |
 | **`User`** | `user.model.js` | `username` (unique), `email` (unique), `password` (hash bcrypt), `person` (unique), `seller` (ref: 'Seller', sparse: true) | `roles`: `'Administrador'` \| `'Vendedor'` \| `'Directiva'`<br>`status`: `'Activo'` \| `'Inactivo'` |
 | **`Counter`** | `counter.model.js` | `model` (unique), `seq` (secuencias atómicas `$inc` para `saleNumber`, `sellerNumber`, `clientNumber`, `sellerPaymentNumber`, `transactionNumber`) | N/A |
+| **`AuditLog`** | `auditLog.model.js` | `actor` (ref User), `actorRole`, `action`, `entity`, `entityId`, `metadata`, `ip` (registro aditivo no-bloqueante de operaciones críticas) | N/A |
 
 > ✅ **Saneamiento completado:** El modelo legacy `Installment` fue eliminado por completo, consolidando todas las cuotas en el modelo `Quota`.
 

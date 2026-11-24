@@ -5,6 +5,7 @@ import Edition from '../models/edition.model.js';
 import Seller from '../models/seller.model.js';
 import Client from '../models/client.model.js';
 import SellerPayment from '../models/sellerPayment.model.js';
+import { recordAudit } from '../libs/audit.js';
 
 /**
  * 1. Resumen Ejecutivo del Vendedor (Métricas de Bolsillo / Home Mobile) 📊
@@ -388,6 +389,19 @@ export const createVendedorSale = async (req, res) => {
             .populate({ path: 'client', populate: { path: 'person' } })
             .lean();
 
+        await recordAudit({
+            req,
+            action: 'VENDEDOR_SALE_CREATED',
+            entity: 'Sale',
+            entityId: savedSale._id,
+            metadata: {
+                sellerId,
+                cardNumber: card.number,
+                paymentType,
+                editionId: card.edition
+            }
+        });
+
         res.status(201).json({
             message: "Venta registrada con éxito",
             sale: populatedSale
@@ -433,6 +447,21 @@ export const payVendedorQuota = async (req, res) => {
         if (allPaid && quota.sale.status !== 'Entregado sin cargo') {
             await Sale.findByIdAndUpdate(quota.sale._id, { status: 'Pagado' });
         }
+
+        await recordAudit({
+            req,
+            action: 'VENDEDOR_QUOTA_PAID',
+            entity: 'Quota',
+            entityId: quota._id,
+            metadata: {
+                sellerId,
+                saleId: quota.sale._id,
+                quotaNumber: quota.quotaNumber,
+                amount: quota.amount,
+                paymentMethod,
+                isSaleFullyPaid: allPaid
+            }
+        });
 
         res.json({
             message: "Cuota cobrada exitosamente",

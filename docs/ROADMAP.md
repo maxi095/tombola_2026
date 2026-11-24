@@ -65,8 +65,8 @@ Este documento ordena de manera lógica y técnica todo lo necesario para llevar
   - Corrección de cálculo de estado de cartón en vivo (`quotaUpToDate`).
   - Optimización en sorteo de TV (`getTopBingoCards`) en una sola consulta indexada con `.lean()`.
   - Roles RBAC habilitados (`Directiva`, `Vendedor`) en endpoints de consulta clave.
-- [ ] **2.5 Suite Base de Tests Unitarios / Integración (Backend):**
-  - Configurar Vitest en backend para testear: (a) cálculo y asiento doble de `SellerPayment` -> `Balance`, (b) cambio reactivo de estado de `Sale` al pagar `Quota`, y (c) reglas de ganador en sorteo (`cuota` vs `contado`).
+- [x] **2.5 Suite Base de Tests Unitarios / Integración (Backend):**
+  - Configurado `Vitest` (`npm test` + integrado en GitHub Actions CI) cubriendo fórmulas de `SellerPayment`, impuesto de Lotería, elegibilidad y wording de sorteos TV, y middlewares RBAC / `sellerScope`.
 
 ---
 
