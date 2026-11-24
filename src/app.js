@@ -3,7 +3,10 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import compression from 'compression';
-import { FRONTEND_URL } from './config.js';
+import helmet from 'helmet';
+import mongoose from 'mongoose';
+import { FRONTEND_URL, ALLOWED_ORIGINS, NODE_ENV } from './config.js';
+import { apiLimiter } from './middlewares/rateLimit.middleware.js';
 
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
@@ -23,10 +26,22 @@ import vendedorRoutes from './routes/vendedor.routes.js';
 
 const app = express();
 
+// Necesario detrás de reverse proxies en Cloud (Render, Railway, Cloudflare, etc.)
+app.set('trust proxy', 1);
+
+// Seguridad HTTP base
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
+
+const allowedList = new Set([FRONTEND_URL, ...ALLOWED_ORIGINS].filter(Boolean));
+
 const isOriginAllowed = (origin) => {
     if (!origin) return true;
-    if (origin === FRONTEND_URL) return true;
-    if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
+    if (allowedList.has(origin)) return true;
+    if (NODE_ENV !== 'production' && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+        return true;
+    }
     return false;
 };
 
@@ -40,9 +55,23 @@ app.use(cors({
     credentials: true
 }));
 app.use(compression());
-app.use(morgan('dev'));
-app.use(express.json());
+app.use(morgan(NODE_ENV === 'production' ? 'combined' : 'dev'));
+app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser());
+
+// Healthcheck Cloud (monitoreo de disponibilidad y estado de MongoDB)
+app.get('/api/health', (req, res) => {
+    const dbConnected = mongoose.connection.readyState === 1;
+    res.status(dbConnected ? 200 : 503).json({
+        status: dbConnected ? 'ok' : 'degraded',
+        db: dbConnected ? 'connected' : 'disconnected',
+        env: NODE_ENV,
+        uptimeSeconds: Math.round(process.uptime()),
+        timestamp: new Date().toISOString()
+    });
+});
+
+app.use('/api', apiLimiter);
 
 app.use("/api", authRoutes);
 app.use("/api", userRoutes);
@@ -67,7 +96,7 @@ app.use((err, req, res, next) => {
     const message = err.message || "Error interno del servidor";
     res.status(status).json({
         message,
-        ...(process.env.NODE_ENV === 'development' ? { stack: err.stack } : {})
+        ...(NODE_ENV === 'development' ? { stack: err.stack } : {})
     });
 });
 

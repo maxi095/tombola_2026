@@ -10,11 +10,18 @@ import {
 
 import { authRequired } from "../middlewares/validateToken.js";
 import { checkRole } from "../middlewares/role.middleware.js";
+import { clientSearchLimiter } from "../middlewares/rateLimit.middleware.js";
 
 const router = Router();
 
-// Búsqueda puntual protegida (Vendedor y Admin) 🔍
-router.get("/clients/search", authRequired, checkRole(["Administrador", "Vendedor"]), searchClients);
+// Búsqueda puntual protegida contra scraping (Vendedor y Admin) 🔍
+router.get(
+  "/clients/search",
+  authRequired,
+  checkRole(["Administrador", "Vendedor"]),
+  clientSearchLimiter,
+  searchClients
+);
 
 // Padrón masivo protegido (Solo Administrador - RN-ROL-02) 🛡️
 router.get("/clients", authRequired, checkRole(["Administrador"]), getClients);
