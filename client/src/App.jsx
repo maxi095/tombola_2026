@@ -1,5 +1,7 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./libs/queryClient";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import BarraTareas from "./components/BarraTareas";
@@ -141,15 +143,17 @@ function AdminProviders({ children }) {
 
 function App() {
   return (
-    <FeedbackProvider>
-      <LayoutProvider>
-        <AuthProvider>
-          <BrowserRouter>
-            <AppShell />
-          </BrowserRouter>
-        </AuthProvider>
-      </LayoutProvider>
-    </FeedbackProvider>
+    <QueryClientProvider client={queryClient}>
+      <FeedbackProvider>
+        <LayoutProvider>
+          <AuthProvider>
+            <BrowserRouter>
+              <AppShell />
+            </BrowserRouter>
+          </AuthProvider>
+        </LayoutProvider>
+      </FeedbackProvider>
+    </QueryClientProvider>
   );
 }
 

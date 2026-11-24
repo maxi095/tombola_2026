@@ -1,42 +1,56 @@
-import { createContext, useContext, useState, useCallback } from 'react';
-import { getDashboardRequest } from '../api/dashboard'; // Asegurate que este sea el path correcto
+import { createContext, useContext, useState, useCallback, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getDashboardRequest } from "../api/dashboard";
 
 const DashboardContext = createContext();
 
 export const useDashboard = () => {
   const context = useContext(DashboardContext);
-  if (!context) throw new Error('useDashboard debe usarse dentro de un DashboardProvider');
+  if (!context) throw new Error("useDashboard debe usarse dentro de un DashboardProvider");
   return context;
 };
 
+/**
+ * DashboardProvider - Potenciado con TanStack Query v5
+ * Cachea las agregaciones pesadas de MongoDB por edición para cambios instantáneos.
+ */
 export const DashboardProvider = ({ children }) => {
-  const [dashboardData, setDashboardData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const qc = useQueryClient();
+  const [activeEditionId, setActiveEditionId] = useState(null);
 
-  const getDashboard = useCallback(async (editionId) => {
-    setLoading(true);
-    setError(null);
-    try {
-      console.log("Solicitando datos del dashboard para edición:", editionId);
-      const res = await getDashboardRequest(editionId);
-      setDashboardData(res.data);
-    } catch (err) {
-      console.error("Error en getDashboard:", err);
-      setError("Error al obtener estadísticas.");
-      setDashboardData(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const dashboardQuery = useQuery({
+    queryKey: ["dashboard", activeEditionId],
+    queryFn: async () => {
+      const res = await getDashboardRequest(activeEditionId);
+      return res.data;
+    },
+    enabled: Boolean(activeEditionId),
+  });
+
+  const getDashboard = useCallback(
+    async (editionId) => {
+      if (!editionId) return;
+      if (editionId === activeEditionId) {
+        await qc.invalidateQueries({ queryKey: ["dashboard", editionId] });
+      } else {
+        setActiveEditionId(editionId);
+      }
+    },
+    [activeEditionId, qc]
+  );
+
+  const value = useMemo(
+    () => ({
+      dashboardData: dashboardQuery.data || null,
+      loading: dashboardQuery.isLoading || dashboardQuery.isFetching,
+      error: dashboardQuery.error ? "Error al obtener estadísticas." : null,
+      getDashboard,
+    }),
+    [dashboardQuery.data, dashboardQuery.isLoading, dashboardQuery.isFetching, dashboardQuery.error, getDashboard]
+  );
 
   return (
-    <DashboardContext.Provider value={{
-      dashboardData,
-      loading,
-      error,
-      getDashboard
-    }}>
+    <DashboardContext.Provider value={value}>
       {children}
     </DashboardContext.Provider>
   );

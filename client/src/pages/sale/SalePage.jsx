@@ -30,6 +30,7 @@ import FilterBar from "../../components/ui/FilterBar";
 import EliteSelect from "../../components/ui/Select";
 import ColumnPicker from "../../components/ui/ColumnPicker";
 import ConfirmModal from "../../components/ui/ConfirmModal";
+import Pagination from "../../components/ui/Pagination";
 import {
   Table,
   THead,
@@ -167,6 +168,19 @@ export default function SalePage() {
     }
   };
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 50;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredSales.length]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredSales.length / PAGE_SIZE));
+  const paginatedSales = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredSales.slice(start, start + PAGE_SIZE);
+  }, [filteredSales, currentPage]);
+
   return (
     <div className="flex flex-col px-12 animate-in fade-in duration-700 bg-slate-50/50 min-h-screen">
       <PageHeader
@@ -291,7 +305,7 @@ export default function SalePage() {
                   {filteredSales.length === 0 ? (
                     <TR><TD colSpan={visibleColumns.length} className="py-20 text-center text-slate-300 font-medium italic animate-in fade-in slide-in-from-top-2 duration-500">No se encontraron ventas para este criterio</TD></TR>
                   ) : (
-                    filteredSales.map((sale) => (
+                    paginatedSales.map((sale) => (
                       <TR key={sale._id} className="group transition-all duration-300">
                         {visibleColumns.map(col => {
                           if (col.id === 'saleNumber') return <OperationCell key={col.id} number={sale.saleNumber} />;
@@ -375,6 +389,14 @@ export default function SalePage() {
               </Table>
             )}
           </div>
+          {!loading && filteredSales.length > PAGE_SIZE && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredSales.length}
+              onPageChange={setCurrentPage}
+            />
+          )}
         </Card>
       </div>
 

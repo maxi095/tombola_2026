@@ -34,6 +34,7 @@ import Card from "../../components/ui/Card";
 import InputField from "../../components/ui/InputField";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
+import Pagination from "../../components/ui/Pagination";
 import ColumnPicker from "../../components/ui/ColumnPicker";
 import { useTableColumns } from "../../hooks/useTableColumns";
 import { formatDocument } from "../../libs/formatters";
@@ -122,6 +123,19 @@ function SellerPage() {
     showToast("Listado exportado correctamente", "success");
   };
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 30;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredSellers.length]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredSellers.length / PAGE_SIZE));
+  const paginatedSellers = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredSellers.slice(start, start + PAGE_SIZE);
+  }, [filteredSellers, currentPage]);
+
   return (
     <div className="flex flex-col px-12 animate-in fade-in duration-700 bg-slate-50/50 min-h-screen">
       <PageHeader
@@ -206,7 +220,7 @@ function SellerPage() {
                   ))}
                 </THead>
                 <TBody>
-                  {filteredSellers.map((seller) => (
+                  {paginatedSellers.map((seller) => (
                     <TR key={seller._id} className="group transition-all duration-300">
                       {visibleColumns.map(col => {
                         if (col.id === 'sellerNumber') return <OperationCell key={col.id} number={seller.sellerNumber} />;
@@ -326,6 +340,14 @@ function SellerPage() {
               </Table>
             )}
           </div>
+          {!loading && filteredSellers.length > PAGE_SIZE && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredSellers.length}
+              onPageChange={setCurrentPage}
+            />
+          )}
         </Card>
       </div>
     </div>
