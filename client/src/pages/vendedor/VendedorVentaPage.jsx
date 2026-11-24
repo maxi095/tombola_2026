@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useVendedor } from '../../context/VendedorContext';
 import { useFeedback } from '../../context/FeedbackContext';
 import { MobileCard } from '../../components/mobile/MobileCard';
+import MobileDrawer from '../../components/ui/Drawer';
 import { formatCurrency, formatDocument } from '../../libs/formatters';
 import {
     Ticket,
@@ -399,34 +400,14 @@ export const VendedorVentaPage = () => {
                 </button>
             </div>
 
-            {/* Modal Rápido de Nuevo Asociado */}
-            {showNewClientModal && (
-                <div
-                    role="dialog"
-                    aria-modal="true"
-                    className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
-                    onClick={() => !creatingClient && setShowNewClientModal(false)}
-                >
-                    <div
-                        className="bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-2xl w-full max-w-md p-5 pb-safe shadow-2xl max-h-[90vh] overflow-y-auto"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                            <div>
-                                <h3 className="text-base font-bold text-white">Registrar Asociado</h3>
-                                <p className="text-xs text-slate-400">Datos para la venta del cartón</p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setShowNewClientModal(false)}
-                                aria-label="Cerrar"
-                                className="p-2 rounded-lg text-slate-400 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleCreateClient} className="space-y-3 mt-4 pb-2">
+            {/* Drawer nativo (Vaul) de Nuevo Asociado */}
+            <MobileDrawer
+                isOpen={showNewClientModal}
+                onClose={() => !creatingClient && setShowNewClientModal(false)}
+                title="Registrar Asociado"
+                subtitle="Datos para la venta del cartón"
+            >
+                <form onSubmit={handleCreateClient} className="space-y-3 pb-2">
                             <div>
                                 <label className="text-xs text-slate-300 font-medium block mb-1">
                                     DNI / CUIT *
@@ -529,9 +510,7 @@ export const VendedorVentaPage = () => {
                                 </button>
                             </div>
                         </form>
-                    </div>
-                </div>
-            )}
+            </MobileDrawer>
         </div>
     );
 };

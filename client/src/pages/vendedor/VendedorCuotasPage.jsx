@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useVendedor } from '../../context/VendedorContext';
 import { useFeedback } from '../../context/FeedbackContext';
 import { MobileCard } from '../../components/mobile/MobileCard';
+import MobileDrawer from '../../components/ui/Drawer';
 import { formatCurrency, formatDocument } from '../../libs/formatters';
 import {
     CreditCard,
@@ -275,34 +276,16 @@ export const VendedorCuotasPage = () => {
                 )}
             </div>
 
-            {/* Modal de cobro de cuota */}
-            {selectedQuota && (
-                <div
-                    role="dialog"
-                    aria-modal="true"
-                    className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
-                    onClick={() => !processingPayment && setSelectedQuota(null)}
-                >
-                    <div
-                        className="bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-2xl w-full max-w-md p-5 pb-safe shadow-2xl"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                            <div>
-                                <h3 className="text-base font-bold text-white">Registrar Cobranza</h3>
-                                <p className="text-xs text-slate-400">Cobro presencial de cuota</p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setSelectedQuota(null)}
-                                aria-label="Cerrar"
-                                className="p-2 rounded-lg text-slate-400 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        <div className="my-4 p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
+            {/* Drawer nativo (Vaul) de cobro de cuota */}
+            <MobileDrawer
+                isOpen={Boolean(selectedQuota)}
+                onClose={() => !processingPayment && setSelectedQuota(null)}
+                title="Registrar Cobranza"
+                subtitle="Cobro presencial de cuota"
+            >
+                {selectedQuota && (
+                    <div>
+                        <div className="mb-4 p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
                             <div className="flex justify-between text-xs">
                                 <span className="text-slate-400">Asociado:</span>
                                 <span className="font-bold text-white">
@@ -383,8 +366,8 @@ export const VendedorCuotasPage = () => {
                             </button>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </MobileDrawer>
         </div>
     );
 };

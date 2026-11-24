@@ -1,43 +1,34 @@
-import { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { createContext, useContext, useCallback, useMemo } from "react";
+import { toast as sonnerToast } from "sonner";
 
 const FeedbackContext = createContext();
 
 /**
- * FeedbackProvider - Motor de notificaciones centralizado
- * Gestiona Toasts con control seguro de timers (sin race conditions ni memory leaks).
+ * FeedbackProvider - Motor de notificaciones 2026 (Sonner)
+ * Mantiene 100% retrocompatibilidad con useFeedback().showToast(msg, type).
  */
 export const FeedbackProvider = ({ children }) => {
-  const [toast, setToast] = useState(null);
-  const timerRef = useRef(null);
+  const showToast = useCallback((message, type = "success") => {
+    if (!message) return;
 
-  const clearPendingTimer = useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
+    if (type === "error" || type === "danger") {
+      sonnerToast.error(message);
+    } else if (type === "info") {
+      sonnerToast.info(message);
+    } else if (type === "warning") {
+      sonnerToast.warning(message);
+    } else {
+      sonnerToast.success(message);
     }
   }, []);
 
   const hideToast = useCallback(() => {
-    clearPendingTimer();
-    setToast(null);
-  }, [clearPendingTimer]);
-
-  const showToast = useCallback((message, type = "success") => {
-    clearPendingTimer();
-    setToast({ message, type });
-    timerRef.current = setTimeout(() => {
-      setToast(null);
-      timerRef.current = null;
-    }, 4000);
-  }, [clearPendingTimer]);
-
-  useEffect(() => {
-    return () => clearPendingTimer();
-  }, [clearPendingTimer]);
+    sonnerToast.dismiss();
+  }, []);
 
   const value = useMemo(
-    () => ({ showToast, hideToast, toast }),
-    [showToast, hideToast, toast]
+    () => ({ showToast, hideToast, toast: null }),
+    [showToast, hideToast]
   );
 
   return (

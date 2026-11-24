@@ -1,56 +1,33 @@
-import { useState, useId } from "react";
+import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { cn } from "../../libs/cn";
 
 /**
- * Tooltip Standard 2026 — Accesible por mouse y foco de teclado.
+ * Tooltip 2026 (Radix UI Tooltip / shadcn pattern)
+ * Renderiza en Portal (jamás se recorta dentro de tablas o tarjetas overflow-hidden).
  */
 function Tooltip({ children, text, position = "top", className = "" }) {
-  const [visible, setVisible] = useState(false);
-  const tooltipId = useId();
-
-  const positionClasses = {
-    top: "bottom-full left-1/2 -translate-x-1/2 mb-2",
-    bottom: "top-full left-1/2 -translate-x-1/2 mt-2",
-    left: "right-full top-1/2 -translate-y-1/2 mr-2",
-    right: "left-full top-1/2 -translate-y-1/2 ml-2",
-  };
-
-  const arrowClasses = {
-    top: "top-full left-1/2 -translate-x-1/2 border-t-slate-800",
-    bottom: "bottom-full left-1/2 -translate-x-1/2 border-b-slate-800",
-    left: "left-full top-1/2 -translate-y-1/2 border-l-slate-800",
-    right: "right-full top-1/2 -translate-y-1/2 border-r-slate-800",
-  };
+  if (!text) return children;
 
   return (
-    <div
-      className={cn("relative inline-flex items-center", className)}
-      onMouseEnter={() => setVisible(true)}
-      onMouseLeave={() => setVisible(false)}
-      onFocus={() => setVisible(true)}
-      onBlur={() => setVisible(false)}
-      aria-describedby={visible && text ? tooltipId : undefined}
-    >
-      {children}
-
-      {visible && text && (
-        <div
-          id={tooltipId}
-          role="tooltip"
-          className={cn(
-            "absolute z-[200] pointer-events-none animate-in fade-in zoom-in-95 duration-150",
-            positionClasses[position] || positionClasses.top
-          )}
-        >
-          <div className="bg-slate-800 text-white text-[10px] font-black uppercase tracking-[0.12em] whitespace-nowrap px-2.5 py-1.5 rounded-lg shadow-xl">
+    <TooltipPrimitive.Provider delayDuration={180}>
+      <TooltipPrimitive.Root>
+        <TooltipPrimitive.Trigger asChild>
+          <span className={cn("inline-flex items-center", className)}>
+            {children}
+          </span>
+        </TooltipPrimitive.Trigger>
+        <TooltipPrimitive.Portal>
+          <TooltipPrimitive.Content
+            side={position}
+            sideOffset={6}
+            className="z-[200] rounded-lg bg-slate-800 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-white shadow-xl animate-in fade-in-0 zoom-in-95 duration-150"
+          >
             {text}
-          </div>
-          <div
-            className={cn("absolute border-4 border-transparent", arrowClasses[position] || arrowClasses.top)}
-          />
-        </div>
-      )}
-    </div>
+            <TooltipPrimitive.Arrow className="fill-slate-800" />
+          </TooltipPrimitive.Content>
+        </TooltipPrimitive.Portal>
+      </TooltipPrimitive.Root>
+    </TooltipPrimitive.Provider>
   );
 }
 
